@@ -85,4 +85,3 @@ func (s *Service) handleAccountSwitch(ctx context.Context, request mcp.CallToolR
 
 	return mcp.NewToolResultText(resultText), nil
 }
-

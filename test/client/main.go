@@ -93,7 +93,12 @@ func main() {
 		fmt.Println("  2. List all accounts")
 		fmt.Println("  3. Switch account")
 		fmt.Println("  4. List instances")
-		fmt.Println("  5. Raw tool call (advanced)")
+		fmt.Println("  5. Get instance details")
+		fmt.Println("  6. List volumes")
+		fmt.Println("  7. Get volume details")
+		fmt.Println("  8. List IP addresses")
+		fmt.Println("  9. Get IP details")
+		fmt.Println("  10. Raw tool call (advanced)")
 		fmt.Println("  q. Quit")
 		fmt.Print("\nEnter command: ")
 
@@ -115,6 +120,35 @@ func main() {
 		case "4":
 			callTool(ctx, mcpClient, "linode_instances_list", nil)
 		case "5":
+			fmt.Print("Enter instance ID: ")
+			instanceIDStr, _ := reader.ReadString('\n')
+			instanceIDStr = strings.TrimSpace(instanceIDStr)
+			var instanceID float64
+			fmt.Sscanf(instanceIDStr, "%f", &instanceID)
+			callTool(ctx, mcpClient, "linode_instance_get", map[string]interface{}{
+				"instance_id": instanceID,
+			})
+		case "6":
+			callTool(ctx, mcpClient, "linode_volumes_list", nil)
+		case "7":
+			fmt.Print("Enter volume ID: ")
+			volumeIDStr, _ := reader.ReadString('\n')
+			volumeIDStr = strings.TrimSpace(volumeIDStr)
+			var volumeID float64
+			fmt.Sscanf(volumeIDStr, "%f", &volumeID)
+			callTool(ctx, mcpClient, "linode_volume_get", map[string]interface{}{
+				"volume_id": volumeID,
+			})
+		case "8":
+			callTool(ctx, mcpClient, "linode_ips_list", nil)
+		case "9":
+			fmt.Print("Enter IP address: ")
+			ipAddress, _ := reader.ReadString('\n')
+			ipAddress = strings.TrimSpace(ipAddress)
+			callTool(ctx, mcpClient, "linode_ip_get", map[string]interface{}{
+				"address": ipAddress,
+			})
+		case "10":
 			fmt.Print("Enter tool name: ")
 			toolName, _ := reader.ReadString('\n')
 			toolName = strings.TrimSpace(toolName)
