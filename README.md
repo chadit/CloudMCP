@@ -129,7 +129,7 @@ Example prompts:
 
 ### Available Tools
 
-**Currently Implemented: 4 tools** | **Planned: 13 tools**
+**All 17 tools are now implemented!** ✅
 
 #### Account Management
 
@@ -140,26 +140,26 @@ Example prompts:
 #### Compute Operations
 
 - ✅ `linode_instances_list` - List all Linode instances
-- ⏳ `linode_instance_get` - Get details of a specific instance *(not implemented yet)*
-- ⏳ `linode_instance_create` - Create a new Linode instance *(not implemented yet)*
-- ⏳ `linode_instance_delete` - Delete a Linode instance *(not implemented yet)*
-- ⏳ `linode_instance_boot` - Boot a Linode instance *(not implemented yet)*
-- ⏳ `linode_instance_shutdown` - Shutdown a Linode instance *(not implemented yet)*
-- ⏳ `linode_instance_reboot` - Reboot a Linode instance *(not implemented yet)*
+- ✅ `linode_instance_get` - Get details of a specific instance
+- ✅ `linode_instance_create` - Create a new Linode instance
+- ✅ `linode_instance_delete` - Delete a Linode instance
+- ✅ `linode_instance_boot` - Boot a Linode instance
+- ✅ `linode_instance_shutdown` - Shutdown a Linode instance
+- ✅ `linode_instance_reboot` - Reboot a Linode instance
 
 #### Networking
 
-- ⏳ `linode_ips_list` - List IP addresses *(not implemented yet)*
-- ⏳ `linode_ip_get` - Get IP address details *(not implemented yet)*
+- ✅ `linode_ips_list` - List IP addresses
+- ✅ `linode_ip_get` - Get IP address details
 
 #### Storage
 
-- ⏳ `linode_volumes_list` - List block storage volumes *(not implemented yet)*
-- ⏳ `linode_volume_get` - Get volume details *(not implemented yet)*
-- ⏳ `linode_volume_create` - Create a new volume *(not implemented yet)*
-- ⏳ `linode_volume_delete` - Delete a volume *(not implemented yet)*
-- ⏳ `linode_volume_attach` - Attach volume to instance *(not implemented yet)*
-- ⏳ `linode_volume_detach` - Detach volume from instance *(not implemented yet)*
+- ✅ `linode_volumes_list` - List block storage volumes
+- ✅ `linode_volume_get` - Get volume details
+- ✅ `linode_volume_create` - Create a new volume
+- ✅ `linode_volume_delete` - Delete a volume
+- ✅ `linode_volume_attach` - Attach volume to instance
+- ✅ `linode_volume_detach` - Detach volume from instance
 
 ### Example Commands
 
