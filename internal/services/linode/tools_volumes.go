@@ -281,7 +281,7 @@ mkdir -p /mnt/%s
 mount %s /mnt/%s`,
 		volume.Label,
 		volume.ID,
-		linodeID,
+		int(linodeID),
 		volume.FilesystemPath,
 		persistAcrossBoots,
 		volume.Label,

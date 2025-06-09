@@ -6,7 +6,7 @@ CloudMCP is a Model Context Protocol (MCP) server that enables Large Language Mo
 
 - **Multi-Account Support**: Manage multiple Linode accounts with easy switching
 - **Secure Token Management**: Environment-based configuration with token sanitization
-- **Comprehensive Linode Coverage**: Compute, networking, storage, and account management
+- **Comprehensive Linode Coverage**: Compute, networking, storage, image management, and account operations
 - **Built-in Observability**: Prometheus metrics and structured logging
 - **Thread-Safe Operations**: Concurrent request handling with proper synchronization
 - **Extensible Architecture**: Plugin-ready design for additional cloud providers
@@ -29,9 +29,37 @@ cd CloudMCP
 # Build the binary
 go build -o bin/cloud-mcp cmd/server/main.go
 
+# Make the wrapper script executable (for MCP client integration)
+chmod +x cloud-mcp-wrapper.sh
+
 # Or install globally
 go install github.com/chadit/CloudMCP/cmd/server@latest
+go install github.com/chadit/CloudMCP/cmd/cloud-mcp-setup@latest
+
+# Setup for Claude (recommended for local development)
+make setup-mcp
 ```
+
+### Installation via go install
+
+If you install CloudMCP using `go install`:
+
+```bash
+# Install both the server and setup tool
+go install github.com/chadit/CloudMCP/cmd/server@latest
+go install github.com/chadit/CloudMCP/cmd/cloud-mcp-setup@latest
+
+# Run the setup tool
+cloud-mcp-setup
+```
+
+This creates a configuration in `~/.cloud-mcp/` with:
+
+- A wrapper script that loads environment variables
+- An `.env` file template for your API tokens
+- Automatic registration with Claude Desktop and Claude Code
+
+After setup, edit `~/.cloud-mcp/.env` with your Linode API tokens.
 
 ## Configuration
 
@@ -60,6 +88,18 @@ LINODE_ACCOUNTS_DEV_LABEL="Development"
 # LINODE_ACCOUNTS_<NAME>_LABEL="Display Name"
 ```
 
+### MCP Client Integration
+
+CloudMCP includes a wrapper script (`cloud-mcp-wrapper.sh`) that simplifies integration with MCP clients like Claude Desktop and GitHub Copilot. The wrapper script provides several benefits:
+
+- **Automatic Environment Loading**: Loads configuration from `.env` file automatically
+- **Validation**: Checks for required environment variables before starting
+- **Error Handling**: Provides clear error messages for common configuration issues
+- **Path Resolution**: Handles relative paths and ensures the binary is found
+- **Cleaner Configuration**: MCP clients only need the wrapper path, not individual environment variables
+
+The wrapper script automatically loads your `.env` file and validates that required accounts are configured before starting the server.
+
 ## Usage
 
 ### Running the Server
@@ -72,39 +112,104 @@ source .env && ./bin/cloud-mcp
 source .env && go run cmd/server/main.go
 ```
 
-### Connecting with Claude Desktop
+### Setup CloudMCP with Claude
 
-Add to your Claude Desktop configuration (`claude_desktop_config.json`):
+CloudMCP uses a unified setup tool that works for both local development and go install:
+
+#### For Local Development
+
+```bash
+# From the CloudMCP project directory
+make setup-mcp
+
+# Or manually
+./bin/cloud-mcp-setup -local
+```
+
+#### For Go Install Users
+
+```bash
+# After installing via go install
+cloud-mcp-setup
+```
+
+The setup tool will:
+
+1. Configure the appropriate wrapper script and environment
+2. Register CloudMCP with Claude Desktop, Claude Code, and VS Code (for GitHub Copilot Chat)
+3. Create a .env template for your API tokens
+4. Provide clear feedback on the setup status
+
+**Note**: Local development uses the project's `.env` and `cloud-mcp-wrapper.sh`, while go install uses `~/.cloud-mcp/`.
+
+### Manual Configuration
+
+If you prefer manual setup or the automatic setup doesn't work for your environment:
+
+#### Claude Desktop
+
+Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
 
 ```json
 {
   "mcpServers": {
     "cloud-mcp": {
-      "command": "/path/to/cloud-mcp",
-      "env": {
-        "CLOUD_MCP_SERVER_NAME": "Cloud MCP",
-        "LOG_LEVEL": "info",
-        "DEFAULT_LINODE_ACCOUNT": "primary",
-        "LINODE_ACCOUNTS_PRIMARY_TOKEN": "your_token_here",
-        "LINODE_ACCOUNTS_PRIMARY_LABEL": "Production"
+      "command": "/path/to/CloudMCP/cloud-mcp-wrapper.sh",
+      "args": [],
+      "env": {}
+    }
+  }
+}
+```
+
+#### Claude Code
+
+Use the Claude CLI to add CloudMCP:
+
+```bash
+claude mcp add -s user cloud-mcp "/path/to/CloudMCP/cloud-mcp-wrapper.sh"
+```
+
+Or manually edit `~/.claude.json` to include:
+
+```json
+{
+  "mcpServers": {
+    "user": {
+      "cloud-mcp": {
+        "command": "/path/to/CloudMCP/cloud-mcp-wrapper.sh",
+        "args": []
       }
     }
   }
 }
 ```
 
-### Connecting with GitHub Copilot
+### Connecting with GitHub Copilot Chat in VS Code
 
-To use CloudMCP with GitHub Copilot Chat:
+CloudMCP can be automatically configured for VS Code when you run the setup tool. If you need to configure it manually:
 
 1. Install the GitHub Copilot Chat extension in VS Code
-2. Configure the MCP server in VS Code settings:
+2. Add the MCP server configuration to your VS Code settings.json:
 
 ```json
 {
   "github.copilot.chat.mcpServers": {
     "cloud-mcp": {
-      "command": "/path/to/cloud-mcp",
+      "command": "/path/to/CloudMCP/cloud-mcp-wrapper.sh",
+      "args": []
+    }
+  }
+}
+```
+
+**Alternative:** Direct binary configuration (requires manual environment setup):
+
+```json
+{
+  "github.copilot.chat.mcpServers": {
+    "cloud-mcp": {
+      "command": "/path/to/CloudMCP/bin/cloud-mcp",
       "args": [],
       "env": {
         "CLOUD_MCP_SERVER_NAME": "Cloud MCP",
@@ -129,7 +234,7 @@ Example prompts:
 
 ### Available Tools
 
-**All 17 tools are now implemented!** ✅
+**All 24 tools are now implemented!** ✅
 
 #### Account Management
 
@@ -161,6 +266,16 @@ Example prompts:
 - ✅ `linode_volume_attach` - Attach volume to instance
 - ✅ `linode_volume_detach` - Detach volume from instance
 
+#### Image Management
+
+- ✅ `linode_images_list` - List all available images (public and private)
+- ✅ `linode_image_get` - Get details of a specific image
+- ✅ `linode_image_create` - Create a custom image from a Linode disk
+- ✅ `linode_image_update` - Update image labels, descriptions, and tags
+- ✅ `linode_image_delete` - Delete a custom image
+- ✅ `linode_image_replicate` - Replicate images across multiple regions
+- ✅ `linode_image_upload_create` - Create upload URL for direct image upload
+
 ### Example Commands
 
 Through an LLM interface:
@@ -171,6 +286,10 @@ Through an LLM interface:
 "Switch to the development account"
 "List all volumes in the us-east region"
 "Shutdown the web-server instance"
+"List all my custom images"
+"Create an image from disk 12345 called 'web-server-backup'"
+"Replicate my custom image to us-west and eu-central regions"
+"Show details for the Ubuntu 22.04 image"
 ```
 
 ## Development
@@ -190,6 +309,7 @@ CloudMCP/
 │   ├── logger/              # Logging abstraction
 │   ├── types/               # Shared types
 │   └── interfaces/          # Service interfaces
+├── cloud-mcp-wrapper.sh     # MCP client integration wrapper
 └── docs/                    # Additional documentation
 ```
 

@@ -440,6 +440,170 @@ func (s *Service) RegisterTools(server interface{}) error {
 		},
 	}, s.handleVolumeDetach)
 
+	// Image tools
+	// linode_images_list
+	mcpServer.AddTool(mcp.Tool{
+		Name:        "linode_images_list",
+		Description: "List all available Linode images",
+		InputSchema: mcp.ToolInputSchema{
+			Type: "object",
+			Properties: map[string]any{
+				"is_public": map[string]any{
+					"type":        "boolean",
+					"description": "Filter to only public (true) or private (false) images",
+				},
+			},
+		},
+	}, s.handleImagesList)
+
+	// linode_image_get
+	mcpServer.AddTool(mcp.Tool{
+		Name:        "linode_image_get",
+		Description: "Get details of a specific image",
+		InputSchema: mcp.ToolInputSchema{
+			Type: "object",
+			Properties: map[string]any{
+				"image_id": map[string]any{
+					"type":        "string",
+					"description": "ID of the image (e.g. linode/ubuntu22.04 or private/12345)",
+				},
+			},
+			Required: []string{"image_id"},
+		},
+	}, s.handleImageGet)
+
+	// linode_image_create
+	mcpServer.AddTool(mcp.Tool{
+		Name:        "linode_image_create",
+		Description: "Create a custom image from a Linode disk",
+		InputSchema: mcp.ToolInputSchema{
+			Type: "object",
+			Properties: map[string]any{
+				"disk_id": map[string]any{
+					"type":        "number",
+					"description": "ID of the Linode disk to create image from",
+				},
+				"label": map[string]any{
+					"type":        "string",
+					"description": "Display label for the image",
+				},
+				"description": map[string]any{
+					"type":        "string",
+					"description": "Detailed description of the image",
+				},
+				"cloud_init": map[string]any{
+					"type":        "boolean",
+					"description": "Whether this image supports cloud-init",
+				},
+				"tags": map[string]any{
+					"type":        "array",
+					"items":       map[string]any{"type": "string"},
+					"description": "Tags to apply to the image",
+				},
+			},
+			Required: []string{"disk_id", "label"},
+		},
+	}, s.handleImageCreate)
+
+	// linode_image_update
+	mcpServer.AddTool(mcp.Tool{
+		Name:        "linode_image_update",
+		Description: "Update an existing custom image",
+		InputSchema: mcp.ToolInputSchema{
+			Type: "object",
+			Properties: map[string]any{
+				"image_id": map[string]any{
+					"type":        "string",
+					"description": "ID of the image to update",
+				},
+				"label": map[string]any{
+					"type":        "string",
+					"description": "New display label for the image",
+				},
+				"description": map[string]any{
+					"type":        "string",
+					"description": "New description for the image",
+				},
+				"tags": map[string]any{
+					"type":        "array",
+					"items":       map[string]any{"type": "string"},
+					"description": "New tags for the image (replaces existing tags)",
+				},
+			},
+			Required: []string{"image_id"},
+		},
+	}, s.handleImageUpdate)
+
+	// linode_image_delete
+	mcpServer.AddTool(mcp.Tool{
+		Name:        "linode_image_delete",
+		Description: "Delete a custom image",
+		InputSchema: mcp.ToolInputSchema{
+			Type: "object",
+			Properties: map[string]any{
+				"image_id": map[string]any{
+					"type":        "string",
+					"description": "ID of the image to delete",
+				},
+			},
+			Required: []string{"image_id"},
+		},
+	}, s.handleImageDelete)
+
+	// linode_image_replicate
+	mcpServer.AddTool(mcp.Tool{
+		Name:        "linode_image_replicate",
+		Description: "Replicate a custom image to additional regions",
+		InputSchema: mcp.ToolInputSchema{
+			Type: "object",
+			Properties: map[string]any{
+				"image_id": map[string]any{
+					"type":        "string",
+					"description": "ID of the image to replicate",
+				},
+				"regions": map[string]any{
+					"type":        "array",
+					"items":       map[string]any{"type": "string"},
+					"description": "List of region IDs to replicate the image to",
+				},
+			},
+			Required: []string{"image_id", "regions"},
+		},
+	}, s.handleImageReplicate)
+
+	// linode_image_upload_create
+	mcpServer.AddTool(mcp.Tool{
+		Name:        "linode_image_upload_create",
+		Description: "Create an image upload URL for uploading a custom image file",
+		InputSchema: mcp.ToolInputSchema{
+			Type: "object",
+			Properties: map[string]any{
+				"label": map[string]any{
+					"type":        "string",
+					"description": "Display label for the uploaded image",
+				},
+				"region": map[string]any{
+					"type":        "string",
+					"description": "Initial region for the uploaded image",
+				},
+				"description": map[string]any{
+					"type":        "string",
+					"description": "Description of the uploaded image",
+				},
+				"cloud_init": map[string]any{
+					"type":        "boolean",
+					"description": "Whether this image supports cloud-init",
+				},
+				"tags": map[string]any{
+					"type":        "array",
+					"items":       map[string]any{"type": "string"},
+					"description": "Tags to apply to the image",
+				},
+			},
+			Required: []string{"label", "region"},
+		},
+	}, s.handleImageUploadCreate)
+
 	return nil
 }
 
