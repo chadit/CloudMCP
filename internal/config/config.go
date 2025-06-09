@@ -16,8 +16,9 @@ type Config struct {
 }
 
 type LinodeAccount struct {
-	Token string
-	Label string
+	Token  string
+	Label  string
+	APIURL string // Optional custom API URL (defaults to https://api.linode.com/v4)
 }
 
 func Load() (*Config, error) {
@@ -56,6 +57,8 @@ func Load() (*Config, error) {
 				account.Token = parts[1]
 			case "label":
 				account.Label = parts[1]
+			case "apiurl":
+				account.APIURL = parts[1]
 			}
 			cfg.LinodeAccounts[accountName] = account
 		}
