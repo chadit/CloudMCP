@@ -1,4 +1,4 @@
-.PHONY: help build run test test-race test-integration clean lint fmt install-tools
+.PHONY: help build run test test-race test-integration clean lint fmt install-tools setup-mcp
 
 # Default target
 help:
@@ -14,11 +14,14 @@ help:
 	@echo "  make fmt             - Format code with gofumpt"
 	@echo "  make clean           - Clean build artifacts"
 	@echo "  make install-tools   - Install development tools"
+	@echo "  make setup-mcp       - Setup CloudMCP for Claude Desktop and Claude Code"
 
 # Build binary
 build:
 	@echo "Building cloud-mcp..."
 	@go build -o bin/cloud-mcp cmd/server/main.go
+	@echo "Building cloud-mcp-setup..."
+	@go build -o bin/cloud-mcp-setup cmd/cloud-mcp-setup/main.go
 
 # Run server
 run: build
@@ -128,3 +131,9 @@ test-stdio: build
 		echo "No .env file found. Create one from .env.example"; \
 		exit 1; \
 	fi
+
+# Setup CloudMCP for Claude Desktop and Claude Code
+.PHONY: setup-mcp
+setup-mcp: build
+	@echo "Setting up CloudMCP for Claude..."
+	@./bin/cloud-mcp-setup -local

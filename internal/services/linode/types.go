@@ -185,3 +185,98 @@ type VolumeAttachParams struct {
 type VolumeDetachParams struct {
 	VolumeID int `json:"volume_id" jsonschema:"required,description=ID of the volume to detach"`
 }
+
+// Image types.
+type ImagesListParams struct {
+	IsPublic *bool `json:"is_public" jsonschema:"description=Filter to only public (true) or private (false) images"`
+}
+
+type ImagesListResult struct {
+	Images []ImageSummary `json:"images"`
+	Count  int            `json:"count"`
+}
+
+type ImageSummary struct {
+	ID           string        `json:"id"`
+	Label        string        `json:"label"`
+	Description  string        `json:"description"`
+	Created      string        `json:"created"`
+	CreatedBy    string        `json:"created_by"`
+	Deprecated   bool          `json:"deprecated"`
+	IsPublic     bool          `json:"is_public"`
+	Size         int           `json:"size"`
+	Type         string        `json:"type"`
+	Vendor       string        `json:"vendor"`
+	Status       string        `json:"status"`
+	Regions      []ImageRegion `json:"regions"`
+	Tags         []string      `json:"tags"`
+	TotalSize    int           `json:"total_size"`
+	Capabilities []string      `json:"capabilities"`
+}
+
+type ImageRegion struct {
+	Region string `json:"region"`
+	Status string `json:"status"`
+}
+
+type ImageGetParams struct {
+	ImageID string `json:"image_id" jsonschema:"required,description=ID of the image (e.g. linode/ubuntu22.04 or private/12345)"`
+}
+
+type ImageDetail struct {
+	ID           string        `json:"id"`
+	Label        string        `json:"label"`
+	Description  string        `json:"description"`
+	Created      string        `json:"created"`
+	CreatedBy    string        `json:"created_by"`
+	Deprecated   bool          `json:"deprecated"`
+	IsPublic     bool          `json:"is_public"`
+	Size         int           `json:"size"`
+	Type         string        `json:"type"`
+	Vendor       string        `json:"vendor"`
+	Status       string        `json:"status"`
+	Regions      []ImageRegion `json:"regions"`
+	Tags         []string      `json:"tags"`
+	TotalSize    int           `json:"total_size"`
+	Capabilities []string      `json:"capabilities"`
+	Updated      string        `json:"updated"`
+	Expiry       *string       `json:"expiry"`
+}
+
+// Image operations.
+type ImageCreateParams struct {
+	DiskID      int      `json:"disk_id" jsonschema:"required,description=ID of the Linode disk to create image from"`
+	Label       string   `json:"label" jsonschema:"required,description=Display label for the image"`
+	Description string   `json:"description" jsonschema:"description=Detailed description of the image"`
+	CloudInit   bool     `json:"cloud_init" jsonschema:"description=Whether this image supports cloud-init"`
+	Tags        []string `json:"tags" jsonschema:"description=Tags to apply to the image"`
+}
+
+type ImageUpdateParams struct {
+	ImageID     string   `json:"image_id" jsonschema:"required,description=ID of the image to update"`
+	Label       string   `json:"label" jsonschema:"description=New display label for the image"`
+	Description string   `json:"description" jsonschema:"description=New description for the image"`
+	Tags        []string `json:"tags" jsonschema:"description=New tags for the image (replaces existing tags)"`
+}
+
+type ImageDeleteParams struct {
+	ImageID string `json:"image_id" jsonschema:"required,description=ID of the image to delete"`
+}
+
+type ImageReplicateParams struct {
+	ImageID string   `json:"image_id" jsonschema:"required,description=ID of the image to replicate"`
+	Regions []string `json:"regions" jsonschema:"required,description=List of region IDs to replicate the image to"`
+}
+
+type ImageUploadParams struct {
+	Label       string   `json:"label" jsonschema:"required,description=Display label for the uploaded image"`
+	Region      string   `json:"region" jsonschema:"required,description=Initial region for the uploaded image"`
+	Description string   `json:"description" jsonschema:"description=Description of the uploaded image"`
+	CloudInit   bool     `json:"cloud_init" jsonschema:"description=Whether this image supports cloud-init"`
+	Tags        []string `json:"tags" jsonschema:"description=Tags to apply to the image"`
+}
+
+type ImageUploadResult struct {
+	ImageID  string `json:"image_id"`
+	UploadTo string `json:"upload_to"`
+}
