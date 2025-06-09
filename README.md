@@ -86,6 +86,10 @@ LINODE_ACCOUNTS_DEV_LABEL="Development"
 # Additional accounts follow the same pattern:
 # LINODE_ACCOUNTS_<NAME>_TOKEN=token
 # LINODE_ACCOUNTS_<NAME>_LABEL="Display Name"
+
+# Custom API URLs (optional - for development/testing)
+# LINODE_ACCOUNTS_DEV_APIURL=https://api.dev.linode.com/v4
+# LINODE_ACCOUNTS_STAGING_APIURL=https://api.staging.linode.com/v4
 ```
 
 ### MCP Client Integration

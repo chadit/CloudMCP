@@ -54,6 +54,11 @@ func New(cfg *config.Config, log logger.Logger) (*Service, error) {
 		client := linodego.NewClient(oauth2Client)
 		client.SetUserAgent("CloudMCP/0.1.0")
 
+		// Set custom API URL if provided (e.g., for development environments)
+		if accCfg.APIURL != "" {
+			client.SetBaseURL(accCfg.APIURL)
+		}
+
 		s.accountManager.accounts[name] = &Account{
 			Name:   name,
 			Label:  accCfg.Label,
