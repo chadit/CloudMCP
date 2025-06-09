@@ -24,7 +24,6 @@ func New(cfg *config.Config, log logger.Logger) (*Server, error) {
 		cfg.ServerName,
 		"0.1.0",
 		server.WithToolCapabilities(true),
-		server.WithLogging(),
 	)
 
 	s := &Server{
@@ -59,12 +58,7 @@ func (s *Server) Start(ctx context.Context) error {
 		s.logger.Info("Service initialized", "service", svc.Name())
 	}
 
-	s.logger.Info("Starting MCP server")
-	
-	if err := server.ServeStdio(s.mcp); err != nil {
-		return fmt.Errorf("MCP server error: %w", err)
-	}
-
+	// Cleanup services on shutdown
 	defer func() {
 		for _, svc := range s.services {
 			if err := svc.Shutdown(context.Background()); err != nil {
@@ -76,5 +70,25 @@ func (s *Server) Start(ctx context.Context) error {
 		}
 	}()
 
-	return nil
+	s.logger.Info("Starting MCP server")
+	
+	// Create a channel to signal when stdio server is done
+	errCh := make(chan error, 1)
+	
+	// Run ServeStdio in a goroutine
+	go func() {
+		errCh <- server.ServeStdio(s.mcp)
+	}()
+	
+	// Wait for either context cancellation or server error
+	select {
+	case <-ctx.Done():
+		s.logger.Info("Context cancelled, shutting down")
+		return ctx.Err()
+	case err := <-errCh:
+		if err != nil {
+			return fmt.Errorf("MCP server error: %w", err)
+		}
+		return nil
+	}
 }

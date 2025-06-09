@@ -41,7 +41,7 @@ func New(level string) Logger {
 		Level: logLevel,
 	}
 
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, opts))
+	logger := slog.New(slog.NewJSONHandler(os.Stderr, opts))
 	return &slogWrapper{logger: logger}
 }
 
