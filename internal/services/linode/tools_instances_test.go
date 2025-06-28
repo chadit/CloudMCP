@@ -1,7 +1,6 @@
 package linode_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -44,7 +43,7 @@ func TestHandleInstancesList_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test instances list request with empty account manager
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_instances_list",
@@ -87,7 +86,7 @@ func TestHandleInstanceGet_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test instance get request with no accounts and valid parameter
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_instance_get",
@@ -134,7 +133,7 @@ func TestHandleInstanceGet_MissingParameter(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test instance get request with missing instance_id parameter
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_instance_get",
@@ -187,7 +186,7 @@ func TestHandleInstanceGet_InvalidParameter(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test instance get request with invalid instance_id parameter type
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_instance_get",
@@ -242,7 +241,7 @@ func TestHandleInstanceCreate_MissingRequiredParameters(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test instance create request with missing required parameters
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_instance_create",
@@ -295,7 +294,7 @@ func TestHandleInstanceCreate_PartialParameters(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test instance create request with only partial required parameters
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_instance_create",
@@ -351,7 +350,7 @@ func TestHandleInstanceDelete_MissingParameter(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test instance delete request with missing instance_id parameter
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_instance_delete",
@@ -404,7 +403,7 @@ func TestHandleInstanceBoot_MissingParameter(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test instance boot request with missing instance_id parameter
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_instance_boot",
@@ -457,7 +456,7 @@ func TestHandleInstanceShutdown_MissingParameter(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test instance shutdown request with missing instance_id parameter
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_instance_shutdown",
@@ -510,7 +509,7 @@ func TestHandleInstanceReboot_MissingParameter(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test instance reboot request with missing instance_id parameter
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_instance_reboot",
@@ -562,7 +561,7 @@ func TestHandleInstanceBoot_ValidParameters(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test instance boot request with valid parameters but no account
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_instance_boot",

@@ -1,10 +1,24 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
 	"github.com/BurntSushi/toml"
+)
+
+const (
+	defaultLogMaxSize     = 10 // 10MB
+	defaultLogMaxBackups  = 5  // Keep 5 files
+	defaultLogMaxAge      = 30 // 30 days
+)
+
+var (
+	ErrConfigFileNotFound       = errors.New("config file not found")
+	ErrDefaultAccountRequired   = errors.New("default_account is required")
+	ErrAccountMissingToken      = errors.New("account is missing token")
+	ErrAccountMissingLabel      = errors.New("account is missing label")
 )
 
 // TOMLConfig represents the new TOML-based configuration structure.
@@ -48,11 +62,7 @@ func (tc *TOMLConfig) ToLegacyConfig() *Config {
 
 	// Convert accounts
 	for name, account := range tc.Accounts {
-		cfg.LinodeAccounts[name] = LinodeAccount{
-			Token:  account.Token,
-			Label:  account.Label,
-			APIURL: account.APIURL,
-		}
+		cfg.LinodeAccounts[name] = LinodeAccount(account)
 	}
 
 	return cfg
@@ -64,7 +74,7 @@ func LoadTOMLConfig(configPath string) (*TOMLConfig, error) {
 
 	// Check if file exists
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		return nil, fmt.Errorf("config file not found: %s", configPath)
+		return nil, fmt.Errorf("%s: %w", configPath, ErrConfigFileNotFound)
 	}
 
 	// Decode TOML file
@@ -83,13 +93,13 @@ func LoadTOMLConfig(configPath string) (*TOMLConfig, error) {
 		config.System.MetricsPort = defaultMetricsPort
 	}
 	if config.System.LogMaxSize == 0 {
-		config.System.LogMaxSize = 10 // 10MB
+		config.System.LogMaxSize = defaultLogMaxSize // 10MB
 	}
 	if config.System.LogMaxBackups == 0 {
-		config.System.LogMaxBackups = 5
+		config.System.LogMaxBackups = defaultLogMaxBackups
 	}
 	if config.System.LogMaxAge == 0 {
-		config.System.LogMaxAge = 30 // 30 days
+		config.System.LogMaxAge = defaultLogMaxAge // 30 days
 	}
 
 	// Validate configuration
@@ -130,7 +140,7 @@ func (tc *TOMLConfig) Validate() error {
 	}
 
 	if tc.System.DefaultAccount == "" {
-		return fmt.Errorf("default_account is required")
+		return ErrDefaultAccountRequired
 	}
 
 	if _, exists := tc.Accounts[tc.System.DefaultAccount]; !exists {
@@ -140,10 +150,10 @@ func (tc *TOMLConfig) Validate() error {
 	// Validate accounts
 	for name, account := range tc.Accounts {
 		if account.Token == "" {
-			return fmt.Errorf("account %q is missing token", name)
+			return fmt.Errorf("account %q: %w", name, ErrAccountMissingToken)
 		}
 		if account.Label == "" {
-			return fmt.Errorf("account %q is missing label", name)
+			return fmt.Errorf("account %q: %w", name, ErrAccountMissingLabel)
 		}
 	}
 
@@ -160,9 +170,9 @@ func CreateDefaultTOMLConfig() *TOMLConfig {
 			MetricsPort:    defaultMetricsPort,
 			DefaultAccount: "primary",
 			LogFile:        "", // Use default path
-			LogMaxSize:     10,
-			LogMaxBackups:  5,
-			LogMaxAge:      30,
+			LogMaxSize:     defaultLogMaxSize,
+			LogMaxBackups:  defaultLogMaxBackups,
+			LogMaxAge:      defaultLogMaxAge,
 		},
 		Accounts: map[string]AccountConfig{
 			"primary": {

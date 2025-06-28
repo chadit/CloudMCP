@@ -13,6 +13,12 @@ import (
 	"github.com/chadit/CloudMCP/pkg/logger"
 )
 
+const (
+	defaultLogMaxSize     = 10 // 10MB
+	defaultLogMaxBackups  = 5  // Keep 5 files  
+	defaultLogMaxAge      = 30 // 30 days
+)
+
 func main() {
 	cfg, err := config.Load()
 	if err != nil {
@@ -24,9 +30,9 @@ func main() {
 	logConfig := logger.LogConfig{
 		Level:      cfg.LogLevel,
 		FilePath:   config.GetLogPath(),
-		MaxSize:    10, // 10MB
-		MaxBackups: 5,  // Keep 5 files
-		MaxAge:     30, // 30 days
+		MaxSize:    defaultLogMaxSize, // 10MB
+		MaxBackups: defaultLogMaxBackups,  // Keep 5 files
+		MaxAge:     defaultLogMaxAge, // 30 days
 	}
 
 	// Ensure log directory exists
@@ -53,6 +59,7 @@ func main() {
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+
 	go func() {
 		<-sigChan
 		log.Info("Shutdown signal received")
@@ -62,11 +69,13 @@ func main() {
 	srv, err := server.New(cfg, log)
 	if err != nil {
 		log.Error("Failed to create server", "error", err)
+		cancel()
 		os.Exit(1)
 	}
 
 	if err := srv.Start(ctx); err != nil {
 		log.Error("Server error", "error", err)
+		cancel()
 		os.Exit(1)
 	}
 

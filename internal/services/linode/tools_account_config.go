@@ -167,7 +167,7 @@ func (s *Service) handleCloudMCPAccountAdd(ctx context.Context, request mcp.Call
 }
 
 // handleCloudMCPAccountRemove removes an account from the TOML configuration.
-func (s *Service) handleCloudMCPAccountRemove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (s *Service) handleCloudMCPAccountRemove(_ context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	var params CloudMCPAccountRemoveParams
 	if err := parseArguments(request.Params.Arguments, &params); err != nil {
 		return nil, types.NewToolError("cloudmcp", "account_remove", "invalid parameters", err) //nolint:wrapcheck // types.NewToolError already wraps the error

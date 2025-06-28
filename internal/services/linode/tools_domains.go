@@ -104,7 +104,6 @@ func (s *Service) handleDomainGet(ctx context.Context, request mcp.CallToolReque
 		ExpireSec:   domain.ExpireSec,
 		RefreshSec:  domain.RefreshSec,
 		TTLSec:      domain.TTLSec,
-		Group:       domain.Group,
 	}
 
 	var sb strings.Builder
@@ -115,9 +114,6 @@ func (s *Service) handleDomainGet(ctx context.Context, request mcp.CallToolReque
 	fmt.Fprintf(&sb, "Status: %s\n", detail.Status)
 	if detail.Description != "" {
 		fmt.Fprintf(&sb, "Description: %s\n", detail.Description)
-	}
-	if detail.Group != "" {
-		fmt.Fprintf(&sb, "Group: %s\n", detail.Group)
 	}
 	fmt.Fprintf(&sb, "SOA Email: %s\n", detail.SOAEmail)
 	fmt.Fprintf(&sb, "TTL: %d seconds\n", detail.TTLSec)
@@ -182,9 +178,6 @@ func (s *Service) handleDomainCreate(ctx context.Context, request mcp.CallToolRe
 	}
 	if ttlSec, ok := arguments["ttl_sec"].(float64); ok {
 		params.TTLSec = int(ttlSec)
-	}
-	if group, ok := arguments["group"].(string); ok {
-		params.Group = group
 	}
 	if tagsRaw, ok := arguments["tags"]; ok {
 		if tagsSlice, ok := tagsRaw.([]interface{}); ok {
@@ -257,9 +250,6 @@ func (s *Service) handleDomainCreate(ctx context.Context, request mcp.CallToolRe
 	if len(params.Tags) > 0 {
 		createOpts.Tags = params.Tags
 	}
-	if params.Group != "" {
-		createOpts.Group = params.Group
-	}
 
 	createdDomain, err := account.Client.CreateDomain(ctx, createOpts)
 	if err != nil {
@@ -311,9 +301,6 @@ func (s *Service) handleDomainUpdate(ctx context.Context, request mcp.CallToolRe
 	}
 	if ttlSec, ok := arguments["ttl_sec"].(float64); ok {
 		params.TTLSec = int(ttlSec)
-	}
-	if group, ok := arguments["group"].(string); ok {
-		params.Group = group
 	}
 	if tagsRaw, ok := arguments["tags"]; ok {
 		if tagsSlice, ok := tagsRaw.([]interface{}); ok {
@@ -388,9 +375,6 @@ func (s *Service) handleDomainUpdate(ctx context.Context, request mcp.CallToolRe
 	}
 	if len(params.Tags) > 0 {
 		updateOpts.Tags = params.Tags
-	}
-	if params.Group != "" {
-		updateOpts.Group = params.Group
 	}
 
 	domain, err := account.Client.UpdateDomain(ctx, params.DomainID, updateOpts)

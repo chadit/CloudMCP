@@ -1,8 +1,18 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"sync"
+)
+
+var (
+	ErrConfigurationNotLoaded    = errors.New("configuration not loaded")
+	ErrAccountTokenRequired      = errors.New("account token is required")
+	ErrAccountLabelRequired      = errors.New("account label is required")
+	ErrAccountNotExist           = errors.New("account does not exist")
+	ErrCannotRemoveDefaultAccount = errors.New("cannot remove the default account")
+	ErrNoConfigurationToSave     = errors.New("no configuration to save")
 )
 
 // Manager provides thread-safe management of TOML configuration.
@@ -40,7 +50,7 @@ func (cm *TOMLConfigManager) LoadOrCreate() error {
 	if err != nil {
 		// Create default configuration
 		config = CreateDefaultTOMLConfig()
-		
+
 		// Save default configuration
 		if saveErr := SaveTOMLConfig(config, cm.configPath); saveErr != nil {
 			return fmt.Errorf("failed to create default config: %w", saveErr)
@@ -79,15 +89,15 @@ func (cm *TOMLConfigManager) AddAccount(name string, account AccountConfig) erro
 	defer cm.mutex.Unlock()
 
 	if cm.config == nil {
-		return fmt.Errorf("configuration not loaded")
+		return ErrConfigurationNotLoaded
 	}
 
 	// Validate account
 	if account.Token == "" {
-		return fmt.Errorf("account token is required")
+		return ErrAccountTokenRequired
 	}
 	if account.Label == "" {
-		return fmt.Errorf("account label is required")
+		return ErrAccountLabelRequired
 	}
 
 	// Add account
@@ -103,17 +113,17 @@ func (cm *TOMLConfigManager) RemoveAccount(name string) error {
 	defer cm.mutex.Unlock()
 
 	if cm.config == nil {
-		return fmt.Errorf("configuration not loaded")
+		return ErrConfigurationNotLoaded
 	}
 
 	// Check if account exists
 	if _, exists := cm.config.Accounts[name]; !exists {
-		return fmt.Errorf("account %q does not exist", name)
+		return fmt.Errorf("account %q: %w", name, ErrAccountNotExist)
 	}
 
 	// Prevent removing the default account
 	if name == cm.config.System.DefaultAccount {
-		return fmt.Errorf("cannot remove the default account %q", name)
+		return fmt.Errorf("account %q: %w", name, ErrCannotRemoveDefaultAccount)
 	}
 
 	// Remove account
@@ -129,20 +139,20 @@ func (cm *TOMLConfigManager) UpdateAccount(name string, account AccountConfig) e
 	defer cm.mutex.Unlock()
 
 	if cm.config == nil {
-		return fmt.Errorf("configuration not loaded")
+		return ErrConfigurationNotLoaded
 	}
 
 	// Check if account exists
 	if _, exists := cm.config.Accounts[name]; !exists {
-		return fmt.Errorf("account %q does not exist", name)
+		return fmt.Errorf("account %q: %w", name, ErrAccountNotExist)
 	}
 
 	// Validate account
 	if account.Token == "" {
-		return fmt.Errorf("account token is required")
+		return ErrAccountTokenRequired
 	}
 	if account.Label == "" {
-		return fmt.Errorf("account label is required")
+		return ErrAccountLabelRequired
 	}
 
 	// Update account
@@ -158,12 +168,12 @@ func (cm *TOMLConfigManager) SetDefaultAccount(name string) error {
 	defer cm.mutex.Unlock()
 
 	if cm.config == nil {
-		return fmt.Errorf("configuration not loaded")
+		return ErrConfigurationNotLoaded
 	}
 
 	// Check if account exists
 	if _, exists := cm.config.Accounts[name]; !exists {
-		return fmt.Errorf("account %q does not exist", name)
+		return fmt.Errorf("account %q: %w", name, ErrAccountNotExist)
 	}
 
 	// Update default account
@@ -184,7 +194,7 @@ func (cm *TOMLConfigManager) Save() error {
 // save is the internal save method (assumes lock is held).
 func (cm *TOMLConfigManager) save() error {
 	if cm.config == nil {
-		return fmt.Errorf("no configuration to save")
+		return ErrNoConfigurationToSave
 	}
 
 	return SaveTOMLConfig(cm.config, cm.configPath)

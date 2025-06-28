@@ -11,6 +11,10 @@ import (
 	"github.com/chadit/CloudMCP/pkg/types"
 )
 
+const (
+	ipAssignmentUnassigned = "Unassigned"
+)
+
 // handleReservedIPsList lists all reserved IP addresses.
 func (s *Service) handleReservedIPsList(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	account, err := s.accountManager.GetCurrentAccount()
@@ -47,7 +51,7 @@ func (s *Service) handleReservedIPsList(ctx context.Context, _ mcp.CallToolReque
 	sb.WriteString(fmt.Sprintf("Found %d reserved IP addresses:\n\n", len(reservedIPs)))
 
 	for _, ip := range reservedIPs {
-		assignment := "Unassigned"
+		assignment := ipAssignmentUnassigned
 		if ip.LinodeID != nil && *ip.LinodeID > 0 {
 			assignment = fmt.Sprintf("Assigned to Linode %d", *ip.LinodeID)
 		}
@@ -122,7 +126,7 @@ func (s *Service) handleReservedIPGet(ctx context.Context, request mcp.CallToolR
 	if detail.LinodeID != nil && *detail.LinodeID > 0 {
 		fmt.Fprintf(&sb, "Assigned to Linode: %d\n", *detail.LinodeID)
 	} else {
-		fmt.Fprintf(&sb, "Assignment: Unassigned\n")
+		fmt.Fprintf(&sb, "Assignment: %s\n", ipAssignmentUnassigned)
 	}
 
 	if detail.RDNS != "" {
@@ -162,7 +166,7 @@ func (s *Service) handleReservedIPAllocate(ctx context.Context, request mcp.Call
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to allocate reserved IP: %v", err)), nil
 	}
 
-	assignment := "Unassigned"
+	assignment := ipAssignmentUnassigned
 	if ip.LinodeID > 0 {
 		assignment = fmt.Sprintf("Assigned to Linode %d", ip.LinodeID)
 	}
@@ -204,7 +208,7 @@ func (s *Service) handleReservedIPAssign(ctx context.Context, request mcp.CallTo
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to assign IP address: %v", err)), nil
 	}
 
-	assignment := "Unassigned"
+	assignment := ipAssignmentUnassigned
 	if params.LinodeID > 0 {
 		assignment = fmt.Sprintf("Assigned to Linode %d", params.LinodeID)
 	}

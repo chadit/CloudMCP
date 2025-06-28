@@ -63,7 +63,7 @@ func (s *Server) Start(ctx context.Context) error {
 	// Cleanup services on shutdown
 	defer func() {
 		for _, svc := range s.services {
-			if err := svc.Shutdown(context.Background()); err != nil {
+			if err := svc.Shutdown(ctx); err != nil {
 				s.logger.Error("Failed to shutdown service",
 					"service", svc.Name(),
 					"error", err,
@@ -86,11 +86,13 @@ func (s *Server) Start(ctx context.Context) error {
 	select {
 	case <-ctx.Done():
 		s.logger.Info("Context cancelled, shutting down")
+
 		return ctx.Err()
 	case err := <-errCh:
 		if err != nil {
 			return fmt.Errorf("MCP server error: %w", err)
 		}
+
 		return nil
 	}
 }
