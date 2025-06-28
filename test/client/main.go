@@ -14,14 +14,12 @@ import (
 )
 
 func main() {
-	// Check for environment variables
-	if os.Getenv("DEFAULT_LINODE_ACCOUNT") == "" {
-		fmt.Println("Please set environment variables first:")
-		fmt.Println("export DEFAULT_LINODE_ACCOUNT=primary")
-		fmt.Println("export LINODE_ACCOUNTS_PRIMARY_TOKEN=your_token")
-		fmt.Println("export LINODE_ACCOUNTS_PRIMARY_LABEL=\"Production\"")
-		os.Exit(1)
-	}
+	// Check for TOML configuration
+	fmt.Println("Note: CloudMCP now uses TOML configuration.")
+	fmt.Println("Ensure your config file is set up at the appropriate location:")
+	fmt.Println("- Linux/Unix: ~/.config/cloudmcp/config.toml")
+	fmt.Println("- macOS: ~/Library/Application Support/CloudMCP/config.toml")
+	fmt.Println("- Windows: %APPDATA%\\CloudMCP\\config.toml")
 
 	fmt.Println("Starting CloudMCP Test Client...")
 	fmt.Println("This will launch the cloud-mcp server and interact with it")
@@ -34,7 +32,7 @@ func main() {
 		// Try from test/client directory
 		binaryPath = "../../bin/cloud-mcp"
 	}
-	
+
 	mcpClient, err := client.NewStdioMCPClient(
 		binaryPath,
 		[]string{},
@@ -152,11 +150,11 @@ func main() {
 			fmt.Print("Enter tool name: ")
 			toolName, _ := reader.ReadString('\n')
 			toolName = strings.TrimSpace(toolName)
-			
+
 			fmt.Print("Enter arguments as JSON (or press enter for none): ")
 			argsStr, _ := reader.ReadString('\n')
 			argsStr = strings.TrimSpace(argsStr)
-			
+
 			var args map[string]interface{}
 			if argsStr != "" {
 				if err := json.Unmarshal([]byte(argsStr), &args); err != nil {
@@ -164,7 +162,7 @@ func main() {
 					continue
 				}
 			}
-			
+
 			callTool(ctx, mcpClient, toolName, args)
 		case "q", "quit", "exit":
 			fmt.Println("Goodbye!")
@@ -177,7 +175,7 @@ func main() {
 
 func callTool(ctx context.Context, mcpClient *client.Client, toolName string, args map[string]interface{}) {
 	fmt.Printf("\nCalling tool: %s\n", toolName)
-	
+
 	result, err := mcpClient.CallTool(ctx, mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      toolName,
@@ -206,7 +204,7 @@ func callTool(ctx context.Context, mcpClient *client.Client, toolName string, ar
 			}
 		}
 	}
-	
+
 	if result.IsError {
 		fmt.Println("(Tool returned an error)")
 	}

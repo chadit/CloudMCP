@@ -11,7 +11,7 @@ import (
 	"github.com/chadit/CloudMCP/pkg/types"
 )
 
-func (s *Service) handleVolumesList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (s *Service) handleVolumesList(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	account, err := s.accountManager.GetCurrentAccount()
 	if err != nil {
 		return nil, err
@@ -19,7 +19,7 @@ func (s *Service) handleVolumesList(ctx context.Context, request mcp.CallToolReq
 
 	volumes, err := account.Client.ListVolumes(ctx, nil)
 	if err != nil {
-		return nil, types.NewToolError("linode", "volumes_list",
+		return nil, types.NewToolError("linode", "volumes_list", //nolint:wrapcheck // types.NewToolError already wraps the error
 			"failed to list volumes", err)
 	}
 
@@ -29,6 +29,7 @@ func (s *Service) handleVolumesList(ctx context.Context, request mcp.CallToolReq
 
 	var resultText string
 	resultText = fmt.Sprintf("Found %d volume(s):\n\n", len(volumes))
+
 	for _, vol := range volumes {
 		resultText += fmt.Sprintf("ID: %d | %s\n", vol.ID, vol.Label)
 		resultText += fmt.Sprintf("  Status: %s | Size: %d GB | Region: %s\n", vol.Status, vol.Size, vol.Region)
@@ -55,9 +56,9 @@ func (s *Service) handleVolumesList(ctx context.Context, request mcp.CallToolReq
 
 func (s *Service) handleVolumeGet(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	arguments := request.GetArguments()
-	volumeID, ok := arguments["volume_id"].(float64)
-	if !ok || volumeID <= 0 {
-		return mcp.NewToolResultError("volume_id is required and must be a positive number"), nil
+	volumeID, err := parseIDFromArguments(arguments, "volume_id")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
 	}
 
 	account, err := s.accountManager.GetCurrentAccount()
@@ -65,10 +66,10 @@ func (s *Service) handleVolumeGet(ctx context.Context, request mcp.CallToolReque
 		return nil, err
 	}
 
-	volume, err := account.Client.GetVolume(ctx, int(volumeID))
+	volume, err := account.Client.GetVolume(ctx, volumeID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "volume_get",
-			fmt.Sprintf("failed to get volume %d", int(volumeID)), err)
+		return nil, types.NewToolError("linode", "volume_get", //nolint:wrapcheck // types.NewToolError already wraps the error
+			fmt.Sprintf("failed to get volume %d", volumeID), err)
 	}
 
 	// Format the detailed volume information
@@ -113,8 +114,8 @@ func (s *Service) handleVolumeCreate(ctx context.Context, request mcp.CallToolRe
 	arguments := request.GetArguments()
 
 	// Required parameters
-	label, ok := arguments["label"].(string)
-	if !ok || label == "" {
+	label, labelPresent := arguments["label"].(string)
+	if !labelPresent || label == "" {
 		return mcp.NewToolResultError("label is required"), nil
 	}
 
@@ -157,7 +158,7 @@ func (s *Service) handleVolumeCreate(ctx context.Context, request mcp.CallToolRe
 	// Create the volume
 	volume, err := account.Client.CreateVolume(ctx, createOpts)
 	if err != nil {
-		return nil, types.NewToolError("linode", "volume_create",
+		return nil, types.NewToolError("linode", "volume_create", //nolint:wrapcheck // types.NewToolError already wraps the error
 			"failed to create volume", err)
 	}
 
@@ -187,9 +188,9 @@ Status: %s`,
 
 func (s *Service) handleVolumeDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	arguments := request.GetArguments()
-	volumeID, ok := arguments["volume_id"].(float64)
-	if !ok || volumeID <= 0 {
-		return mcp.NewToolResultError("volume_id is required and must be a positive number"), nil
+	volumeID, err := parseIDFromArguments(arguments, "volume_id")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
 	}
 
 	account, err := s.accountManager.GetCurrentAccount()
@@ -197,21 +198,24 @@ func (s *Service) handleVolumeDelete(ctx context.Context, request mcp.CallToolRe
 		return nil, err
 	}
 
-	// Get volume details first to show what we're deleting
-	volume, err := account.Client.GetVolume(ctx, int(volumeID))
+	volume, err := account.Client.GetVolume(ctx, volumeID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "volume_delete",
-			fmt.Sprintf("failed to get volume %d", int(volumeID)), err)
+		return nil, types.NewToolError("linode", "volume_delete", //nolint:wrapcheck // types.NewToolError already wraps the error
+			fmt.Sprintf("failed to get volume %d", volumeID), err)
 	}
 
-	// Delete the volume
-	err = account.Client.DeleteVolume(ctx, int(volumeID))
+	err = account.Client.DeleteVolume(ctx, volumeID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "volume_delete",
-			fmt.Sprintf("failed to delete volume %d", int(volumeID)), err)
+		return nil, types.NewToolError("linode", "volume_delete", //nolint:wrapcheck // types.NewToolError already wraps the error
+			fmt.Sprintf("failed to delete volume %d", volumeID), err)
 	}
 
-	resultText := fmt.Sprintf(`Volume deleted successfully!
+	s.logger.Info("Deleted volume",
+		"volume_id", volume.ID,
+		"label", volume.Label,
+	)
+
+	return mcp.NewToolResultText(fmt.Sprintf(`Volume deleted successfully!
 
 Deleted Volume:
 - ID: %d
@@ -224,27 +228,20 @@ The volume has been permanently deleted.`,
 		volume.Label,
 		volume.Size,
 		volume.Region,
-	)
-
-	s.logger.Info("Deleted volume",
-		"volume_id", volume.ID,
-		"label", volume.Label,
-	)
-
-	return mcp.NewToolResultText(resultText), nil
+	)), nil
 }
 
 func (s *Service) handleVolumeAttach(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	arguments := request.GetArguments()
 
-	volumeID, ok := arguments["volume_id"].(float64)
-	if !ok || volumeID <= 0 {
-		return mcp.NewToolResultError("volume_id is required and must be a positive number"), nil
+	volumeID, err := parseIDFromArguments(arguments, "volume_id")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	linodeID, ok := arguments["linode_id"].(float64)
-	if !ok || linodeID <= 0 {
-		return mcp.NewToolResultError("linode_id is required and must be a positive number"), nil
+	linodeID, err := parseIDFromArguments(arguments, "linode_id")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
 	}
 
 	persistAcrossBoots := true // Default to true
@@ -259,14 +256,14 @@ func (s *Service) handleVolumeAttach(ctx context.Context, request mcp.CallToolRe
 
 	// Attach the volume
 	attachOpts := linodego.VolumeAttachOptions{
-		LinodeID:           int(linodeID),
+		LinodeID:           linodeID,
 		PersistAcrossBoots: &persistAcrossBoots,
 	}
 
-	volume, err := account.Client.AttachVolume(ctx, int(volumeID), &attachOpts)
+	volume, err := account.Client.AttachVolume(ctx, volumeID, &attachOpts)
 	if err != nil {
-		return nil, types.NewToolError("linode", "volume_attach",
-			fmt.Sprintf("failed to attach volume %d to instance %d", int(volumeID), int(linodeID)), err)
+		return nil, types.NewToolError("linode", "volume_attach", //nolint:wrapcheck // types.NewToolError already wraps the error
+			fmt.Sprintf("failed to attach volume %d to instance %d", volumeID, linodeID), err)
 	}
 
 	resultText := fmt.Sprintf(`Volume attached successfully!
@@ -281,7 +278,7 @@ mkdir -p /mnt/%s
 mount %s /mnt/%s`,
 		volume.Label,
 		volume.ID,
-		int(linodeID),
+		linodeID,
 		volume.FilesystemPath,
 		persistAcrossBoots,
 		volume.Label,
@@ -294,9 +291,9 @@ mount %s /mnt/%s`,
 
 func (s *Service) handleVolumeDetach(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	arguments := request.GetArguments()
-	volumeID, ok := arguments["volume_id"].(float64)
-	if !ok || volumeID <= 0 {
-		return mcp.NewToolResultError("volume_id is required and must be a positive number"), nil
+	volumeID, err := parseIDFromArguments(arguments, "volume_id")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
 	}
 
 	account, err := s.accountManager.GetCurrentAccount()
@@ -305,10 +302,10 @@ func (s *Service) handleVolumeDetach(ctx context.Context, request mcp.CallToolRe
 	}
 
 	// Get volume details first
-	volume, err := account.Client.GetVolume(ctx, int(volumeID))
+	volume, err := account.Client.GetVolume(ctx, volumeID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "volume_detach",
-			fmt.Sprintf("failed to get volume %d", int(volumeID)), err)
+		return nil, types.NewToolError("linode", "volume_detach", //nolint:wrapcheck // types.NewToolError already wraps the error
+			fmt.Sprintf("failed to get volume %d", volumeID), err)
 	}
 
 	var previousLinodeID int
@@ -317,10 +314,10 @@ func (s *Service) handleVolumeDetach(ctx context.Context, request mcp.CallToolRe
 	}
 
 	// Detach the volume
-	err = account.Client.DetachVolume(ctx, int(volumeID))
+	err = account.Client.DetachVolume(ctx, volumeID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "volume_detach",
-			fmt.Sprintf("failed to detach volume %d", int(volumeID)), err)
+		return nil, types.NewToolError("linode", "volume_detach", //nolint:wrapcheck // types.NewToolError already wraps the error
+			fmt.Sprintf("failed to detach volume %d", volumeID), err)
 	}
 
 	resultText := fmt.Sprintf(`Volume detached successfully!
