@@ -10,7 +10,7 @@ import (
 )
 
 // handleStackScriptsList lists all StackScripts.
-func (s *Service) handleStackScriptsList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (s *Service) handleStackScriptsList(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	account, err := s.accountManager.GetCurrentAccount()
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil

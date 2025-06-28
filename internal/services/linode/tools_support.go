@@ -193,7 +193,7 @@ func (s *Service) handleSupportTicketGet(ctx context.Context, request mcp.CallTo
 }
 
 // handleSupportTicketCreate creates a new support ticket.
-func (s *Service) handleSupportTicketCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (s *Service) handleSupportTicketCreate(_ context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	var params SupportTicketCreateParams
 	if err := parseArguments(request.Params.Arguments, &params); err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Invalid parameters: %v", err)), nil

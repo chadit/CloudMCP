@@ -35,7 +35,7 @@ type CloudMCPAccountUpdateParams struct {
 }
 
 // handleCloudMCPAccountList returns a formatted list of all configured accounts.
-func (s *Service) handleCloudMCPAccountList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (s *Service) handleCloudMCPAccountList(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	// Load current TOML configuration
 	configPath := config.GetConfigPath()
 	tomlConfig, err := config.LoadTOMLConfig(configPath)

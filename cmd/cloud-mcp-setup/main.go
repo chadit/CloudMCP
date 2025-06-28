@@ -461,7 +461,7 @@ func setupVSCode(wrapperPath string) {
 		if err := os.WriteFile(settingsPath, []byte(newSettings), 0o644); err != nil {
 			fmt.Printf("⚠️  Cannot write VS Code settings: %v\n", err)
 			// Restore backup
-			os.Rename(backupPath, settingsPath)
+			_ = os.Rename(backupPath, settingsPath)
 			return
 		}
 

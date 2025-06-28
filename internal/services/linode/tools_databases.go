@@ -9,6 +9,93 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
+
+// formatMySQLDatabases formats MySQL database list for display
+func formatMySQLDatabases(databases []linodego.MySQLDatabase) string {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Found %d MySQL databases:\n\n", len(databases)))
+
+	for _, db := range databases {
+		fmt.Fprintf(&sb, "ID: %d | %s (MySQL %s)\n", db.ID, db.Label, db.Version)
+		fmt.Fprintf(&sb, "  Region: %s | Type: %s | Status: %s\n", db.Region, db.Type, string(db.Status))
+		fmt.Fprintf(&sb, "  Primary Host: %s | Port: %d\n", db.Hosts.Primary, db.Port)
+		if db.Hosts.Secondary != "" {
+			fmt.Fprintf(&sb, "  Secondary Host: %s\n", db.Hosts.Secondary)
+		}
+		fmt.Fprintf(&sb, "  Created: %s | Updated: %s\n", 
+			db.Created.Format("2006-01-02T15:04:05"), 
+			db.Updated.Format("2006-01-02T15:04:05"))
+		sb.WriteString("\n")
+	}
+
+	return sb.String()
+}
+
+// formatPostgresDatabases formats PostgreSQL database list for display
+func formatPostgresDatabases(databases []linodego.PostgresDatabase) string {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Found %d PostgreSQL databases:\n\n", len(databases)))
+
+	for _, db := range databases {
+		fmt.Fprintf(&sb, "ID: %d | %s (PostgreSQL %s)\n", db.ID, db.Label, db.Version)
+		fmt.Fprintf(&sb, "  Region: %s | Type: %s | Status: %s\n", db.Region, db.Type, string(db.Status))
+		fmt.Fprintf(&sb, "  Primary Host: %s | Port: %d\n", db.Hosts.Primary, db.Port)
+		if db.Hosts.Secondary != "" {
+			fmt.Fprintf(&sb, "  Secondary Host: %s\n", db.Hosts.Secondary)
+		}
+		fmt.Fprintf(&sb, "  Created: %s | Updated: %s\n", 
+			db.Created.Format("2006-01-02T15:04:05"), 
+			db.Updated.Format("2006-01-02T15:04:05"))
+		sb.WriteString("\n")
+	}
+
+	return sb.String()
+}
+
+// formatMySQLDatabaseDetail formats MySQL database detail for display
+func formatMySQLDatabaseDetail(db *linodego.MySQLDatabase) string {
+	return formatDatabaseDetail("MySQL", MySQLDatabaseDetail{
+		ID:          db.ID,
+		Label:       db.Label,
+		Engine:      db.Engine,
+		Version:     db.Version,
+		Region:      db.Region,
+		Type:        db.Type,
+		Status:      string(db.Status),
+		ClusterSize: db.ClusterSize,
+		Hosts: DatabaseHosts{
+			Primary:   db.Hosts.Primary,
+			Secondary: db.Hosts.Secondary,
+		},
+		Port:      db.Port,
+		AllowList: db.AllowList,
+		Created:   db.Created.Format("2006-01-02T15:04:05"),
+		Updated:   db.Updated.Format("2006-01-02T15:04:05"),
+	})
+}
+
+// formatPostgresDatabaseDetail formats PostgreSQL database detail for display
+func formatPostgresDatabaseDetail(db *linodego.PostgresDatabase) string {
+	return formatDatabaseDetail("PostgreSQL", PostgresDatabaseDetail{
+		ID:          db.ID,
+		Label:       db.Label,
+		Engine:      db.Engine,
+		Version:     db.Version,
+		Region:      db.Region,
+		Type:        db.Type,
+		Status:      string(db.Status),
+		ClusterSize: db.ClusterSize,
+		Hosts: DatabaseHosts{
+			Primary:   db.Hosts.Primary,
+			Secondary: db.Hosts.Secondary,
+		},
+		Port:      db.Port,
+		AllowList: db.AllowList,
+		Created:   db.Created.Format("2006-01-02T15:04:05"),
+		Updated:   db.Updated.Format("2006-01-02T15:04:05"),
+	})
+}
+
 // handleDatabasesList lists all databases (both MySQL and PostgreSQL).
 func (s *Service) handleDatabasesList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	account, err := s.accountManager.GetCurrentAccount()
@@ -54,7 +141,7 @@ func (s *Service) handleDatabasesList(ctx context.Context, request mcp.CallToolR
 }
 
 // handleMySQLDatabasesList lists all MySQL databases.
-func (s *Service) handleMySQLDatabasesList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (s *Service) handleMySQLDatabasesList(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	account, err := s.accountManager.GetCurrentAccount()
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
@@ -105,7 +192,7 @@ func (s *Service) handleMySQLDatabasesList(ctx context.Context, request mcp.Call
 }
 
 // handlePostgresDatabasesList lists all PostgreSQL databases.
-func (s *Service) handlePostgresDatabasesList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (s *Service) handlePostgresDatabasesList(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	account, err := s.accountManager.GetCurrentAccount()
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
