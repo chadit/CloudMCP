@@ -11,7 +11,7 @@ import (
 )
 
 // handleSystemVersion returns version and build information
-func (s *Service) handleSystemVersion(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (s *Service) handleSystemVersion(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	versionInfo := version.Get()
 
 	// Format as detailed text output

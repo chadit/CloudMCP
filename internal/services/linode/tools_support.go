@@ -211,7 +211,7 @@ func (s *Service) handleSupportTicketCreate(_ context.Context, request mcp.CallT
 }
 
 // handleSupportTicketReply creates a reply to a support ticket.
-func (s *Service) handleSupportTicketReply(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (s *Service) handleSupportTicketReply(_ context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	var params SupportTicketReplyParams
 	if err := parseArguments(request.Params.Arguments, &params); err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Invalid parameters: %v", err)), nil

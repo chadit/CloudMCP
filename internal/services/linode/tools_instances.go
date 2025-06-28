@@ -12,7 +12,8 @@ import (
 )
 
 const (
-	mbToGB = 1024
+	mbToGB                 = 1024
+	watchdogStatusDisabled = "Disabled"
 )
 
 func (s *Service) handleInstancesList(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -145,7 +146,7 @@ func formatBool(b bool) string {
 		return "Enabled"
 	}
 
-	return "Disabled"
+	return watchdogStatusDisabled
 }
 
 func (s *Service) handleInstanceCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {

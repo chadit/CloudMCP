@@ -1,7 +1,6 @@
 package linode_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -44,7 +43,7 @@ func TestHandleImagesList_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test images list request with empty account manager
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_images_list",
@@ -87,7 +86,7 @@ func TestHandleImageGet_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test image get request with no accounts and valid parameter
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_image_get",
@@ -134,7 +133,7 @@ func TestHandleImageGet_MissingParameter(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test image get request with missing image_id parameter
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_image_get",
@@ -187,7 +186,7 @@ func TestHandleImageGet_EmptyParameter(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test image get request with empty image_id parameter
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_image_get",
@@ -242,7 +241,7 @@ func TestHandleImageCreate_MissingRequiredParameters(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test image create request with missing required parameters
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_image_create",
@@ -295,7 +294,7 @@ func TestHandleImageCreate_PartialParameters(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test image create request with only partial required parameters
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_image_create",
@@ -351,7 +350,7 @@ func TestHandleImageUpdate_MissingParameter(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test image update request with missing image_id parameter
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_image_update",
@@ -404,7 +403,7 @@ func TestHandleImageDelete_MissingParameter(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test image delete request with missing image_id parameter
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_image_delete",
@@ -457,7 +456,7 @@ func TestHandleImageReplicate_MissingParameter(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test image replicate request with missing image_id parameter
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_image_replicate",
@@ -510,7 +509,7 @@ func TestHandleImageUploadCreate_MissingParameter(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test image upload create request with missing required parameters
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_image_upload_create",

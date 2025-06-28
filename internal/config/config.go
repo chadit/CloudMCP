@@ -50,6 +50,3 @@ func Load() (*Config, error) {
 
 	return defaultConfig.ToLegacyConfig(), nil
 }
-
-
-

@@ -2919,7 +2919,6 @@ func (s *Service) CallToolForTesting(ctx context.Context, request mcp.CallToolRe
 	}
 }
 
-
 // GetTextContentForTesting extracts text content from CallToolResult for testing.
 // This allows external test packages to access the text content helper function.
 func GetTextContentForTesting(t interface {
@@ -2932,17 +2931,17 @@ func GetTextContentForTesting(t interface {
 
 	if result == nil {
 		t.Errorf("result should not be nil")
-		t.FailNow()
+		return ""
 	}
 
 	if len(result.Content) == 0 {
 		t.Errorf("result should have content")
-		t.FailNow()
+		return ""
 	}
 
 	if len(result.Content) != 1 {
 		t.Errorf("result should have exactly one content item, got %d", len(result.Content))
-		t.FailNow()
+		return ""
 	}
 
 	textContent, ok := result.Content[0].(mcp.TextContent)

@@ -122,7 +122,10 @@ func main() {
 			instanceIDStr, _ := reader.ReadString('\n')
 			instanceIDStr = strings.TrimSpace(instanceIDStr)
 			var instanceID float64
-			fmt.Sscanf(instanceIDStr, "%f", &instanceID)
+			if _, err := fmt.Sscanf(instanceIDStr, "%f", &instanceID); err != nil {
+				fmt.Printf("Invalid instance ID format: %v\n", err)
+				continue
+			}
 			callTool(ctx, mcpClient, "linode_instance_get", map[string]interface{}{
 				"instance_id": instanceID,
 			})
@@ -133,7 +136,10 @@ func main() {
 			volumeIDStr, _ := reader.ReadString('\n')
 			volumeIDStr = strings.TrimSpace(volumeIDStr)
 			var volumeID float64
-			fmt.Sscanf(volumeIDStr, "%f", &volumeID)
+			if _, err := fmt.Sscanf(volumeIDStr, "%f", &volumeID); err != nil {
+				fmt.Printf("Invalid volume ID format: %v\n", err)
+				continue
+			}
 			callTool(ctx, mcpClient, "linode_volume_get", map[string]interface{}{
 				"volume_id": volumeID,
 			})
@@ -193,7 +199,11 @@ func callTool(ctx context.Context, mcpClient *client.Client, toolName string, ar
 		// Try to get the text representation
 		for i, content := range result.Content {
 			// Marshal to JSON to see the content
-			data, _ := json.Marshal(content)
+			data, err := json.Marshal(content)
+			if err != nil {
+				fmt.Printf("Error marshaling content %d: %v\n", i, err)
+				continue
+			}
 			var contentMap map[string]interface{}
 			if err := json.Unmarshal(data, &contentMap); err == nil {
 				if text, ok := contentMap["text"].(string); ok {

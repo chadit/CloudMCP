@@ -547,7 +547,6 @@ type DomainDetail struct {
 	ExpireSec   int      `json:"expire_sec"`
 	RefreshSec  int      `json:"refresh_sec"`
 	TTLSec      int      `json:"ttl_sec"`
-	Group       string   `json:"group"`
 }
 
 type DomainCreateParams struct {
@@ -562,7 +561,6 @@ type DomainCreateParams struct {
 	RefreshSec  int      `json:"refresh_sec" jsonschema:"description=Refresh time in seconds"`
 	TTLSec      int      `json:"ttl_sec" jsonschema:"description=Default TTL in seconds"`
 	Tags        []string `json:"tags" jsonschema:"description=Tags to apply to the domain"`
-	Group       string   `json:"group" jsonschema:"description=Group for the domain"`
 }
 
 type DomainUpdateParams struct {
@@ -578,7 +576,6 @@ type DomainUpdateParams struct {
 	RefreshSec  int      `json:"refresh_sec" jsonschema:"description=New refresh time in seconds"`
 	TTLSec      int      `json:"ttl_sec" jsonschema:"description=New default TTL in seconds"`
 	Tags        []string `json:"tags" jsonschema:"description=New tags for the domain"`
-	Group       string   `json:"group" jsonschema:"description=New group for the domain"`
 }
 
 type DomainDeleteParams struct {

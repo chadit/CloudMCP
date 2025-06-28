@@ -10,7 +10,7 @@ import (
 )
 
 // handleNodeBalancersList lists all NodeBalancers.
-func (s *Service) handleNodeBalancersList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (s *Service) handleNodeBalancersList(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	account, err := s.accountManager.GetCurrentAccount()
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil

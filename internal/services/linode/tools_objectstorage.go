@@ -9,6 +9,11 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
+const (
+	bucketAccessFull    = "Full Access"
+	bucketAccessLimited = "Limited Access"
+)
+
 // handleObjectStorageBucketsList lists all Object Storage buckets.
 func (s *Service) handleObjectStorageBucketsList(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	account, err := s.accountManager.GetCurrentAccount()
@@ -249,9 +254,9 @@ func (s *Service) handleObjectStorageKeysList(ctx context.Context, _ mcp.CallToo
 	sb.WriteString(fmt.Sprintf("Found %d Object Storage keys:\n\n", len(summaries)))
 
 	for _, key := range summaries {
-		accessType := "Full Access"
+		accessType := bucketAccessFull
 		if key.Limited {
-			accessType = "Limited Access"
+			accessType = bucketAccessLimited
 		}
 
 		fmt.Fprintf(&sb, "ID: %d | %s (%s)\n", key.ID, key.Label, accessType)
@@ -314,7 +319,7 @@ func (s *Service) handleObjectStorageKeyGet(ctx context.Context, request mcp.Cal
 	fmt.Fprintf(&sb, "Access Key: %s\n", detail.AccessKey)
 	fmt.Fprintf(&sb, "Secret Key: %s\n", detail.SecretKey)
 
-	accessType := "Full Access"
+	accessType := bucketAccessFull
 	if detail.Limited {
 		accessType = "Limited Access"
 	}
@@ -366,7 +371,7 @@ func (s *Service) handleObjectStorageKeyCreate(ctx context.Context, request mcp.
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to create Object Storage key: %v", err)), nil
 	}
 
-	accessType := "Full Access"
+	accessType := bucketAccessFull
 	if key.Limited {
 		accessType = "Limited Access"
 	}
@@ -394,16 +399,18 @@ func (s *Service) handleObjectStorageKeyUpdate(ctx context.Context, request mcp.
 	}
 
 	if len(params.BucketAccess) > 0 {
-		var bucketAccess []linodego.ObjectStorageKeyBucketAccess
-		for _, access := range params.BucketAccess {
-			bucketAccess = append(bucketAccess, linodego.ObjectStorageKeyBucketAccess{
-				Cluster:     access.Cluster,
-				BucketName:  access.BucketName,
-				Permissions: string(access.Permissions),
-			})
-		}
 		// TODO: BucketAccess field not available in ObjectStorageKeyUpdateOptions
+		// Once the Linode API supports updating bucket access, implement this:
+		// var bucketAccess []linodego.ObjectStorageKeyBucketAccess
+		// for _, access := range params.BucketAccess {
+		//     bucketAccess = append(bucketAccess, linodego.ObjectStorageKeyBucketAccess{
+		//         Cluster:     access.Cluster,
+		//         BucketName:  access.BucketName,
+		//         Permissions: string(access.Permissions),
+		//     })
+		// }
 		// updateOpts.BucketAccess = &bucketAccess
+		_ = params.BucketAccess // Acknowledge parameter until API supports it
 	}
 
 	key, err := account.Client.UpdateObjectStorageKey(ctx, params.KeyID, updateOpts)
@@ -411,7 +418,7 @@ func (s *Service) handleObjectStorageKeyUpdate(ctx context.Context, request mcp.
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to update Object Storage key: %v", err)), nil
 	}
 
-	accessType := "Full Access"
+	accessType := bucketAccessFull
 	if key.Limited {
 		accessType = "Limited Access"
 	}
@@ -441,7 +448,7 @@ func (s *Service) handleObjectStorageKeyDelete(ctx context.Context, request mcp.
 }
 
 // handleObjectStorageClustersList lists all Object Storage clusters.
-func (s *Service) handleObjectStorageClustersList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (s *Service) handleObjectStorageClustersList(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	account, err := s.accountManager.GetCurrentAccount()
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
