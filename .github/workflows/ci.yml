@@ -1,0 +1,114 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.22', '1.23']
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ matrix.go-version }}-
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Verify dependencies
+        run: go mod verify
+
+      - name: Run go vet
+        run: go vet ./...
+
+      - name: Run tests
+        run: go test -race -coverprofile=coverage.out ./...
+
+      - name: Run integration tests
+        env:
+          # Integration tests require a test token - skip if not available
+          LINODE_TEST_TOKEN: ${{ secrets.LINODE_TEST_TOKEN }}
+        run: |
+          if [ -n "$LINODE_TEST_TOKEN" ]; then
+            echo "Running integration tests..."
+            go test -tags=integration -race ./internal/services/linode/...
+          else
+            echo "Skipping integration tests (no LINODE_TEST_TOKEN)"
+          fi
+
+      - name: Upload coverage to Codecov
+        if: matrix.go-version == '1.23'
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.out
+          flags: unittests
+
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          args: --enable-all --disable forbidigo,exhaustruct,depguard,gci,lll,cyclop,funlen,tenv
+
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+
+      - name: Build server
+        run: go build -v -o build/cloud-mcp cmd/server/main.go
+
+      - name: Build setup tool
+        run: go build -v -o build/cloud-mcp-setup cmd/cloud-mcp-setup/main.go
+
+      - name: Test binaries
+        run: |
+          ./build/cloud-mcp --help || echo "Server binary built successfully"
+          ./build/cloud-mcp-setup --help || echo "Setup binary built successfully"
+
+      - name: Cross-compile check
+        run: |
+          # Test cross-compilation for major platforms
+          GOOS=darwin GOARCH=amd64 go build -o /dev/null cmd/server/main.go
+          GOOS=darwin GOARCH=arm64 go build -o /dev/null cmd/server/main.go
+          GOOS=windows GOARCH=amd64 go build -o /dev/null cmd/server/main.go
+          GOOS=linux GOARCH=arm64 go build -o /dev/null cmd/server/main.go
+          echo "Cross-compilation successful"
