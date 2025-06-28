@@ -13,6 +13,7 @@ func (e *CloudMCPServerError) Error() string {
 	if e.Tool != "" {
 		return fmt.Sprintf("[%s/%s] %s", e.Service, e.Tool, e.Message)
 	}
+
 	return fmt.Sprintf("[%s] %s", e.Service, e.Message)
 }
 

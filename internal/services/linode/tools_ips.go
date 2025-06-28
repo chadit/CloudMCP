@@ -15,7 +15,7 @@ const (
 	visibilityPrivate = "Private"
 )
 
-func (s *Service) handleIPsList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (s *Service) handleIPsList(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	account, err := s.accountManager.GetCurrentAccount()
 	if err != nil {
 		return nil, err
@@ -24,7 +24,7 @@ func (s *Service) handleIPsList(ctx context.Context, request mcp.CallToolRequest
 	// Get all instances to fetch their IPs
 	instances, err := account.Client.ListInstances(ctx, nil)
 	if err != nil {
-		return nil, types.NewToolError("linode", "ips_list",
+		return nil, types.NewToolError("linode", "ips_list", //nolint:wrapcheck // types.NewToolError already wraps the error
 			"failed to list instances for IPs", err)
 	}
 
@@ -78,13 +78,13 @@ func (s *Service) handleIPsList(ctx context.Context, request mcp.CallToolRequest
 
 		if len(instanceIPs) > 0 {
 			resultText += fmt.Sprintf("Instance: %s (ID: %d)\n", instanceLabel, instanceID)
-			for _, ip := range instanceIPs {
+			for _, ipInfo := range instanceIPs {
 				visibility := visibilityPublic
-				if !ip.Public {
+				if !ipInfo.Public {
 					visibility = visibilityPrivate
 				}
 				resultText += fmt.Sprintf("  - %s (%s, %s) - Region: %s\n",
-					ip.Address, ip.Type, visibility, ip.Region)
+					ipInfo.Address, ipInfo.Type, visibility, ipInfo.Region)
 			}
 			resultText += "\n"
 		}
@@ -115,7 +115,7 @@ func (s *Service) handleIPGet(ctx context.Context, request mcp.CallToolRequest) 
 	// We need to find the IP by searching through instances
 	instances, err := account.Client.ListInstances(ctx, nil)
 	if err != nil {
-		return nil, types.NewToolError("linode", "ip_get",
+		return nil, types.NewToolError("linode", "ip_get", //nolint:wrapcheck // types.NewToolError already wraps the error
 			"failed to list instances", err)
 	}
 

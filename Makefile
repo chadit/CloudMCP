@@ -3,15 +3,28 @@
 # Default target
 help:
 	@echo "CloudMCP Development Commands:"
+	@echo ""
+	@echo "Build Commands:"
 	@echo "  make build           - Build the cloud-mcp binary"
+	@echo "  make build-all       - Build for multiple platforms"
 	@echo "  make run             - Run the server (requires .env)"
-	@echo "  make test            - Run unit tests"
+	@echo ""
+	@echo "Testing Commands:"
+	@echo "  make test            - Run unit tests only (no integration)"
+	@echo "  make test-unit       - Run unit tests only (alias for test)"
+	@echo "  make test-integration - Run integration tests only (mock-based)"
+	@echo "  make test-all        - Run all tests (unit + integration)"
 	@echo "  make test-race       - Run tests with race detector"
-	@echo "  make test-integration - Run integration tests (requires LINODE_TEST_TOKEN)"
+	@echo "  make coverage        - Generate test coverage report"
+	@echo ""
+	@echo "Development Tools:"
 	@echo "  make test-client     - Run interactive test client"
 	@echo "  make test-stdio      - Test with stdio commands"
 	@echo "  make lint            - Run golangci-lint"
 	@echo "  make fmt             - Format code with gofumpt"
+	@echo "  make tidy            - Tidy and verify dependencies"
+	@echo ""
+	@echo "Setup Commands:"
 	@echo "  make clean           - Clean build artifacts"
 	@echo "  make install-tools   - Install development tools"
 	@echo "  make setup-mcp       - Setup CloudMCP for Claude Desktop and Claude Code"
@@ -28,20 +41,35 @@ run: build
 	@echo "Running cloud-mcp..."
 	@./bin/cloud-mcp
 
-# Run tests
+# Run unit tests only (excludes integration tests)
 test:
-	@echo "Running tests..."
-	@go test ./...
+	@echo "Running unit tests only..."
+	@go test -v ./... -short
+
+# Alias for unit tests
+test-unit:
+	@echo "Running unit tests only..."
+	@go test -v ./... -short
+
+# Run integration tests only (mock-based, no live APIs)
+test-integration:
+	@echo "Running integration tests (mock-based)..."
+	@go test -v ./... -tags=integration -run="Integration"
+
+# Run all tests (unit + integration)
+test-all:
+	@echo "Running all tests (unit + integration)..."
+	@go test -race -v ./...
 
 # Run tests with race detector
 test-race:
 	@echo "Running tests with race detector..."
 	@go test -race ./...
 
-# Run integration tests
-test-integration:
-	@echo "Running integration tests..."
-	@go test ./internal/... -tags=integration
+# Run unit tests with race detector only
+test-race-unit:
+	@echo "Running unit tests with race detector..."
+	@go test -race -v ./... -short
 
 # Clean build artifacts
 clean:
@@ -64,6 +92,7 @@ install-tools:
 	@go install mvdan.cc/gofumpt@latest
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 	@go install github.com/vektra/mockery/v2@latest
+	@go install github.com/testcontainers/testcontainers-go@latest
 	@echo "Tools installed successfully"
 
 # Build for multiple platforms

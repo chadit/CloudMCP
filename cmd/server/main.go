@@ -9,6 +9,7 @@ import (
 
 	"github.com/chadit/CloudMCP/internal/config"
 	"github.com/chadit/CloudMCP/internal/server"
+	"github.com/chadit/CloudMCP/internal/version"
 	"github.com/chadit/CloudMCP/pkg/logger"
 )
 
@@ -19,11 +20,32 @@ func main() {
 		os.Exit(1)
 	}
 
-	log := logger.New(cfg.LogLevel)
+	// Set up enhanced logging with rotation
+	logConfig := logger.LogConfig{
+		Level:      cfg.LogLevel,
+		FilePath:   config.GetLogPath(),
+		MaxSize:    10, // 10MB
+		MaxBackups: 5,  // Keep 5 files
+		MaxAge:     30, // 30 days
+	}
+
+	// Ensure log directory exists
+	if err := config.EnsureLogDir(); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create log directory: %v\n", err)
+		// Fall back to stderr logging
+		logConfig.FilePath = ""
+	}
+
+	log := logger.NewWithConfig(logConfig)
+	versionInfo := version.Get()
 	log.Info("Starting CloudMCP Server",
-		"version", "0.1.0",
+		"version", versionInfo.Version,
 		"server_name", cfg.ServerName,
 		"log_level", cfg.LogLevel,
+		"log_file", logConfig.FilePath,
+		"api_version", versionInfo.APIVersion,
+		"platform", versionInfo.Platform,
+		"git_commit", versionInfo.GitCommit,
 	)
 
 	ctx, cancel := context.WithCancel(context.Background())

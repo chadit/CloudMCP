@@ -9,7 +9,7 @@ import (
 	"github.com/chadit/CloudMCP/pkg/types"
 )
 
-func (s *Service) handleAccountGet(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (s *Service) handleAccountGet(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	account, err := s.accountManager.GetCurrentAccount()
 	if err != nil {
 		return nil, err
@@ -17,7 +17,7 @@ func (s *Service) handleAccountGet(ctx context.Context, request mcp.CallToolRequ
 
 	profile, err := account.Client.GetProfile(ctx)
 	if err != nil {
-		return nil, types.NewToolError("linode", "account_get",
+		return nil, types.NewToolError("linode", "account_get", //nolint:wrapcheck // types.NewToolError already wraps the error
 			"failed to get profile", err)
 	}
 
@@ -27,7 +27,7 @@ func (s *Service) handleAccountGet(ctx context.Context, request mcp.CallToolRequ
 	return mcp.NewToolResultText(resultText), nil
 }
 
-func (s *Service) handleAccountList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (s *Service) handleAccountList(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	accounts := s.accountManager.ListAccounts()
 	currentAccount, _ := s.accountManager.GetCurrentAccount()
 
@@ -42,6 +42,7 @@ func (s *Service) handleAccountList(ctx context.Context, request mcp.CallToolReq
 
 	var resultText string
 	resultText = fmt.Sprintf("Current account: %s\n\nConfigured accounts:\n", currentAccount.Name)
+
 	for _, acc := range accountList {
 		if acc.IsCurrent {
 			resultText += fmt.Sprintf("* %s: %s (current)\n", acc.Name, acc.Label)
@@ -71,7 +72,7 @@ func (s *Service) handleAccountSwitch(ctx context.Context, request mcp.CallToolR
 
 	profile, err := account.Client.GetProfile(ctx)
 	if err != nil {
-		return nil, types.NewToolError("linode", "account_switch",
+		return nil, types.NewToolError("linode", "account_switch", //nolint:wrapcheck // types.NewToolError already wraps the error
 			"failed to verify switched account", err)
 	}
 

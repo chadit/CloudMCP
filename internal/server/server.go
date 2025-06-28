@@ -26,7 +26,7 @@ func New(cfg *config.Config, log logger.Logger) (*Server, error) {
 		server.WithToolCapabilities(true),
 	)
 
-	s := &Server{
+	server := &Server{
 		config:   cfg,
 		logger:   log,
 		mcp:      mcpServer,
@@ -37,15 +37,16 @@ func New(cfg *config.Config, log logger.Logger) (*Server, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Linode service: %w", err)
 	}
-	s.services = append(s.services, linodeSvc)
 
-	for _, svc := range s.services {
+	server.services = append(server.services, linodeSvc)
+
+	for _, svc := range server.services {
 		if err := svc.RegisterTools(mcpServer); err != nil {
 			return nil, fmt.Errorf("failed to register tools for %s: %w", svc.Name(), err)
 		}
 	}
 
-	return s, nil
+	return server, nil
 }
 
 func (s *Server) Start(ctx context.Context) error {
@@ -55,6 +56,7 @@ func (s *Server) Start(ctx context.Context) error {
 		if err := svc.Initialize(ctx); err != nil {
 			return fmt.Errorf("failed to initialize %s: %w", svc.Name(), err)
 		}
+
 		s.logger.Info("Service initialized", "service", svc.Name())
 	}
 
@@ -71,15 +73,15 @@ func (s *Server) Start(ctx context.Context) error {
 	}()
 
 	s.logger.Info("Starting MCP server")
-	
+
 	// Create a channel to signal when stdio server is done
 	errCh := make(chan error, 1)
-	
+
 	// Run ServeStdio in a goroutine
 	go func() {
 		errCh <- server.ServeStdio(s.mcp)
 	}()
-	
+
 	// Wait for either context cancellation or server error
 	select {
 	case <-ctx.Done():

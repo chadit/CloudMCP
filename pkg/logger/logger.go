@@ -2,8 +2,11 @@ package logger
 
 import (
 	"context"
+	"io"
 	"log/slog"
 	"os"
+
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 type Logger interface {
@@ -18,13 +21,30 @@ type Logger interface {
 	With(args ...any) Logger
 }
 
+type LogConfig struct {
+	Level      string
+	FilePath   string // If empty, log to stderr
+	MaxSize    int    // MB
+	MaxBackups int    // Number of files
+	MaxAge     int    // Days
+}
+
 type slogWrapper struct {
 	logger *slog.Logger
 }
 
+// New creates a logger that outputs to stderr (for backwards compatibility).
 func New(level string) Logger {
+	return NewWithConfig(LogConfig{
+		Level: level,
+	})
+}
+
+// NewWithConfig creates a logger with the specified configuration.
+func NewWithConfig(config LogConfig) Logger {
 	var logLevel slog.Level
-	switch level {
+
+	switch config.Level {
 	case "debug":
 		logLevel = slog.LevelDebug
 	case "info":
@@ -41,7 +61,23 @@ func New(level string) Logger {
 		Level: logLevel,
 	}
 
-	logger := slog.New(slog.NewJSONHandler(os.Stderr, opts))
+	var writer io.Writer
+	if config.FilePath != "" {
+		// Use lumberjack for file rotation
+		writer = &lumberjack.Logger{
+			Filename:   config.FilePath,
+			MaxSize:    config.MaxSize,    // MB
+			MaxBackups: config.MaxBackups, // Number of files
+			MaxAge:     config.MaxAge,     // Days
+			Compress:   true,              // Compress rotated files
+		}
+	} else {
+		// Default to stderr
+		writer = os.Stderr
+	}
+
+	logger := slog.New(slog.NewJSONHandler(writer, opts))
+
 	return &slogWrapper{logger: logger}
 }
 
