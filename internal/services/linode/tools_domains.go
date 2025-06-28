@@ -832,7 +832,7 @@ func (s *Service) handleDomainRecordDelete(ctx context.Context, request mcp.Call
 
 // parseArguments is a placeholder function for structured parameter parsing.
 // TODO: Convert remaining handler functions to use direct argument parsing like instances and domains.
-func parseArguments(arguments interface{}, params interface{}) error {
+func parseArguments(_ interface{}, _ interface{}) error {
 	// This is a temporary placeholder that returns no error.
 	// The remaining functions will need to be converted to use direct argument parsing.
 	return nil

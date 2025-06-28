@@ -10,7 +10,7 @@ import (
 )
 
 // handleObjectStorageBucketsList lists all Object Storage buckets.
-func (s *Service) handleObjectStorageBucketsList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (s *Service) handleObjectStorageBucketsList(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	account, err := s.accountManager.GetCurrentAccount()
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
@@ -208,7 +208,7 @@ func (s *Service) handleObjectStorageBucketDelete(ctx context.Context, request m
 }
 
 // handleObjectStorageKeysList lists all Object Storage keys.
-func (s *Service) handleObjectStorageKeysList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (s *Service) handleObjectStorageKeysList(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	account, err := s.accountManager.GetCurrentAccount()
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
