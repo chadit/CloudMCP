@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/linode/linodego"
 	"github.com/stretchr/testify/mock"
@@ -13,23 +14,42 @@ type MockDatabaseService struct {
 	mock.Mock
 }
 
-// Generic database methods
+// Generic database methods.
 func (m *MockDatabaseService) ListDatabases(ctx context.Context, opts *linodego.ListOptions) ([]linodego.Database, error) {
 	args := m.Called(ctx, opts)
-	return args.Get(0).([]linodego.Database), args.Error(1)
+	if result := args.Get(0); result != nil {
+		return result.([]linodego.Database), args.Error(1)
+	}
+
+	if err := args.Error(1); err != nil {
+		return nil, fmt.Errorf("mock database error: %w", err)
+	}
+	return nil, nil
 }
 
 func (m *MockDatabaseService) ListDatabaseEngines(ctx context.Context, opts *linodego.ListOptions) ([]linodego.DatabaseEngine, error) {
 	args := m.Called(ctx, opts)
-	return args.Get(0).([]linodego.DatabaseEngine), args.Error(1)
+	if result := args.Get(0); result != nil {
+		return result.([]linodego.DatabaseEngine), args.Error(1)
+	}
+	if err := args.Error(1); err != nil {
+		return nil, fmt.Errorf("mock database error: %w", err)
+	}
+	return nil, nil
 }
 
 func (m *MockDatabaseService) ListDatabaseTypes(ctx context.Context, opts *linodego.ListOptions) ([]linodego.DatabaseType, error) {
 	args := m.Called(ctx, opts)
-	return args.Get(0).([]linodego.DatabaseType), args.Error(1)
+	if result := args.Get(0); result != nil {
+		return result.([]linodego.DatabaseType), args.Error(1)
+	}
+	if err := args.Error(1); err != nil {
+		return nil, fmt.Errorf("mock database error: %w", err)
+	}
+	return nil, nil
 }
 
-// MySQL-specific methods
+// MySQL-specific methods.
 func (m *MockDatabaseService) ListMySQLDatabases(ctx context.Context, opts *linodego.ListOptions) ([]linodego.MySQLDatabase, error) {
 	args := m.Called(ctx, opts)
 	return args.Get(0).([]linodego.MySQLDatabase), args.Error(1)
@@ -65,7 +85,7 @@ func (m *MockDatabaseService) ResetMySQLDatabaseCredentials(ctx context.Context,
 	return args.Error(0)
 }
 
-// PostgreSQL-specific methods
+// PostgreSQL-specific methods.
 func (m *MockDatabaseService) ListPostgresDatabases(ctx context.Context, opts *linodego.ListOptions) ([]linodego.PostgresDatabase, error) {
 	args := m.Called(ctx, opts)
 	return args.Get(0).([]linodego.PostgresDatabase), args.Error(1)
@@ -103,7 +123,7 @@ func (m *MockDatabaseService) ResetPostgresDatabaseCredentials(ctx context.Conte
 
 // Helper methods for setting up common test scenarios
 
-// MySQL helper methods
+// MySQL helper methods.
 func (m *MockDatabaseService) SetupListMySQLDatabasesSuccess(databases []linodego.MySQLDatabase) {
 	m.On("ListMySQLDatabases", mock.Anything, mock.Anything).Return(databases, nil)
 }

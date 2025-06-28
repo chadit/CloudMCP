@@ -10,8 +10,14 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
+const (
+	haStatusStandard         = "Standard"
+	haStatusHighAvailability = "High Availability"
+	autoscalerStatusDisabled = "Disabled"
+)
+
 // handleLKEClustersList lists all LKE clusters.
-func (s *Service) handleLKEClustersList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (s *Service) handleLKEClustersList(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	account, err := s.accountManager.GetCurrentAccount()
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
@@ -44,9 +50,9 @@ func (s *Service) handleLKEClustersList(ctx context.Context, request mcp.CallToo
 	sb.WriteString(fmt.Sprintf("Found %d LKE clusters:\n\n", len(summaries)))
 
 	for _, cluster := range summaries {
-		haStatus := "Standard"
+		haStatus := haStatusStandard
 		if cluster.ControlPlane.HighAvailability {
-			haStatus = "High Availability"
+			haStatus = haStatusHighAvailability
 		}
 
 		fmt.Fprintf(&sb, "ID: %d | %s (%s)\n", cluster.ID, cluster.Label, cluster.Region)
@@ -81,7 +87,7 @@ func (s *Service) handleLKEClusterGet(ctx context.Context, request mcp.CallToolR
 	}
 
 	// Get node pools
-	pools, err := account.Client.ListLKEClusterPools(ctx, params.ClusterID, nil)
+	pools, err := account.Client.ListLKENodePools(ctx, params.ClusterID, nil)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get cluster node pools: %v", err)), nil
 	}
@@ -144,9 +150,9 @@ func (s *Service) handleLKEClusterGet(ctx context.Context, request mcp.CallToolR
 	fmt.Fprintf(&sb, "Status: %s\n", detail.Status)
 	fmt.Fprintf(&sb, "Kubernetes Version: %s\n", detail.K8sVersion)
 
-	haStatus := "Standard"
+	haStatus := haStatusStandard
 	if detail.ControlPlane.HighAvailability {
-		haStatus = "High Availability"
+		haStatus = haStatusHighAvailability
 	}
 	fmt.Fprintf(&sb, "Control Plane: %s\n", haStatus)
 	fmt.Fprintf(&sb, "Created: %s\n", detail.Created)
@@ -166,7 +172,7 @@ func (s *Service) handleLKEClusterGet(ctx context.Context, request mcp.CallToolR
 			if pool.Autoscaler.Enabled {
 				fmt.Fprintf(&sb, "     Autoscaler: Enabled (Min: %d, Max: %d)\n", pool.Autoscaler.Min, pool.Autoscaler.Max)
 			} else {
-				fmt.Fprintf(&sb, "     Autoscaler: Disabled\n")
+				fmt.Fprintf(&sb, "     Autoscaler: %s\n", autoscalerStatusDisabled)
 			}
 
 			if len(pool.Disks) > 0 {
@@ -207,7 +213,7 @@ func (s *Service) handleLKEClusterCreate(ctx context.Context, request mcp.CallTo
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	var nodePools []linodego.LKEClusterPoolCreateOptions
+	var nodePools []linodego.LKENodePoolCreateOptions
 	for _, pool := range params.NodePools {
 		var disks []linodego.LKENodePoolDisk
 		for _, disk := range pool.Disks {
@@ -216,7 +222,7 @@ func (s *Service) handleLKEClusterCreate(ctx context.Context, request mcp.CallTo
 			})
 		}
 
-		nodePool := linodego.LKEClusterPoolCreateOptions{
+		nodePool := linodego.LKENodePoolCreateOptions{
 			Type:  pool.Type,
 			Count: pool.Count,
 			Disks: disks,
@@ -224,7 +230,7 @@ func (s *Service) handleLKEClusterCreate(ctx context.Context, request mcp.CallTo
 		}
 
 		if pool.Autoscaler != nil {
-			nodePool.Autoscaler = &linodego.LKEClusterPoolAutoscaler{
+			nodePool.Autoscaler = &linodego.LKENodePoolAutoscaler{
 				Enabled: pool.Autoscaler.Enabled,
 				Min:     pool.Autoscaler.Min,
 				Max:     pool.Autoscaler.Max,
@@ -250,9 +256,9 @@ func (s *Service) handleLKEClusterCreate(ctx context.Context, request mcp.CallTo
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to create LKE cluster: %v", err)), nil
 	}
 
-	haStatus := "Standard"
+	haStatus := haStatusStandard
 	if cluster.ControlPlane.HighAvailability {
-		haStatus = "High Availability"
+		haStatus = haStatusHighAvailability
 	}
 
 	return mcp.NewToolResultText(fmt.Sprintf("LKE cluster created successfully:\nID: %d\nLabel: %s\nRegion: %s\nKubernetes Version: %s\nControl Plane: %s\nStatus: %s",
@@ -293,9 +299,9 @@ func (s *Service) handleLKEClusterUpdate(ctx context.Context, request mcp.CallTo
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to update LKE cluster: %v", err)), nil
 	}
 
-	haStatus := "Standard"
+	haStatus := haStatusStandard
 	if cluster.ControlPlane.HighAvailability {
-		haStatus = "High Availability"
+		haStatus = haStatusHighAvailability
 	}
 
 	return mcp.NewToolResultText(fmt.Sprintf("LKE cluster updated successfully:\nID: %d\nLabel: %s\nKubernetes Version: %s\nControl Plane: %s\nStatus: %s",
@@ -341,7 +347,7 @@ func (s *Service) handleLKENodePoolCreate(ctx context.Context, request mcp.CallT
 		})
 	}
 
-	createOpts := linodego.LKEClusterPoolCreateOptions{
+	createOpts := linodego.LKENodePoolCreateOptions{
 		Type:  params.Type,
 		Count: params.Count,
 		Disks: disks,
@@ -349,19 +355,19 @@ func (s *Service) handleLKENodePoolCreate(ctx context.Context, request mcp.CallT
 	}
 
 	if params.Autoscaler != nil {
-		createOpts.Autoscaler = &linodego.LKEClusterPoolAutoscaler{
+		createOpts.Autoscaler = &linodego.LKENodePoolAutoscaler{
 			Enabled: params.Autoscaler.Enabled,
 			Min:     params.Autoscaler.Min,
 			Max:     params.Autoscaler.Max,
 		}
 	}
 
-	pool, err := account.Client.CreateLKEClusterPool(ctx, params.ClusterID, createOpts)
+	pool, err := account.Client.CreateLKENodePool(ctx, params.ClusterID, createOpts)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to create node pool: %v", err)), nil
 	}
 
-	autoscalerStatus := "Disabled"
+	autoscalerStatus := autoscalerStatusDisabled
 	if pool.Autoscaler.Enabled {
 		autoscalerStatus = fmt.Sprintf("Enabled (Min: %d, Max: %d)", pool.Autoscaler.Min, pool.Autoscaler.Max)
 	}
@@ -382,7 +388,7 @@ func (s *Service) handleLKENodePoolUpdate(ctx context.Context, request mcp.CallT
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	updateOpts := linodego.LKEClusterPoolUpdateOptions{}
+	updateOpts := linodego.LKENodePoolUpdateOptions{}
 
 	if params.Count > 0 {
 		updateOpts.Count = params.Count
@@ -391,19 +397,19 @@ func (s *Service) handleLKENodePoolUpdate(ctx context.Context, request mcp.CallT
 		updateOpts.Tags = &params.Tags
 	}
 	if params.Autoscaler != nil {
-		updateOpts.Autoscaler = &linodego.LKEClusterPoolAutoscaler{
+		updateOpts.Autoscaler = &linodego.LKENodePoolAutoscaler{
 			Enabled: params.Autoscaler.Enabled,
 			Min:     params.Autoscaler.Min,
 			Max:     params.Autoscaler.Max,
 		}
 	}
 
-	pool, err := account.Client.UpdateLKEClusterPool(ctx, params.ClusterID, params.PoolID, updateOpts)
+	pool, err := account.Client.UpdateLKENodePool(ctx, params.ClusterID, params.PoolID, updateOpts)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to update node pool: %v", err)), nil
 	}
 
-	autoscalerStatus := "Disabled"
+	autoscalerStatus := autoscalerStatusDisabled
 	if pool.Autoscaler.Enabled {
 		autoscalerStatus = fmt.Sprintf("Enabled (Min: %d, Max: %d)", pool.Autoscaler.Min, pool.Autoscaler.Max)
 	}
@@ -424,7 +430,7 @@ func (s *Service) handleLKENodePoolDelete(ctx context.Context, request mcp.CallT
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	err = account.Client.DeleteLKEClusterPool(ctx, params.ClusterID, params.PoolID)
+	err = account.Client.DeleteLKENodePool(ctx, params.ClusterID, params.PoolID)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to delete node pool: %v", err)), nil
 	}

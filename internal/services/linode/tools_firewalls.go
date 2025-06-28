@@ -32,7 +32,7 @@ func (s *Service) handleFirewallsList(ctx context.Context, request mcp.CallToolR
 			inboundRules = append(inboundRules, FirewallRule{
 				Ports:       rule.Ports,
 				Protocol:    string(rule.Protocol),
-				Action:      string(rule.Action),
+				Action:      rule.Action,
 				Label:       rule.Label,
 				Description: rule.Description,
 				Addresses: FirewallAddress{
@@ -46,7 +46,7 @@ func (s *Service) handleFirewallsList(ctx context.Context, request mcp.CallToolR
 			outboundRules = append(outboundRules, FirewallRule{
 				Ports:       rule.Ports,
 				Protocol:    string(rule.Protocol),
-				Action:      string(rule.Action),
+				Action:      rule.Action,
 				Label:       rule.Label,
 				Description: rule.Description,
 				Addresses: FirewallAddress{
@@ -65,7 +65,7 @@ func (s *Service) handleFirewallsList(ctx context.Context, request mcp.CallToolR
 				Inbound:        inboundRules,
 				InboundPolicy:  string(fw.Rules.InboundPolicy),
 				Outbound:       outboundRules,
-				OutboundPolicy: string(fw.Rules.OutboundPolicy),
+				OutboundPolicy: fw.Rules.OutboundPolicy,
 			},
 			Devices: []FirewallDevice{}, // Empty slice - devices need to be fetched separately
 			Created: fw.Created.Format("2006-01-02T15:04:05"),
@@ -131,7 +131,7 @@ func (s *Service) handleFirewallGet(ctx context.Context, request mcp.CallToolReq
 		inboundRules = append(inboundRules, FirewallRule{
 			Ports:       rule.Ports,
 			Protocol:    string(rule.Protocol),
-			Action:      string(rule.Action),
+			Action:      rule.Action,
 			Label:       rule.Label,
 			Description: rule.Description,
 			Addresses: FirewallAddress{
@@ -145,7 +145,7 @@ func (s *Service) handleFirewallGet(ctx context.Context, request mcp.CallToolReq
 		outboundRules = append(outboundRules, FirewallRule{
 			Ports:       rule.Ports,
 			Protocol:    string(rule.Protocol),
-			Action:      string(rule.Action),
+			Action:      rule.Action,
 			Label:       rule.Label,
 			Description: rule.Description,
 			Addresses: FirewallAddress{

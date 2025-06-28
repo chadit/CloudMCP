@@ -40,22 +40,22 @@ func (m *MockLKEService) DeleteLKECluster(ctx context.Context, clusterID int) er
 }
 
 // LKE Node Pool methods
-func (m *MockLKEService) ListLKEClusterPools(ctx context.Context, clusterID int, opts *linodego.ListOptions) ([]linodego.LKEClusterPool, error) {
+func (m *MockLKEService) ListLKENodePools(ctx context.Context, clusterID int, opts *linodego.ListOptions) ([]linodego.LKENodePool, error) {
 	args := m.Called(ctx, clusterID, opts)
-	return args.Get(0).([]linodego.LKEClusterPool), args.Error(1)
+	return args.Get(0).([]linodego.LKENodePool), args.Error(1)
 }
 
-func (m *MockLKEService) CreateLKEClusterPool(ctx context.Context, clusterID int, opts linodego.LKEClusterPoolCreateOptions) (*linodego.LKEClusterPool, error) {
+func (m *MockLKEService) CreateLKENodePool(ctx context.Context, clusterID int, opts linodego.LKENodePoolCreateOptions) (*linodego.LKENodePool, error) {
 	args := m.Called(ctx, clusterID, opts)
-	return args.Get(0).(*linodego.LKEClusterPool), args.Error(1)
+	return args.Get(0).(*linodego.LKENodePool), args.Error(1)
 }
 
-func (m *MockLKEService) UpdateLKEClusterPool(ctx context.Context, clusterID int, poolID int, opts linodego.LKEClusterPoolUpdateOptions) (*linodego.LKEClusterPool, error) {
+func (m *MockLKEService) UpdateLKENodePool(ctx context.Context, clusterID int, poolID int, opts linodego.LKENodePoolUpdateOptions) (*linodego.LKENodePool, error) {
 	args := m.Called(ctx, clusterID, poolID, opts)
-	return args.Get(0).(*linodego.LKEClusterPool), args.Error(1)
+	return args.Get(0).(*linodego.LKENodePool), args.Error(1)
 }
 
-func (m *MockLKEService) DeleteLKEClusterPool(ctx context.Context, clusterID int, poolID int) error {
+func (m *MockLKEService) DeleteLKENodePool(ctx context.Context, clusterID int, poolID int) error {
 	args := m.Called(ctx, clusterID, poolID)
 	return args.Error(0)
 }
@@ -92,12 +92,12 @@ func (m *MockLKEService) SetupCreateLKEClusterError(opts linodego.LKEClusterCrea
 	m.On("CreateLKECluster", mock.Anything, opts).Return((*linodego.LKECluster)(nil), err)
 }
 
-func (m *MockLKEService) SetupListLKEClusterPoolsSuccess(clusterID int, pools []linodego.LKEClusterPool) {
-	m.On("ListLKEClusterPools", mock.Anything, clusterID, mock.Anything).Return(pools, nil)
+func (m *MockLKEService) SetupListLKENodePoolsSuccess(clusterID int, pools []linodego.LKENodePool) {
+	m.On("ListLKENodePools", mock.Anything, clusterID, mock.Anything).Return(pools, nil)
 }
 
-func (m *MockLKEService) SetupListLKEClusterPoolsError(clusterID int, err error) {
-	m.On("ListLKEClusterPools", mock.Anything, clusterID, mock.Anything).Return([]linodego.LKEClusterPool{}, err)
+func (m *MockLKEService) SetupListLKENodePoolsError(clusterID int, err error) {
+	m.On("ListLKENodePools", mock.Anything, clusterID, mock.Anything).Return([]linodego.LKENodePool{}, err)
 }
 
 func (m *MockLKEService) SetupGetLKEClusterKubeconfigSuccess(clusterID int, kubeconfig *linodego.LKEClusterKubeconfig) {

@@ -6,6 +6,10 @@ import (
 	"runtime"
 )
 
+const (
+	dirPermissions = 0o755 // Read/write/execute for owner, read/execute for group and others
+)
+
 // getConfigDir returns the appropriate configuration directory for the current OS.
 // Linux/Unix: $HOME/.config/cloudmcp/
 // macOS: ~/Library/Application Support/CloudMCP/
@@ -54,10 +58,10 @@ func GetLogPath() string {
 
 // EnsureConfigDir creates the configuration directory if it doesn't exist.
 func EnsureConfigDir() error {
-	return os.MkdirAll(getConfigDir(), 0755)
+	return os.MkdirAll(getConfigDir(), dirPermissions)
 }
 
 // EnsureLogDir creates the log directory if it doesn't exist.
 func EnsureLogDir() error {
-	return os.MkdirAll(getLogDir(), 0755)
+	return os.MkdirAll(getLogDir(), dirPermissions)
 }
