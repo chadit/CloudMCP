@@ -1,9 +1,18 @@
 package config
 
 import (
+	"errors"
 	"fmt"
-	"os"
-	"strings"
+	"log"
+)
+
+const (
+	defaultMetricsPort = 8080
+)
+
+var (
+	ErrNoLinodeAccounts       = errors.New("no Linode accounts configured")
+	ErrDefaultAccountNotFound = errors.New("default account not found in configured accounts")
 )
 
 type Config struct {
@@ -21,83 +30,26 @@ type LinodeAccount struct {
 	APIURL string // Optional custom API URL (defaults to https://api.linode.com/v4)
 }
 
+// Load loads configuration from TOML file, creating a default config if none exists.
 func Load() (*Config, error) {
-	cfg := &Config{
-		ServerName:     getEnv("CLOUD_MCP_SERVER_NAME", "Cloud MCP Server"),
-		LogLevel:       getEnv("LOG_LEVEL", "info"),
-		EnableMetrics:  getEnvBool("ENABLE_METRICS", true),
-		MetricsPort:    getEnvInt("METRICS_PORT", 8080),
-		LinodeAccounts: make(map[string]LinodeAccount),
+	configPath := GetConfigPath()
+
+	// Try to load TOML config
+	if tomlConfig, err := LoadTOMLConfig(configPath); err == nil {
+		return tomlConfig.ToLegacyConfig(), nil
 	}
 
-	cfg.DefaultLinodeAccount = getEnv("DEFAULT_LINODE_ACCOUNT", "primary")
-
-	for _, env := range os.Environ() {
-		if strings.HasPrefix(env, "LINODE_ACCOUNTS_") {
-			parts := strings.SplitN(env, "=", 2)
-			if len(parts) != 2 {
-				continue
-			}
-
-			keyParts := strings.Split(parts[0], "_")
-			if len(keyParts) < 4 {
-				continue
-			}
-
-			accountName := strings.ToLower(keyParts[2])
-			fieldType := strings.ToLower(keyParts[3])
-
-			if _, exists := cfg.LinodeAccounts[accountName]; !exists {
-				cfg.LinodeAccounts[accountName] = LinodeAccount{}
-			}
-
-			account := cfg.LinodeAccounts[accountName]
-			switch fieldType {
-			case "token":
-				account.Token = parts[1]
-			case "label":
-				account.Label = parts[1]
-			case "apiurl":
-				account.APIURL = parts[1]
-			}
-			cfg.LinodeAccounts[accountName] = account
-		}
+	// Create default config if none exists
+	defaultConfig := CreateDefaultTOMLConfig()
+	if err := SaveTOMLConfig(defaultConfig, configPath); err != nil {
+		return nil, fmt.Errorf("failed to create default config: %w", err)
 	}
 
-	if len(cfg.LinodeAccounts) == 0 {
-		return nil, fmt.Errorf("no Linode accounts configured")
-	}
+	log.Printf("Created default TOML configuration at: %s", configPath)
+	log.Printf("Please edit the configuration file to add your Linode API tokens")
 
-	if _, exists := cfg.LinodeAccounts[cfg.DefaultLinodeAccount]; !exists {
-		return nil, fmt.Errorf("default account %q not found in configured accounts", cfg.DefaultLinodeAccount)
-	}
-
-	return cfg, nil
+	return defaultConfig.ToLegacyConfig(), nil
 }
 
-func getEnv(key, defaultValue string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return defaultValue
-}
 
-func getEnvBool(key string, defaultValue bool) bool {
-	value := os.Getenv(key)
-	if value == "" {
-		return defaultValue
-	}
-	return strings.ToLower(value) == "true" || value == "1"
-}
 
-func getEnvInt(key string, defaultValue int) int {
-	value := os.Getenv(key)
-	if value == "" {
-		return defaultValue
-	}
-	var result int
-	if _, err := fmt.Sscanf(value, "%d", &result); err != nil {
-		return defaultValue
-	}
-	return result
-}

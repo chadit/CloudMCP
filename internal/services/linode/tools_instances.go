@@ -15,7 +15,7 @@ const (
 	mbToGB = 1024
 )
 
-func (s *Service) handleInstancesList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (s *Service) handleInstancesList(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	account, err := s.accountManager.GetCurrentAccount()
 	if err != nil {
 		return nil, err
@@ -23,7 +23,7 @@ func (s *Service) handleInstancesList(ctx context.Context, request mcp.CallToolR
 
 	instances, err := account.Client.ListInstances(ctx, nil)
 	if err != nil {
-		return nil, types.NewToolError("linode", "instances_list",
+		return nil, types.NewToolError("linode", "instances_list", //nolint:wrapcheck // types.NewToolError already wraps the error
 			"failed to list instances", err)
 	}
 
@@ -54,6 +54,7 @@ func (s *Service) handleInstancesList(ctx context.Context, request mcp.CallToolR
 
 	var resultText string
 	resultText = fmt.Sprintf("Found %d Linode instance(s):\n\n", len(summaries))
+
 	for _, inst := range summaries {
 		resultText += fmt.Sprintf("ID: %d | %s\n", inst.ID, inst.Label)
 		resultText += fmt.Sprintf("  Status: %s | Region: %s | Type: %s\n", inst.Status, inst.Region, inst.Type)
@@ -68,9 +69,9 @@ func (s *Service) handleInstancesList(ctx context.Context, request mcp.CallToolR
 
 func (s *Service) handleInstanceGet(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	arguments := request.GetArguments()
-	instanceID, ok := arguments["instance_id"].(float64)
-	if !ok || instanceID <= 0 {
-		return mcp.NewToolResultError("instance_id is required and must be a positive number"), nil
+	instanceID, err := parseIDFromArguments(arguments, "instance_id")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
 	}
 
 	account, err := s.accountManager.GetCurrentAccount()
@@ -78,10 +79,10 @@ func (s *Service) handleInstanceGet(ctx context.Context, request mcp.CallToolReq
 		return nil, err
 	}
 
-	instance, err := account.Client.GetInstance(ctx, int(instanceID))
+	instance, err := account.Client.GetInstance(ctx, instanceID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "instance_get",
-			fmt.Sprintf("failed to get instance %d", int(instanceID)), err)
+		return nil, types.NewToolError("linode", "instance_get", //nolint:wrapcheck // types.NewToolError already wraps the error
+			fmt.Sprintf("failed to get instance %d", instanceID), err)
 	}
 
 	// Format IPv4 addresses
@@ -143,6 +144,7 @@ func formatBool(b bool) string {
 	if b {
 		return "Enabled"
 	}
+
 	return "Disabled"
 }
 
@@ -150,18 +152,18 @@ func (s *Service) handleInstanceCreate(ctx context.Context, request mcp.CallTool
 	arguments := request.GetArguments()
 
 	// Required parameters
-	region, ok := arguments["region"].(string)
-	if !ok || region == "" {
+	region, regionPresent := arguments["region"].(string)
+	if !regionPresent || region == "" {
 		return mcp.NewToolResultError("region is required"), nil
 	}
 
-	instanceType, ok := arguments["type"].(string)
-	if !ok || instanceType == "" {
+	instanceType, typePresent := arguments["type"].(string)
+	if !typePresent || instanceType == "" {
 		return mcp.NewToolResultError("type is required"), nil
 	}
 
-	label, ok := arguments["label"].(string)
-	if !ok || label == "" {
+	label, labelPresent := arguments["label"].(string)
+	if !labelPresent || label == "" {
 		return mcp.NewToolResultError("label is required"), nil
 	}
 
@@ -221,7 +223,7 @@ func (s *Service) handleInstanceCreate(ctx context.Context, request mcp.CallTool
 	// Create the instance
 	instance, err := account.Client.CreateInstance(ctx, createOpts)
 	if err != nil {
-		return nil, types.NewToolError("linode", "instance_create",
+		return nil, types.NewToolError("linode", "instance_create", //nolint:wrapcheck // types.NewToolError already wraps the error
 			"failed to create instance", err)
 	}
 
@@ -257,9 +259,9 @@ The instance is now being provisioned. Use linode_instance_get with ID %d to che
 
 func (s *Service) handleInstanceDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	arguments := request.GetArguments()
-	instanceID, ok := arguments["instance_id"].(float64)
-	if !ok || instanceID <= 0 {
-		return mcp.NewToolResultError("instance_id is required and must be a positive number"), nil
+	instanceID, err := parseIDFromArguments(arguments, "instance_id")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
 	}
 
 	account, err := s.accountManager.GetCurrentAccount()
@@ -267,21 +269,24 @@ func (s *Service) handleInstanceDelete(ctx context.Context, request mcp.CallTool
 		return nil, err
 	}
 
-	// Get instance details first to show what we're deleting
-	instance, err := account.Client.GetInstance(ctx, int(instanceID))
+	instance, err := account.Client.GetInstance(ctx, instanceID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "instance_delete",
-			fmt.Sprintf("failed to get instance %d", int(instanceID)), err)
+		return nil, types.NewToolError("linode", "instance_delete", //nolint:wrapcheck // types.NewToolError already wraps the error
+			fmt.Sprintf("failed to get instance %d", instanceID), err)
 	}
 
-	// Delete the instance
-	err = account.Client.DeleteInstance(ctx, int(instanceID))
+	err = account.Client.DeleteInstance(ctx, instanceID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "instance_delete",
-			fmt.Sprintf("failed to delete instance %d", int(instanceID)), err)
+		return nil, types.NewToolError("linode", "instance_delete", //nolint:wrapcheck // types.NewToolError already wraps the error
+			fmt.Sprintf("failed to delete instance %d", instanceID), err)
 	}
 
-	resultText := fmt.Sprintf(`Instance deleted successfully!
+	s.logger.Info("Deleted Linode instance",
+		"instance_id", instance.ID,
+		"label", instance.Label,
+	)
+
+	return mcp.NewToolResultText(fmt.Sprintf(`Instance deleted successfully!
 
 Deleted Instance:
 - ID: %d
@@ -294,21 +299,14 @@ The instance and all its disks have been permanently deleted.`,
 		instance.Label,
 		instance.Region,
 		instance.Type,
-	)
-
-	s.logger.Info("Deleted Linode instance",
-		"instance_id", instance.ID,
-		"label", instance.Label,
-	)
-
-	return mcp.NewToolResultText(resultText), nil
+	)), nil
 }
 
 func (s *Service) handleInstanceBoot(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	arguments := request.GetArguments()
-	instanceID, ok := arguments["instance_id"].(float64)
-	if !ok || instanceID <= 0 {
-		return mcp.NewToolResultError("instance_id is required and must be a positive number"), nil
+	instanceID, err := parseIDFromArguments(arguments, "instance_id")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
 	}
 
 	var configID int
@@ -321,41 +319,14 @@ func (s *Service) handleInstanceBoot(ctx context.Context, request mcp.CallToolRe
 		return nil, err
 	}
 
-	// Boot the instance
-	err = account.Client.BootInstance(ctx, int(instanceID), configID)
-	if err != nil {
-		return nil, types.NewToolError("linode", "instance_boot",
-			fmt.Sprintf("failed to boot instance %d", int(instanceID)), err)
-	}
-
-	// Get updated instance status
-	instance, err := account.Client.GetInstance(ctx, int(instanceID))
-	if err != nil {
-		return nil, types.NewToolError("linode", "instance_boot",
-			"failed to get updated instance status", err)
-	}
-
-	resultText := fmt.Sprintf(`Instance boot initiated successfully!
-
-Instance: %s (ID: %d)
-Status: %s
-Region: %s
-
-The instance is now booting up.`,
-		instance.Label,
-		instance.ID,
-		instance.Status,
-		instance.Region,
-	)
-
-	return mcp.NewToolResultText(resultText), nil
+	return s.performInstanceOperation(ctx, instanceID, configID, "boot", "booting up", account.Client.BootInstance)
 }
 
 func (s *Service) handleInstanceShutdown(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	arguments := request.GetArguments()
-	instanceID, ok := arguments["instance_id"].(float64)
-	if !ok || instanceID <= 0 {
-		return mcp.NewToolResultError("instance_id is required and must be a positive number"), nil
+	instanceID, err := parseIDFromArguments(arguments, "instance_id")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
 	}
 
 	account, err := s.accountManager.GetCurrentAccount()
@@ -364,16 +335,16 @@ func (s *Service) handleInstanceShutdown(ctx context.Context, request mcp.CallTo
 	}
 
 	// Shutdown the instance
-	err = account.Client.ShutdownInstance(ctx, int(instanceID))
+	err = account.Client.ShutdownInstance(ctx, instanceID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "instance_shutdown",
-			fmt.Sprintf("failed to shutdown instance %d", int(instanceID)), err)
+		return nil, types.NewToolError("linode", "instance_shutdown", //nolint:wrapcheck // types.NewToolError already wraps the error
+			fmt.Sprintf("failed to shutdown instance %d", instanceID), err)
 	}
 
 	// Get updated instance status
-	instance, err := account.Client.GetInstance(ctx, int(instanceID))
+	instance, err := account.Client.GetInstance(ctx, instanceID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "instance_shutdown",
+		return nil, types.NewToolError("linode", "instance_shutdown", //nolint:wrapcheck // types.NewToolError already wraps the error
 			"failed to get updated instance status", err)
 	}
 
@@ -395,9 +366,9 @@ The instance is now shutting down.`,
 
 func (s *Service) handleInstanceReboot(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	arguments := request.GetArguments()
-	instanceID, ok := arguments["instance_id"].(float64)
-	if !ok || instanceID <= 0 {
-		return mcp.NewToolResultError("instance_id is required and must be a positive number"), nil
+	instanceID, err := parseIDFromArguments(arguments, "instance_id")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
 	}
 
 	var configID int
@@ -410,31 +381,56 @@ func (s *Service) handleInstanceReboot(ctx context.Context, request mcp.CallTool
 		return nil, err
 	}
 
-	// Reboot the instance
-	err = account.Client.RebootInstance(ctx, int(instanceID), configID)
+	return s.performInstanceOperation(ctx, instanceID, configID, "reboot", "rebooting", account.Client.RebootInstance)
+}
+
+// parseIDFromArguments validates and parses a numeric ID from MCP request arguments.
+// It ensures the parameter exists, is a positive number, and returns it as an int.
+// Returns an error if the parameter is missing, not a number, or not positive.
+func parseIDFromArguments(arguments map[string]interface{}, paramName string) (int, error) {
+	idValue, ok := arguments[paramName].(float64)
+	if !ok || idValue <= 0 {
+		return 0, fmt.Errorf("%s: %w", paramName, ErrInvalidParameterType)
+	}
+
+	return int(idValue), nil
+}
+
+// performInstanceOperation performs a boot or reboot operation on an instance and returns formatted result.
+// The operationName should be "boot" or "reboot", action should be "booting" or "rebooting".
+func (s *Service) performInstanceOperation(ctx context.Context, instanceID, configID int, operationName, action string, operation func(context.Context, int, int) error) (*mcp.CallToolResult, error) {
+	account, err := s.accountManager.GetCurrentAccount()
 	if err != nil {
-		return nil, types.NewToolError("linode", "instance_reboot",
-			fmt.Sprintf("failed to reboot instance %d", int(instanceID)), err)
+		return nil, err
+	}
+
+	// Perform the operation
+	err = operation(ctx, instanceID, configID)
+	if err != nil {
+		return nil, types.NewToolError("linode", fmt.Sprintf("instance_%s", operationName), //nolint:wrapcheck // types.NewToolError already wraps the error
+			fmt.Sprintf("failed to %s instance %d", operationName, instanceID), err)
 	}
 
 	// Get updated instance status
-	instance, err := account.Client.GetInstance(ctx, int(instanceID))
+	instance, err := account.Client.GetInstance(ctx, instanceID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "instance_reboot",
+		return nil, types.NewToolError("linode", fmt.Sprintf("instance_%s", operationName), //nolint:wrapcheck // types.NewToolError already wraps the error
 			"failed to get updated instance status", err)
 	}
 
-	resultText := fmt.Sprintf(`Instance reboot initiated successfully!
+	resultText := fmt.Sprintf(`Instance %s initiated successfully!
 
 Instance: %s (ID: %d)
 Status: %s
 Region: %s
 
-The instance is now rebooting.`,
+The instance is now %s.`,
+		operationName,
 		instance.Label,
 		instance.ID,
 		instance.Status,
 		instance.Region,
+		action,
 	)
 
 	return mcp.NewToolResultText(resultText), nil
