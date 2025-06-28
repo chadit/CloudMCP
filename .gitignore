@@ -21,6 +21,10 @@ go.work
 bin/
 dist/
 
+# Project-specific binaries
+cloud-mcp-setup
+server
+
 # Environment files
 .env
 .env.local

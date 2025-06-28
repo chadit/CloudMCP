@@ -969,7 +969,7 @@ type ObjectStorageBucketsListResult struct {
 
 type ObjectStorageBucketSummary struct {
 	Label    string `json:"label"`
-	Cluster  string `json:"cluster"`
+	Region   string `json:"region"`
 	Hostname string `json:"hostname"`
 	Created  string `json:"created"`
 	Size     int64  `json:"size"`
@@ -977,13 +977,13 @@ type ObjectStorageBucketSummary struct {
 }
 
 type ObjectStorageBucketGetParams struct {
-	Cluster string `json:"cluster" jsonschema:"required,description=Object Storage cluster ID"`
-	Bucket  string `json:"bucket" jsonschema:"required,description=Bucket name"`
+	Region string `json:"region" jsonschema:"required,description=Object Storage region ID"`
+	Bucket string `json:"bucket" jsonschema:"required,description=Bucket name"`
 }
 
 type ObjectStorageBucketDetail struct {
 	Label    string `json:"label"`
-	Cluster  string `json:"cluster"`
+	Region   string `json:"region"`
 	Hostname string `json:"hostname"`
 	Created  string `json:"created"`
 	Size     int64  `json:"size"`
@@ -991,23 +991,22 @@ type ObjectStorageBucketDetail struct {
 }
 
 type ObjectStorageBucketCreateParams struct {
-	Label   string `json:"label" jsonschema:"required,description=Bucket name/label"`
-	Cluster string `json:"cluster" jsonschema:"description=Object Storage cluster ID (deprecated, use Region)"`
-	Region  string `json:"region" jsonschema:"description=Object Storage region ID"`
-	ACL     string `json:"acl" jsonschema:"description=Access control list (private, public-read, authenticated-read, public-read-write)"`
-	CORS    bool   `json:"cors_enabled" jsonschema:"description=Enable CORS"`
+	Label  string `json:"label" jsonschema:"required,description=Bucket name/label"`
+	Region string `json:"region" jsonschema:"required,description=Object Storage region ID"`
+	ACL    string `json:"acl" jsonschema:"description=Access control list (private, public-read, authenticated-read, public-read-write)"`
+	CORS   bool   `json:"cors_enabled" jsonschema:"description=Enable CORS"`
 }
 
 type ObjectStorageBucketUpdateParams struct {
-	Cluster string `json:"cluster" jsonschema:"required,description=Object Storage cluster ID"`
-	Bucket  string `json:"bucket" jsonschema:"required,description=Bucket name"`
-	ACL     string `json:"acl" jsonschema:"description=New access control list"`
-	CORS    *bool  `json:"cors_enabled" jsonschema:"description=Enable or disable CORS"`
+	Region string `json:"region" jsonschema:"required,description=Object Storage region ID"`
+	Bucket string `json:"bucket" jsonschema:"required,description=Bucket name"`
+	ACL    string `json:"acl" jsonschema:"description=New access control list"`
+	CORS   *bool  `json:"cors_enabled" jsonschema:"description=Enable or disable CORS"`
 }
 
 type ObjectStorageBucketDeleteParams struct {
-	Cluster string `json:"cluster" jsonschema:"required,description=Object Storage cluster ID"`
-	Bucket  string `json:"bucket" jsonschema:"required,description=Bucket name"`
+	Region string `json:"region" jsonschema:"required,description=Object Storage region ID"`
+	Bucket string `json:"bucket" jsonschema:"required,description=Bucket name"`
 }
 
 type ObjectStorageKeysListResult struct {
@@ -1025,7 +1024,7 @@ type ObjectStorageKeySummary struct {
 }
 
 type ObjectStorageBucketAccess struct {
-	Cluster     string `json:"cluster"`
+	Region      string `json:"region"`
 	BucketName  string `json:"bucket_name"`
 	Permissions string `json:"permissions"`
 }

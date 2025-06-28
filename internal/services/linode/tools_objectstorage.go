@@ -30,7 +30,7 @@ func (s *Service) handleObjectStorageBucketsList(ctx context.Context, _ mcp.Call
 	for _, bucket := range buckets {
 		summary := ObjectStorageBucketSummary{
 			Label:    bucket.Label,
-			Cluster:  bucket.Cluster,
+			Region:   bucket.Region,
 			Hostname: bucket.Hostname,
 			Created:  bucket.Created.Format("2006-01-02T15:04:05"),
 			Size:     int64(bucket.Size),
@@ -59,7 +59,7 @@ func (s *Service) handleObjectStorageBucketsList(ctx context.Context, _ mcp.Call
 			}
 		}
 
-		fmt.Fprintf(&sb, "Name: %s (%s)\n", bucket.Label, bucket.Cluster)
+		fmt.Fprintf(&sb, "Name: %s (%s)\n", bucket.Label, bucket.Region)
 		fmt.Fprintf(&sb, "  Hostname: %s\n", bucket.Hostname)
 		fmt.Fprintf(&sb, "  Size: %s | Objects: %d\n", sizeDisplay, bucket.Objects)
 		fmt.Fprintf(&sb, "  Created: %s\n", bucket.Created)
@@ -81,14 +81,14 @@ func (s *Service) handleObjectStorageBucketGet(ctx context.Context, request mcp.
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	bucket, err := account.Client.GetObjectStorageBucket(ctx, params.Cluster, params.Bucket)
+	bucket, err := account.Client.GetObjectStorageBucket(ctx, params.Region, params.Bucket)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get Object Storage bucket: %v", err)), nil
 	}
 
 	detail := ObjectStorageBucketDetail{
 		Label:    bucket.Label,
-		Cluster:  bucket.Cluster,
+		Region:   bucket.Region,
 		Hostname: bucket.Hostname,
 		Created:  bucket.Created.Format("2006-01-02T15:04:05"),
 		Size:     int64(bucket.Size),
@@ -98,7 +98,7 @@ func (s *Service) handleObjectStorageBucketGet(ctx context.Context, request mcp.
 	var sb strings.Builder
 	fmt.Fprintf(&sb, "Object Storage Bucket Details:\n")
 	fmt.Fprintf(&sb, "Name: %s\n", detail.Label)
-	fmt.Fprintf(&sb, "Cluster: %s\n", detail.Cluster)
+	fmt.Fprintf(&sb, "Region: %s\n", detail.Region)
 	fmt.Fprintf(&sb, "Hostname: %s\n", detail.Hostname)
 	fmt.Fprintf(&sb, "Created: %s\n", detail.Created)
 
@@ -138,12 +138,7 @@ func (s *Service) handleObjectStorageBucketCreate(ctx context.Context, request m
 		Label: params.Label,
 	}
 
-	// Support both deprecated Cluster and new Region parameters
-	if params.Region != "" {
-		createOpts.Region = params.Region
-	} else if params.Cluster != "" {
-		createOpts.Cluster = params.Cluster
-	}
+	createOpts.Region = params.Region
 
 	if params.ACL != "" {
 		createOpts.ACL = linodego.ObjectStorageACL(params.ACL)
@@ -157,8 +152,8 @@ func (s *Service) handleObjectStorageBucketCreate(ctx context.Context, request m
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to create Object Storage bucket: %v", err)), nil
 	}
 
-	return mcp.NewToolResultText(fmt.Sprintf("Object Storage bucket created successfully:\nName: %s\nCluster: %s\nHostname: %s",
-		bucket.Label, bucket.Cluster, bucket.Hostname)), nil
+	return mcp.NewToolResultText(fmt.Sprintf("Object Storage bucket created successfully:\nName: %s\nRegion: %s\nHostname: %s",
+		bucket.Label, bucket.Region, bucket.Hostname)), nil
 }
 
 // handleObjectStorageBucketUpdate updates an existing Object Storage bucket's access settings.
@@ -182,13 +177,13 @@ func (s *Service) handleObjectStorageBucketUpdate(ctx context.Context, request m
 		updateOpts.CorsEnabled = params.CORS
 	}
 
-	err = account.Client.UpdateObjectStorageBucketAccess(ctx, params.Cluster, params.Bucket, updateOpts)
+	err = account.Client.UpdateObjectStorageBucketAccess(ctx, params.Region, params.Bucket, updateOpts)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to update Object Storage bucket access: %v", err)), nil
 	}
 
-	return mcp.NewToolResultText(fmt.Sprintf("Object Storage bucket '%s' access updated successfully in cluster '%s'",
-		params.Bucket, params.Cluster)), nil
+	return mcp.NewToolResultText(fmt.Sprintf("Object Storage bucket '%s' access updated successfully in region '%s'",
+		params.Bucket, params.Region)), nil
 }
 
 // handleObjectStorageBucketDelete deletes an Object Storage bucket.
@@ -203,13 +198,13 @@ func (s *Service) handleObjectStorageBucketDelete(ctx context.Context, request m
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	err = account.Client.DeleteObjectStorageBucket(ctx, params.Cluster, params.Bucket)
+	err = account.Client.DeleteObjectStorageBucket(ctx, params.Region, params.Bucket)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to delete Object Storage bucket: %v", err)), nil
 	}
 
-	return mcp.NewToolResultText(fmt.Sprintf("Object Storage bucket '%s' deleted successfully from cluster '%s'",
-		params.Bucket, params.Cluster)), nil
+	return mcp.NewToolResultText(fmt.Sprintf("Object Storage bucket '%s' deleted successfully from region '%s'",
+		params.Bucket, params.Region)), nil
 }
 
 // handleObjectStorageKeysList lists all Object Storage keys.
@@ -230,7 +225,7 @@ func (s *Service) handleObjectStorageKeysList(ctx context.Context, _ mcp.CallToo
 		if key.BucketAccess != nil {
 			for _, access := range *key.BucketAccess {
 				bucketAccess = append(bucketAccess, ObjectStorageBucketAccess{
-					Cluster:     access.Cluster,
+					Region:      access.Region,
 					BucketName:  access.BucketName,
 					Permissions: string(access.Permissions),
 				})
@@ -265,7 +260,7 @@ func (s *Service) handleObjectStorageKeysList(ctx context.Context, _ mcp.CallToo
 		if key.Limited && len(key.BucketAccess) > 0 {
 			fmt.Fprintf(&sb, "  Bucket Access:\n")
 			for _, access := range key.BucketAccess {
-				fmt.Fprintf(&sb, "    - %s/%s: %s\n", access.Cluster, access.BucketName, access.Permissions)
+				fmt.Fprintf(&sb, "    - %s/%s: %s\n", access.Region, access.BucketName, access.Permissions)
 			}
 		}
 		sb.WriteString("\n")
@@ -296,7 +291,7 @@ func (s *Service) handleObjectStorageKeyGet(ctx context.Context, request mcp.Cal
 	if key.BucketAccess != nil {
 		for _, access := range *key.BucketAccess {
 			bucketAccess = append(bucketAccess, ObjectStorageBucketAccess{
-				Cluster:     access.Cluster,
+				Region:      access.Region,
 				BucketName:  access.BucketName,
 				Permissions: string(access.Permissions),
 			})
@@ -328,7 +323,7 @@ func (s *Service) handleObjectStorageKeyGet(ctx context.Context, request mcp.Cal
 	if detail.Limited && len(detail.BucketAccess) > 0 {
 		fmt.Fprintf(&sb, "\nBucket Access Permissions:\n")
 		for _, access := range detail.BucketAccess {
-			fmt.Fprintf(&sb, "  - Cluster: %s\n", access.Cluster)
+			fmt.Fprintf(&sb, "  - Region: %s\n", access.Region)
 			fmt.Fprintf(&sb, "    Bucket: %s\n", access.BucketName)
 			fmt.Fprintf(&sb, "    Permissions: %s\n", access.Permissions)
 			sb.WriteString("\n")
@@ -358,7 +353,7 @@ func (s *Service) handleObjectStorageKeyCreate(ctx context.Context, request mcp.
 		var bucketAccess []linodego.ObjectStorageKeyBucketAccess
 		for _, access := range params.BucketAccess {
 			bucketAccess = append(bucketAccess, linodego.ObjectStorageKeyBucketAccess{
-				Cluster:     access.Cluster,
+				Region:      access.Region,
 				BucketName:  access.BucketName,
 				Permissions: string(access.Permissions),
 			})
@@ -404,7 +399,7 @@ func (s *Service) handleObjectStorageKeyUpdate(ctx context.Context, request mcp.
 		// var bucketAccess []linodego.ObjectStorageKeyBucketAccess
 		// for _, access := range params.BucketAccess {
 		//     bucketAccess = append(bucketAccess, linodego.ObjectStorageKeyBucketAccess{
-		//         Cluster:     access.Cluster,
+		//         Region:      access.Region,
 		//         BucketName:  access.BucketName,
 		//         Permissions: string(access.Permissions),
 		//     })
