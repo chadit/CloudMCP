@@ -5,8 +5,8 @@ import (
 	"sync"
 )
 
-// ConfigManager provides thread-safe management of TOML configuration.
-type ConfigManager interface {
+// Manager provides thread-safe management of TOML configuration.
+type Manager interface {
 	GetConfig() *TOMLConfig
 	AddAccount(name string, account AccountConfig) error
 	RemoveAccount(name string) error
@@ -16,7 +16,7 @@ type ConfigManager interface {
 	Reload() error
 }
 
-// TOMLConfigManager implements ConfigManager for TOML-based configuration.
+// TOMLConfigManager implements Manager for TOML-based configuration.
 type TOMLConfigManager struct {
 	configPath string
 	config     *TOMLConfig

@@ -166,7 +166,7 @@ func CreateTestService() (*Service, *MockAccountManager, *MockLinodeClient) {
 }
 
 // CreateTestServiceWithClient creates a service instance with a properly mocked Linode client.
-func CreateTestServiceWithClient(mockClient *MockLinodeClient) (*Service, *MockAccountManager) {
+func CreateTestServiceWithClient(_ *MockLinodeClient) (*Service, *MockAccountManager) {
 	// Create mock logger
 	log := logger.New("debug")
 
