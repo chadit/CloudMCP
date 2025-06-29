@@ -81,6 +81,34 @@ jobs:
           version: latest
           args: --enable-all --disable forbidigo,exhaustruct,depguard,gci,lll,cyclop,funlen,tenv
 
+      - name: Check for deprecation warnings
+        id: deprecation-check
+        run: |
+          echo "Scanning for deprecation warnings..."
+          
+          # Use golangci-lint to find SA1019 (deprecated) warnings
+          golangci-lint run --enable=staticcheck --disable-all --out-format=line-number 2>&1 | \
+          grep -E "SA1019|deprecated" > deprecations.txt || true
+          
+          DEPRECATION_COUNT=$(wc -l < deprecations.txt || echo "0")
+          echo "deprecation_count=$DEPRECATION_COUNT" >> $GITHUB_OUTPUT
+          
+          if [ "$DEPRECATION_COUNT" -gt 0 ]; then
+            echo "::warning::Found $DEPRECATION_COUNT deprecation warning(s)"
+            echo "See detailed report in deprecation-monitoring workflow or artifact"
+            cat deprecations.txt
+          else
+            echo "::notice::No deprecation warnings found ✅"
+          fi
+
+      - name: Upload deprecation report
+        if: steps.deprecation-check.outputs.deprecation_count > 0
+        uses: actions/upload-artifact@v4
+        with:
+          name: deprecation-report-ci-${{ github.sha }}
+          path: deprecations.txt
+          retention-days: 7
+
   build:
     runs-on: ubuntu-latest
     

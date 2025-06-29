@@ -2104,16 +2104,16 @@ func (s *Service) RegisterTools(server interface{}) error {
 		InputSchema: mcp.ToolInputSchema{
 			Type: "object",
 			Properties: map[string]any{
-				"cluster": map[string]any{
+				"region": map[string]any{
 					"type":        "string",
-					"description": "Object Storage cluster ID",
+					"description": "Object Storage region ID",
 				},
 				"bucket": map[string]any{
 					"type":        "string",
 					"description": "Bucket name",
 				},
 			},
-			Required: []string{"cluster", "bucket"},
+			Required: []string{"region", "bucket"},
 		},
 	}, s.handleObjectStorageBucketGet)
 
@@ -2126,10 +2126,6 @@ func (s *Service) RegisterTools(server interface{}) error {
 				"label": map[string]any{
 					"type":        "string",
 					"description": "Bucket name/label",
-				},
-				"cluster": map[string]any{
-					"type":        "string",
-					"description": "Object Storage cluster ID (deprecated, use region)",
 				},
 				"region": map[string]any{
 					"type":        "string",
@@ -2154,9 +2150,9 @@ func (s *Service) RegisterTools(server interface{}) error {
 		InputSchema: mcp.ToolInputSchema{
 			Type: "object",
 			Properties: map[string]any{
-				"cluster": map[string]any{
+				"region": map[string]any{
 					"type":        "string",
-					"description": "Object Storage cluster ID",
+					"description": "Object Storage region ID",
 				},
 				"bucket": map[string]any{
 					"type":        "string",
@@ -2171,7 +2167,7 @@ func (s *Service) RegisterTools(server interface{}) error {
 					"description": "Enable or disable CORS",
 				},
 			},
-			Required: []string{"cluster", "bucket"},
+			Required: []string{"region", "bucket"},
 		},
 	}, s.handleObjectStorageBucketUpdate)
 
@@ -2181,16 +2177,16 @@ func (s *Service) RegisterTools(server interface{}) error {
 		InputSchema: mcp.ToolInputSchema{
 			Type: "object",
 			Properties: map[string]any{
-				"cluster": map[string]any{
+				"region": map[string]any{
 					"type":        "string",
-					"description": "Object Storage cluster ID",
+					"description": "Object Storage region ID",
 				},
 				"bucket": map[string]any{
 					"type":        "string",
 					"description": "Bucket name",
 				},
 			},
-			Required: []string{"cluster", "bucket"},
+			Required: []string{"region", "bucket"},
 		},
 	}, s.handleObjectStorageBucketDelete)
 

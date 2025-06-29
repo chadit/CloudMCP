@@ -1,8 +1,9 @@
 //go:build integration
 
-package linode
+package linode_test
 
 import (
+	"github.com/chadit/CloudMCP/internal/services/linode"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -400,7 +401,7 @@ func TestNetworkingToolsIntegration(t *testing.T) {
 	server := createNetworkingTestServer()
 	defer server.Close()
 
-	service := CreateHTTPTestService(t, server.URL)
+	service := linode.CreateHTTPTestService(t, server.URL)
 	ctx := context.Background()
 
 	err := service.Initialize(ctx)
@@ -656,7 +657,7 @@ func TestNetworkingErrorHandlingIntegration(t *testing.T) {
 	server := createNetworkingTestServer()
 	defer server.Close()
 
-	service := CreateHTTPTestService(t, server.URL)
+	service := linode.CreateHTTPTestService(t, server.URL)
 	ctx := context.Background()
 
 	err := service.Initialize(ctx)
