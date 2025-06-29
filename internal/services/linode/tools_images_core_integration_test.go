@@ -1,6 +1,6 @@
 //go:build integration
 
-package linode
+package linode_test
 
 import (
 	"context"
@@ -200,6 +200,25 @@ func handleImagesList(w http.ResponseWriter, r *http.Request) {
 				"total_size":   2048,
 				"regions":      []string{"us-east", "us-west", "us-central", "eu-west", "ap-south"},
 				"capabilities": []string{"cloud-init", "virtio_scsi", "virtio_net"},
+			},
+			{
+				"id":           "linode/ubuntu18.04",
+				"label":        "Ubuntu 18.04 LTS",
+				"description":  "Ubuntu 18.04 LTS (Deprecated - use Ubuntu 22.04)",
+				"type":         "manual",
+				"status":       "available",
+				"size":         1536,
+				"is_public":    true,
+				"deprecated":   true,
+				"vendor":       "Ubuntu",
+				"expiry":       nil,
+				"eol":          "2023-04-01T04:00:00",
+				"created":      "2018-04-26T00:00:00",
+				"updated":      "2023-01-01T00:00:00",
+				"created_by":   "linode",
+				"total_size":   1536,
+				"regions":      []string{"us-east", "us-west", "us-central"},
+				"capabilities": []string{"cloud-init"},
 			},
 			{
 				"id":           "private/12345",

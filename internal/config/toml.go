@@ -9,16 +9,16 @@ import (
 )
 
 const (
-	defaultLogMaxSize     = 10 // 10MB
-	defaultLogMaxBackups  = 5  // Keep 5 files
-	defaultLogMaxAge      = 30 // 30 days
+	defaultLogMaxSize    = 10 // 10MB
+	defaultLogMaxBackups = 5  // Keep 5 files
+	defaultLogMaxAge     = 30 // 30 days
 )
 
 var (
-	ErrConfigFileNotFound       = errors.New("config file not found")
-	ErrDefaultAccountRequired   = errors.New("default_account is required")
-	ErrAccountMissingToken      = errors.New("account is missing token")
-	ErrAccountMissingLabel      = errors.New("account is missing label")
+	ErrConfigFileNotFound     = errors.New("config file not found")
+	ErrDefaultAccountRequired = errors.New("default_account is required")
+	ErrAccountMissingToken    = errors.New("account is missing token")
+	ErrAccountMissingLabel    = errors.New("account is missing label")
 )
 
 // TOMLConfig represents the new TOML-based configuration structure.
@@ -86,18 +86,23 @@ func LoadTOMLConfig(configPath string) (*TOMLConfig, error) {
 	if config.System.ServerName == "" {
 		config.System.ServerName = "Cloud MCP Server"
 	}
+
 	if config.System.LogLevel == "" {
 		config.System.LogLevel = "info"
 	}
+
 	if config.System.MetricsPort == 0 {
 		config.System.MetricsPort = defaultMetricsPort
 	}
+
 	if config.System.LogMaxSize == 0 {
 		config.System.LogMaxSize = defaultLogMaxSize // 10MB
 	}
+
 	if config.System.LogMaxBackups == 0 {
 		config.System.LogMaxBackups = defaultLogMaxBackups
 	}
+
 	if config.System.LogMaxAge == 0 {
 		config.System.LogMaxAge = defaultLogMaxAge // 30 days
 	}
@@ -152,6 +157,7 @@ func (tc *TOMLConfig) Validate() error {
 		if account.Token == "" {
 			return fmt.Errorf("account %q: %w", name, ErrAccountMissingToken)
 		}
+
 		if account.Label == "" {
 			return fmt.Errorf("account %q: %w", name, ErrAccountMissingLabel)
 		}

@@ -24,6 +24,7 @@ dist/
 # Project-specific binaries
 cloud-mcp-setup
 server
+main
 
 # Environment files
 .env

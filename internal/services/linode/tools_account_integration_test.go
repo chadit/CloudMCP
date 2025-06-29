@@ -1,6 +1,6 @@
 //go:build integration
 
-package linode
+package linode_test
 
 import (
 	"context"

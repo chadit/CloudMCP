@@ -1,6 +1,6 @@
 //go:build integration
 
-package linode
+package linode_test
 
 import (
 	"context"
@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/chadit/CloudMCP/internal/config"
+	"github.com/chadit/CloudMCP/internal/services/linode"
 	"github.com/chadit/CloudMCP/pkg/logger"
 )
 
@@ -333,7 +334,7 @@ func handleVolumesList(w http.ResponseWriter, r *http.Request) {
 // • Single test account named "httptest-integration"
 // • Uses placeholder token (test server doesn't validate)
 // • Custom API URL pointing to httptest server
-func CreateHTTPTestService(t *testing.T, mockAPIURL string) *Service {
+func CreateHTTPTestService(t *testing.T, mockAPIURL string) *linode.Service {
 	log := logger.New("debug")
 
 	cfg := &config.Config{
@@ -347,7 +348,7 @@ func CreateHTTPTestService(t *testing.T, mockAPIURL string) *Service {
 		},
 	}
 
-	service, err := New(cfg, log)
+	service, err := linode.New(cfg, log)
 	require.NoError(t, err, "failed to create HTTP test service")
 
 	return service
@@ -355,7 +356,7 @@ func CreateHTTPTestService(t *testing.T, mockAPIURL string) *Service {
 
 // createHTTPTestServiceForBenchmark creates a CloudMCP service for benchmark tests.
 // This is separate from the main test helper because testing.B and testing.T are different types.
-func createHTTPTestServiceForBenchmark(b *testing.B, mockAPIURL string) *Service {
+func createHTTPTestServiceForBenchmark(b *testing.B, mockAPIURL string) *linode.Service {
 	log := logger.New("error") // Use error level to reduce benchmark noise
 
 	cfg := &config.Config{
@@ -369,7 +370,7 @@ func createHTTPTestServiceForBenchmark(b *testing.B, mockAPIURL string) *Service
 		},
 	}
 
-	service, err := New(cfg, log)
+	service, err := linode.New(cfg, log)
 	if err != nil {
 		b.Fatalf("failed to create HTTP test service for benchmark: %v", err)
 	}
@@ -397,7 +398,7 @@ func createHTTPTestServiceForBenchmark(b *testing.B, mockAPIURL string) *Service
 //	service, cleanup := SetupHTTPTestIntegration(t)
 //	defer cleanup()
 //	// Run integration tests with service
-func SetupHTTPTestIntegration(t *testing.T) (*Service, func()) {
+func SetupHTTPTestIntegration(t *testing.T) (*linode.Service, func()) {
 	ctx := context.Background()
 
 	server := MockLinodeAPIServer()

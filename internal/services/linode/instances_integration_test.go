@@ -1,8 +1,9 @@
 //go:build integration
 
-package linode
+package linode_test
 
 import (
+	"github.com/chadit/CloudMCP/internal/services/linode"
 	"context"
 	"encoding/json"
 	"testing"
@@ -34,7 +35,7 @@ import (
 // **Purpose**: This test ensures end-to-end integration between CloudMCP's MCP
 // interface and Linode API communication works correctly with realistic data.
 func TestInstancesListIntegration(t *testing.T) {
-	service, cleanup := SetupIntegrationTest(t)
+	service, cleanup := linode.SetupIntegrationTest(t)
 	defer cleanup()
 
 	ctx := context.Background()
@@ -113,7 +114,7 @@ func TestInstancesListIntegration(t *testing.T) {
 // **Purpose**: Validates that CloudMCP can successfully retrieve and format
 // detailed instance information through the MCP protocol interface.
 func TestInstanceGetIntegration(t *testing.T) {
-	service, cleanup := SetupIntegrationTest(t)
+	service, cleanup := linode.SetupIntegrationTest(t)
 	defer cleanup()
 
 	ctx := context.Background()
@@ -207,7 +208,7 @@ func TestInstanceGetIntegration(t *testing.T) {
 // **Purpose**: Validates that CloudMCP can successfully handle instance creation
 // workflows through the MCP interface with proper parameter handling.
 func TestInstanceCreateIntegration(t *testing.T) {
-	service, cleanup := SetupIntegrationTest(t)
+	service, cleanup := linode.SetupIntegrationTest(t)
 	defer cleanup()
 
 	ctx := context.Background()
@@ -280,7 +281,7 @@ func TestInstanceCreateIntegration(t *testing.T) {
 // **Purpose**: Ensures CloudMCP gracefully handles API errors and provides
 // meaningful error information through the MCP interface.
 func TestInstanceNotFoundErrorIntegration(t *testing.T) {
-	service, cleanup := SetupIntegrationTest(t)
+	service, cleanup := linode.SetupIntegrationTest(t)
 	defer cleanup()
 
 	ctx := context.Background()
@@ -327,7 +328,7 @@ func TestInstanceNotFoundErrorIntegration(t *testing.T) {
 // **Purpose**: Validates that CloudMCP can successfully handle volume operations
 // through the MCP interface with proper data formatting.
 func TestVolumesListIntegration(t *testing.T) {
-	service, cleanup := SetupIntegrationTest(t)
+	service, cleanup := linode.SetupIntegrationTest(t)
 	defer cleanup()
 
 	ctx := context.Background()
