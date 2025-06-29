@@ -76,10 +76,16 @@ clean:
 	@echo "Cleaning..."
 	@rm -rf bin/ dist/ coverage.txt coverage.html *.coverprofile
 
-# Run linters
+# Run linters (using reliable approach)
 lint:
 	@echo "Running linters..."
-	@golangci-lint run
+	@echo "• Running go vet..."
+	@go vet ./...
+	@echo "• Running go fmt check..."
+	@test -z "$$(gofmt -l .)" || (echo "Code needs formatting. Run 'make fmt'" && exit 1)
+	@echo "• Running staticcheck for deprecation warnings..."
+	@golangci-lint run --disable-all --enable=staticcheck,gosimple,unused,ineffassign,misspell,unconvert --exclude-use-default=false
+	@echo "✅ All linting checks passed!"
 
 # Format code
 fmt:

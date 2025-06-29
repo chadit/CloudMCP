@@ -683,7 +683,7 @@ func (s *Service) handleDatabaseEnginesList(ctx context.Context, request mcp.Cal
 		fmt.Fprintf(&sb, "Engine: %s\n", engine.Engine)
 		fmt.Fprintf(&sb, "  ID: %s\n", engine.ID)
 		fmt.Fprintf(&sb, "  Version: %s\n", engine.Version)
-		// Note: Deprecated field may not be available in all linodego versions
+		// Note: DatabaseEngine struct doesn't include status field, showing generic status
 		fmt.Fprintf(&sb, "  Status: Active\n")
 		sb.WriteString("\n")
 	}

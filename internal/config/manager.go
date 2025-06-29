@@ -7,12 +7,12 @@ import (
 )
 
 var (
-	ErrConfigurationNotLoaded    = errors.New("configuration not loaded")
-	ErrAccountTokenRequired      = errors.New("account token is required")
-	ErrAccountLabelRequired      = errors.New("account label is required")
-	ErrAccountNotExist           = errors.New("account does not exist")
+	ErrConfigurationNotLoaded     = errors.New("configuration not loaded")
+	ErrAccountTokenRequired       = errors.New("account token is required")
+	ErrAccountLabelRequired       = errors.New("account label is required")
+	ErrAccountNotExist            = errors.New("account does not exist")
 	ErrCannotRemoveDefaultAccount = errors.New("cannot remove the default account")
-	ErrNoConfigurationToSave     = errors.New("no configuration to save")
+	ErrNoConfigurationToSave      = errors.New("no configuration to save")
 )
 
 // Manager provides thread-safe management of TOML configuration.
@@ -58,6 +58,7 @@ func (cm *TOMLConfigManager) LoadOrCreate() error {
 	}
 
 	cm.config = config
+
 	return nil
 }
 
@@ -96,6 +97,7 @@ func (cm *TOMLConfigManager) AddAccount(name string, account AccountConfig) erro
 	if account.Token == "" {
 		return ErrAccountTokenRequired
 	}
+
 	if account.Label == "" {
 		return ErrAccountLabelRequired
 	}
@@ -151,6 +153,7 @@ func (cm *TOMLConfigManager) UpdateAccount(name string, account AccountConfig) e
 	if account.Token == "" {
 		return ErrAccountTokenRequired
 	}
+
 	if account.Label == "" {
 		return ErrAccountLabelRequired
 	}
@@ -211,5 +214,6 @@ func (cm *TOMLConfigManager) Reload() error {
 	}
 
 	cm.config = config
+
 	return nil
 }

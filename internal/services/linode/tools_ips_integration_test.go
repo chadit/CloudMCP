@@ -1,6 +1,6 @@
 //go:build integration
 
-package linode
+package linode_test
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/chadit/CloudMCP/internal/services/linode"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"
 )
@@ -257,7 +258,7 @@ func TestIPsToolsIntegration(t *testing.T) {
 	server := createIPsTestServer()
 	defer server.Close()
 
-	service := CreateHTTPTestService(t, server.URL)
+	service := linode.CreateHTTPTestService(t, server.URL)
 	ctx := context.Background()
 
 	err := service.Initialize(ctx)
@@ -377,7 +378,7 @@ func TestIPsErrorHandlingIntegration(t *testing.T) {
 	server := createIPsTestServer()
 	defer server.Close()
 
-	service := CreateHTTPTestService(t, server.URL)
+	service := linode.CreateHTTPTestService(t, server.URL)
 	ctx := context.Background()
 
 	err := service.Initialize(ctx)

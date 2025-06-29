@@ -45,14 +45,17 @@ func main() {
 
 	// Start the client
 	fmt.Println("Starting CloudMCP server...")
+
 	err = mcpClient.Start(ctx)
 	if err != nil {
 		log.Fatalf("Failed to start client: %v", err)
 	}
+
 	defer mcpClient.Close()
 
 	// Initialize connection
 	fmt.Println("Initializing connection...")
+
 	initResult, err := mcpClient.Initialize(ctx, mcp.InitializeRequest{
 		Params: mcp.InitializeParams{
 			ProtocolVersion: "0.1.0",
@@ -64,6 +67,7 @@ func main() {
 		},
 	})
 	if err != nil {
+		mcpClient.Close()
 		log.Fatalf("Failed to initialize: %v", err)
 	}
 
@@ -78,13 +82,16 @@ func main() {
 	}
 
 	fmt.Println("Available tools:")
+
 	for _, tool := range toolsResult.Tools {
 		fmt.Printf("  - %s: %s\n", tool.Name, tool.Description)
 	}
+
 	fmt.Println()
 
 	// Interactive loop
 	reader := bufio.NewReader(os.Stdin)
+
 	for {
 		fmt.Println("\nAvailable commands:")
 		fmt.Println("  1. Get current account")
@@ -110,6 +117,7 @@ func main() {
 			callTool(ctx, mcpClient, "linode_account_list", nil)
 		case "3":
 			fmt.Print("Enter account name to switch to: ")
+
 			accountName, _ := reader.ReadString('\n')
 			accountName = strings.TrimSpace(accountName)
 			callTool(ctx, mcpClient, "linode_account_switch", map[string]interface{}{
@@ -119,13 +127,17 @@ func main() {
 			callTool(ctx, mcpClient, "linode_instances_list", nil)
 		case "5":
 			fmt.Print("Enter instance ID: ")
+
 			instanceIDStr, _ := reader.ReadString('\n')
 			instanceIDStr = strings.TrimSpace(instanceIDStr)
+
 			var instanceID float64
+
 			if _, err := fmt.Sscanf(instanceIDStr, "%f", &instanceID); err != nil {
 				fmt.Printf("Invalid instance ID format: %v\n", err)
 				continue
 			}
+
 			callTool(ctx, mcpClient, "linode_instance_get", map[string]interface{}{
 				"instance_id": instanceID,
 			})
@@ -133,13 +145,17 @@ func main() {
 			callTool(ctx, mcpClient, "linode_volumes_list", nil)
 		case "7":
 			fmt.Print("Enter volume ID: ")
+
 			volumeIDStr, _ := reader.ReadString('\n')
 			volumeIDStr = strings.TrimSpace(volumeIDStr)
+
 			var volumeID float64
+
 			if _, err := fmt.Sscanf(volumeIDStr, "%f", &volumeID); err != nil {
 				fmt.Printf("Invalid volume ID format: %v\n", err)
 				continue
 			}
+
 			callTool(ctx, mcpClient, "linode_volume_get", map[string]interface{}{
 				"volume_id": volumeID,
 			})
@@ -147,6 +163,7 @@ func main() {
 			callTool(ctx, mcpClient, "linode_ips_list", nil)
 		case "9":
 			fmt.Print("Enter IP address: ")
+
 			ipAddress, _ := reader.ReadString('\n')
 			ipAddress = strings.TrimSpace(ipAddress)
 			callTool(ctx, mcpClient, "linode_ip_get", map[string]interface{}{
@@ -154,10 +171,12 @@ func main() {
 			})
 		case "10":
 			fmt.Print("Enter tool name: ")
+
 			toolName, _ := reader.ReadString('\n')
 			toolName = strings.TrimSpace(toolName)
 
 			fmt.Print("Enter arguments as JSON (or press enter for none): ")
+
 			argsStr, _ := reader.ReadString('\n')
 			argsStr = strings.TrimSpace(argsStr)
 
@@ -197,19 +216,20 @@ func callTool(ctx context.Context, mcpClient *client.Client, toolName string, ar
 	// Since Content is an interface, we need to handle it as raw JSON
 	if len(result.Content) > 0 {
 		// Try to get the text representation
-		for i, content := range result.Content {
+		for index, content := range result.Content {
 			// Marshal to JSON to see the content
 			data, err := json.Marshal(content)
 			if err != nil {
-				fmt.Printf("Error marshaling content %d: %v\n", i, err)
+				fmt.Printf("Error marshaling content %d: %v\n", index, err)
 				continue
 			}
+
 			var contentMap map[string]interface{}
 			if err := json.Unmarshal(data, &contentMap); err == nil {
 				if text, ok := contentMap["text"].(string); ok {
 					fmt.Println(text)
 				} else {
-					fmt.Printf("Content %d: %s\n", i, string(data))
+					fmt.Printf("Content %d: %s\n", index, string(data))
 				}
 			}
 		}

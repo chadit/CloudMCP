@@ -14,9 +14,9 @@ import (
 )
 
 const (
-	defaultLogMaxSize     = 10 // 10MB
-	defaultLogMaxBackups  = 5  // Keep 5 files  
-	defaultLogMaxAge      = 30 // 30 days
+	defaultLogMaxSize    = 10 // 10MB
+	defaultLogMaxBackups = 5  // Keep 5 files
+	defaultLogMaxAge     = 30 // 30 days
 )
 
 func main() {
@@ -30,9 +30,9 @@ func main() {
 	logConfig := logger.LogConfig{
 		Level:      cfg.LogLevel,
 		FilePath:   config.GetLogPath(),
-		MaxSize:    defaultLogMaxSize, // 10MB
-		MaxBackups: defaultLogMaxBackups,  // Keep 5 files
-		MaxAge:     defaultLogMaxAge, // 30 days
+		MaxSize:    defaultLogMaxSize,    // 10MB
+		MaxBackups: defaultLogMaxBackups, // Keep 5 files
+		MaxAge:     defaultLogMaxAge,     // 30 days
 	}
 
 	// Ensure log directory exists
