@@ -32,8 +32,6 @@ import (
 func TestHandleInstancesList_AccountError(t *testing.T) {
 	t.Parallel()
 
-	t.Parallel()
-
 	// Create minimal service with empty account manager
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -569,8 +567,6 @@ func TestHandleInstanceReboot_MissingParameter(t *testing.T) {
 //
 // **Purpose**: This test ensures instance boot parameter validation works correctly and account errors are handled.
 func TestHandleInstanceBoot_ValidParameters(t *testing.T) {
-	t.Parallel()
-
 	t.Parallel()
 
 	// Create service with completely empty account manager - no accounts at all
