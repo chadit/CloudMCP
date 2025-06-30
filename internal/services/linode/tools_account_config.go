@@ -205,7 +205,7 @@ func (s *Service) handleCloudMCPAccountRemove(_ context.Context, request mcp.Cal
 	s.accountManager.mu.Unlock()
 
 	result := fmt.Sprintf("Account '%s' removed successfully.\n", params.Name)
-	result += fmt.Sprintf("Configuration saved to: %s", configPath)
+	result += "Configuration saved to: " + configPath
 
 	return mcp.NewToolResultText(result), nil
 }
@@ -301,7 +301,7 @@ func (s *Service) handleCloudMCPAccountUpdate(ctx context.Context, request mcp.C
 	}
 
 	result := fmt.Sprintf("Account '%s' updated successfully.\n", params.Name)
-	result += fmt.Sprintf("Configuration saved to: %s", configPath)
+	result += "Configuration saved to: " + configPath
 
 	return mcp.NewToolResultText(result), nil
 }

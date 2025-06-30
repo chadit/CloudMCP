@@ -333,7 +333,7 @@ func (s *Service) handleReplicateImage(ctx context.Context, params ImageReplicat
 	existingImage, err := account.Client.GetImage(ctx, params.ImageID)
 	if err != nil {
 		return nil, types.NewToolError("linode", "replicate_image", //nolint:wrapcheck // types.NewToolError already wraps the error
-			fmt.Sprintf("failed to get image %s", params.ImageID), err)
+			"failed to get image "+params.ImageID, err)
 	}
 
 	if existingImage.IsPublic {

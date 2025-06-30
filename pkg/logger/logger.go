@@ -1,3 +1,5 @@
+// Package logger provides a flexible logging interface with structured logging support.
+// It wraps the standard slog package and provides file rotation capabilities.
 package logger
 
 import (
@@ -34,14 +36,14 @@ type slogWrapper struct {
 }
 
 // New creates a logger that outputs to stderr (for backwards compatibility).
-func New(level string) Logger {
+func New(level string) Logger { //nolint:ireturn // Factory function should return interface
 	return NewWithConfig(LogConfig{
 		Level: level,
 	})
 }
 
 // NewWithConfig creates a logger with the specified configuration.
-func NewWithConfig(config LogConfig) Logger {
+func NewWithConfig(config LogConfig) Logger { //nolint:ireturn // Factory function should return interface
 	var logLevel slog.Level
 
 	switch config.Level {
@@ -113,6 +115,6 @@ func (l *slogWrapper) ErrorContext(ctx context.Context, msg string, args ...any)
 	l.logger.ErrorContext(ctx, msg, args...)
 }
 
-func (l *slogWrapper) With(args ...any) Logger {
+func (l *slogWrapper) With(args ...any) Logger { //nolint:ireturn // Method should return interface for fluent API
 	return &slogWrapper{logger: l.logger.With(args...)}
 }

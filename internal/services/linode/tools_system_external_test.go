@@ -14,7 +14,7 @@ import (
 	"github.com/chadit/CloudMCP/pkg/logger"
 )
 
-// Helper function to extract text content from CallToolResult
+// Helper function to extract text content from CallToolResult.
 func getTextContent(t *testing.T, result *mcp.CallToolResult) string {
 	require.NotNil(t, result, "result should not be nil")
 	require.NotEmpty(t, result.Content, "result should have content")
@@ -309,23 +309,34 @@ func TestVersionInfoConsistencyThroughAPI(t *testing.T) {
 	err = json.Unmarshal([]byte(jsonText), &jsonResponse)
 	require.NoError(t, err, "JSON should be valid")
 
-	cloudmcpObj := jsonResponse["cloudmcp"].(map[string]interface{})
+	cloudmcpObj, ok := jsonResponse["cloudmcp"].(map[string]interface{})
+	require.True(t, ok, "cloudmcp field should be a map")
 
 	// Verify version consistency
 	textContent := getTextContent(t, textResult)
-	require.Contains(t, textContent, cloudmcpObj["version"].(string),
+	version, ok := cloudmcpObj["version"].(string)
+	require.True(t, ok, "version should be a string")
+	require.Contains(t, textContent, version,
 		"text should contain same version as JSON")
-	require.Contains(t, textContent, cloudmcpObj["api_version"].(string),
+	
+	apiVersion, ok := cloudmcpObj["api_version"].(string)
+	require.True(t, ok, "api_version should be a string")
+	require.Contains(t, textContent, apiVersion,
 		"text should contain same API version as JSON")
 
 	// Verify account consistency
-	expectedAccount := jsonResponse["current_account"].(string)
+	expectedAccount, ok := jsonResponse["current_account"].(string)
+	require.True(t, ok, "current_account should be a string")
 	require.Contains(t, textContent, expectedAccount,
 		"text should contain same account as JSON")
 
 	// Verify feature consistency
-	features := cloudmcpObj["features"].(map[string]interface{})
-	require.Contains(t, textContent, features["linode_api_coverage"].(string),
+	features, ok := cloudmcpObj["features"].(map[string]interface{})
+	require.True(t, ok, "features should be a map")
+	
+	linodeCoverage, ok := features["linode_api_coverage"].(string)
+	require.True(t, ok, "linode_api_coverage should be a string")
+	require.Contains(t, textContent, linodeCoverage,
 		"text should contain same API coverage as JSON")
 }
 

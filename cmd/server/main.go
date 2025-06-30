@@ -69,14 +69,14 @@ func main() {
 	srv, err := server.New(cfg, log)
 	if err != nil {
 		log.Error("Failed to create server", "error", err)
-		cancel()
-		os.Exit(1)
+
+		return
 	}
 
 	if err := srv.Start(ctx); err != nil {
 		log.Error("Server error", "error", err)
-		cancel()
-		os.Exit(1)
+
+		return
 	}
 
 	log.Info("Server shutdown complete")
