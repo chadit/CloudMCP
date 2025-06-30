@@ -1,7 +1,6 @@
 package linode_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -30,6 +29,8 @@ import (
 //
 // **Purpose**: This test ensures databases list command fails appropriately when account configuration is invalid.
 func TestHandleDatabasesList_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create minimal service with empty account manager
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -43,7 +44,7 @@ func TestHandleDatabasesList_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test databases list request with empty account manager
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_databases_list",
@@ -57,6 +58,7 @@ func TestHandleDatabasesList_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -81,6 +83,8 @@ func TestHandleDatabasesList_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleMySQLDatabasesList_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -92,7 +96,7 @@ func TestHandleMySQLDatabasesList_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test MySQL databases list request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_mysql_databases_list",
@@ -106,6 +110,7 @@ func TestHandleMySQLDatabasesList_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -128,6 +133,8 @@ func TestHandleMySQLDatabasesList_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandlePostgresDatabasesList_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -139,7 +146,7 @@ func TestHandlePostgresDatabasesList_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test PostgreSQL databases list request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_postgres_databases_list",
@@ -153,6 +160,7 @@ func TestHandlePostgresDatabasesList_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -175,6 +183,8 @@ func TestHandlePostgresDatabasesList_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleMySQLDatabaseGet_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -186,7 +196,7 @@ func TestHandleMySQLDatabaseGet_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test MySQL database get request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_mysql_database_get",
@@ -202,6 +212,7 @@ func TestHandleMySQLDatabaseGet_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -224,6 +235,8 @@ func TestHandleMySQLDatabaseGet_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandlePostgresDatabaseGet_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -235,7 +248,7 @@ func TestHandlePostgresDatabaseGet_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test PostgreSQL database get request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_postgres_database_get",
@@ -251,6 +264,7 @@ func TestHandlePostgresDatabaseGet_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -273,6 +287,8 @@ func TestHandlePostgresDatabaseGet_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleMySQLDatabaseCreate_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -284,7 +300,7 @@ func TestHandleMySQLDatabaseCreate_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test MySQL database create request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_mysql_database_create",
@@ -302,6 +318,7 @@ func TestHandleMySQLDatabaseCreate_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -324,6 +341,8 @@ func TestHandleMySQLDatabaseCreate_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleMySQLDatabaseDelete_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -335,7 +354,7 @@ func TestHandleMySQLDatabaseDelete_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test MySQL database delete request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_mysql_database_delete",
@@ -351,6 +370,7 @@ func TestHandleMySQLDatabaseDelete_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -373,6 +393,8 @@ func TestHandleMySQLDatabaseDelete_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleMySQLDatabaseCredentialsReset_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -384,7 +406,7 @@ func TestHandleMySQLDatabaseCredentialsReset_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test MySQL database credentials reset request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_mysql_database_credentials_reset",
@@ -400,6 +422,7 @@ func TestHandleMySQLDatabaseCredentialsReset_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -422,6 +445,8 @@ func TestHandleMySQLDatabaseCredentialsReset_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleDatabaseEnginesList_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -433,7 +458,7 @@ func TestHandleDatabaseEnginesList_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test database engines list request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_database_engines_list",
@@ -447,6 +472,7 @@ func TestHandleDatabaseEnginesList_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")

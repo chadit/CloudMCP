@@ -33,21 +33,26 @@ func (s *Service) handleVolumesList(ctx context.Context, _ mcp.CallToolRequest) 
 	for _, vol := range volumes {
 		resultText += fmt.Sprintf("ID: %d | %s\n", vol.ID, vol.Label)
 		resultText += fmt.Sprintf("  Status: %s | Size: %d GB | Region: %s\n", vol.Status, vol.Size, vol.Region)
+
 		if vol.LinodeID != nil && *vol.LinodeID > 0 {
 			resultText += fmt.Sprintf("  Attached to: Linode %d", *vol.LinodeID)
 			if vol.LinodeLabel != "" {
 				resultText += fmt.Sprintf(" (%s)", vol.LinodeLabel)
 			}
+
 			resultText += "\n"
+
 			if vol.FilesystemPath != "" {
 				resultText += fmt.Sprintf("  Mount Path: %s\n", vol.FilesystemPath)
 			}
 		} else {
 			resultText += "  Status: Unattached\n"
 		}
+
 		if len(vol.Tags) > 0 {
 			resultText += fmt.Sprintf("  Tags: %s\n", strings.Join(vol.Tags, ", "))
 		}
+
 		resultText += "\n"
 	}
 
@@ -56,6 +61,7 @@ func (s *Service) handleVolumesList(ctx context.Context, _ mcp.CallToolRequest) 
 
 func (s *Service) handleVolumeGet(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	arguments := request.GetArguments()
+
 	volumeID, err := parseIDFromArguments(arguments, "volume_id")
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
@@ -96,6 +102,7 @@ Updated: %s`,
 		if volume.LinodeLabel != "" {
 			resultText += fmt.Sprintf(" (%s)", volume.LinodeLabel)
 		}
+
 		if volume.FilesystemPath != "" {
 			resultText += "\nMount Path: " + volume.FilesystemPath
 		}
@@ -147,11 +154,13 @@ func (s *Service) handleVolumeCreate(ctx context.Context, request mcp.CallToolRe
 
 	if tags, ok := arguments["tags"].([]interface{}); ok {
 		tagList := make([]string, 0, len(tags))
+
 		for _, tag := range tags {
 			if t, ok := tag.(string); ok {
 				tagList = append(tagList, t)
 			}
 		}
+
 		createOpts.Tags = tagList
 	}
 
@@ -188,6 +197,7 @@ Status: %s`,
 
 func (s *Service) handleVolumeDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	arguments := request.GetArguments()
+
 	volumeID, err := parseIDFromArguments(arguments, "volume_id")
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
@@ -215,19 +225,15 @@ func (s *Service) handleVolumeDelete(ctx context.Context, request mcp.CallToolRe
 		"label", volume.Label,
 	)
 
-	return mcp.NewToolResultText(fmt.Sprintf(`Volume deleted successfully!
-
-Deleted Volume:
-- ID: %d
-- Label: %s
-- Size: %d GB
-- Region: %s
-
-The volume has been permanently deleted.`,
+	return mcp.NewToolResultText(s.formatResourceDeleteSuccess(
+		"Volume",
 		volume.ID,
 		volume.Label,
-		volume.Size,
-		volume.Region,
+		map[string]string{
+			"Size":   fmt.Sprintf("%d GB", volume.Size),
+			"Region": volume.Region,
+		},
+		"The volume has been permanently deleted.",
 	)), nil
 }
 
@@ -291,6 +297,7 @@ mount %s /mnt/%s`,
 
 func (s *Service) handleVolumeDetach(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	arguments := request.GetArguments()
+
 	volumeID, err := parseIDFromArguments(arguments, "volume_id")
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil

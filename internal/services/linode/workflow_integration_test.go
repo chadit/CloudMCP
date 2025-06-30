@@ -3,7 +3,6 @@
 package linode_test
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -35,7 +34,7 @@ func TestCompleteInstanceLifecycleWorkflow(t *testing.T) {
 	service, cleanup := SetupHTTPTestIntegration(t)
 	defer cleanup()
 
-	ctx := context.Background()
+	ctx := t.Context()
 
 	// Step 1: Verify account information
 	t.Run("Step1_VerifyAccount", func(t *testing.T) {
@@ -167,7 +166,7 @@ func TestAccountManagementWorkflow(t *testing.T) {
 	service, cleanup := SetupHTTPTestIntegration(t)
 	defer cleanup()
 
-	ctx := context.Background()
+	ctx := t.Context()
 
 	// Step 1: Get current account information
 	t.Run("Step1_GetAccountInfo", func(t *testing.T) {
@@ -261,7 +260,7 @@ func TestResourceDiscoveryWorkflow(t *testing.T) {
 	service, cleanup := SetupHTTPTestIntegration(t)
 	defer cleanup()
 
-	ctx := context.Background()
+	ctx := t.Context()
 
 	// Step 1: Discover instances
 	var instanceFound bool

@@ -79,7 +79,9 @@ func main() {
 	// List available tools
 	toolsResult, err := mcpClient.ListTools(ctx, mcp.ListToolsRequest{})
 	if err != nil {
-		log.Fatalf("Failed to list tools: %v", err)
+		log.Printf("Failed to list tools: %v", err)
+
+		return
 	}
 
 	fmt.Println("Available tools:")

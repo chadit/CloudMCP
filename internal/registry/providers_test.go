@@ -347,7 +347,7 @@ func TestRegistry_ConcurrentAccess(t *testing.T) {
 	const numProviders = 10
 	errors := make(chan error, numProviders)
 
-	for i := range numProviders {
+	for providerIndex := range numProviders {
 		go func(index int) {
 			metadata := interfaces.ProviderMetadata{
 				Name:        fmt.Sprintf("provider-%d", index),
@@ -359,7 +359,7 @@ func TestRegistry_ConcurrentAccess(t *testing.T) {
 
 			err := registry.RegisterProvider(fmt.Sprintf("provider-%d", index), factory)
 			errors <- err
-		}(i)
+		}(providerIndex)
 	}
 
 	// Wait for all registrations to complete

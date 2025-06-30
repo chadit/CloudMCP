@@ -1,7 +1,6 @@
 package linode_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -44,7 +43,7 @@ func TestHandleAccountGet_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test account get request with empty account manager
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_account_get",
@@ -104,7 +103,7 @@ func TestHandleAccountList(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test account list request
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_account_list",
@@ -167,7 +166,7 @@ func TestHandleAccountList_SingleAccount(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test account list request
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_account_list",
@@ -233,7 +232,7 @@ func TestHandleAccountSwitch_InvalidAccount(t *testing.T) {
 	require.NoError(t, err, "should be able to get original current account")
 
 	// Test account switch with invalid account name
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_account_switch",
@@ -301,7 +300,7 @@ func TestHandleAccountSwitch_MissingParameter(t *testing.T) {
 	require.NoError(t, err, "should be able to get original current account")
 
 	// Test account switch with missing account_name parameter
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_account_switch",
@@ -361,7 +360,7 @@ func TestHandleAccountSwitch_EmptyParameter(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test account switch with empty account_name parameter
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_account_switch",

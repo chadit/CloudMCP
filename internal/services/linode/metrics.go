@@ -83,8 +83,8 @@ var (
 	// Resource count metrics.
 	resourceCount = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "cloudmcp_resources_total",
-			Help: "Total number of resources by type and account",
+			Name: "cloudmcp_resources",
+			Help: "Number of resources by type and account",
 		},
 		[]string{"resource_type", "account"},
 	)

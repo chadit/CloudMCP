@@ -39,8 +39,8 @@ type HTTPClientConfig struct {
 
 const (
 	// Connection limit thresholds for validation warnings.
-	maxIdleConnsWarningThreshold    = 1000
-	maxIdleConnsPerHostThreshold    = 100
+	maxIdleConnsWarningThreshold = 1000
+	maxIdleConnsPerHostThreshold = 100
 
 	// Default configuration constants.
 	defaultMaxIdleConns           = 100
@@ -61,11 +61,11 @@ const (
 	highPerfTimeout             = 60
 
 	// Low-latency configuration constants.
-	lowLatencyDialTimeout       = 3
-	lowLatencyTLSTimeout        = 3
-	lowLatencyResponseTimeout   = 5
-	lowLatencyTimeoutSeconds    = 15
-	lowLatencyMaxConnsPerHost   = 10
+	lowLatencyDialTimeout     = 3
+	lowLatencyTLSTimeout      = 3
+	lowLatencyResponseTimeout = 5
+	lowLatencyTimeoutSeconds  = 15
+	lowLatencyMaxConnsPerHost = 10
 
 	// Resource-constrained configuration constants.
 	resourceConstrainedMaxIdleConns        = 20
@@ -74,20 +74,20 @@ const (
 	resourceConstrainedIdleTimeoutSeconds  = 30
 
 	// Batch processing configuration constants.
-	batchMaxIdleConns           = 300
-	batchMaxIdleConnsPerHost    = 30
-	batchMaxConnsPerHost        = 100
-	batchTimeoutSeconds         = 120
-	batchIdleTimeoutSeconds     = 300
+	batchMaxIdleConns        = 300
+	batchMaxIdleConnsPerHost = 30
+	batchMaxConnsPerHost     = 100
+	batchTimeoutSeconds      = 120
+	batchIdleTimeoutSeconds  = 300
 )
 
 // DefaultHTTPClientConfig returns a default configuration optimized for Linode API usage.
 func DefaultHTTPClientConfig() HTTPClientConfig {
 	return HTTPClientConfig{
 		// Connection pool settings - optimized for API usage
-		MaxIdleConns:        defaultMaxIdleConns,                                     // Allow many idle connections for reuse
-		MaxIdleConnsPerHost: defaultMaxIdleConnsPerHost,                              // Reasonable per-host limit
-		IdleConnTimeout:     defaultIdleConnTimeoutSeconds * time.Second,             // Keep connections alive for reuse
+		MaxIdleConns:        defaultMaxIdleConns,                         // Allow many idle connections for reuse
+		MaxIdleConnsPerHost: defaultMaxIdleConnsPerHost,                  // Reasonable per-host limit
+		IdleConnTimeout:     defaultIdleConnTimeoutSeconds * time.Second, // Keep connections alive for reuse
 
 		// Timeout settings - balanced for API responsiveness
 		Timeout:               defaultTimeoutSeconds * time.Second,         // Overall request timeout
@@ -104,8 +104,8 @@ func DefaultHTTPClientConfig() HTTPClientConfig {
 		InsecureSkipVerify: false, // Always verify TLS certificates
 
 		// Advanced settings
-		MaxConnsPerHost:       defaultMaxConnsPerHost,   // Allow multiple concurrent connections
-		ExpectContinueTimeout: 1 * time.Second,          // Quick 100-continue handling
+		MaxConnsPerHost:       defaultMaxConnsPerHost, // Allow multiple concurrent connections
+		ExpectContinueTimeout: 1 * time.Second,        // Quick 100-continue handling
 	}
 }
 
@@ -304,10 +304,9 @@ func (v *ClientValidator) RecommendConfig(usage string) HTTPClientConfig {
 		config.MaxConnsPerHost = batchMaxConnsPerHost
 		config.Timeout = batchTimeoutSeconds * time.Second
 		config.IdleConnTimeout = batchIdleTimeoutSeconds * time.Second
-
 	default:
 		// Return default config for unknown usage patterns
-	}
+}
 
 	return config
 }

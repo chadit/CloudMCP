@@ -8,13 +8,13 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockLinodeClient provides a mock implementation of Linode client for testing.
-type MockLinodeClient struct {
+// MockClient provides a mock implementation of Linode client for testing.
+type MockClient struct {
 	mock.Mock
 }
 
 // ListRegions mocks the ListRegions method.
-func (m *MockLinodeClient) ListRegions(ctx context.Context, opts *linodego.ListOptions) ([]linodego.Region, error) {
+func (m *MockClient) ListRegions(ctx context.Context, opts *linodego.ListOptions) ([]linodego.Region, error) {
 	args := m.Called(ctx, opts)
 
 	regions, ok := args.Get(0).([]linodego.Region)
@@ -26,7 +26,7 @@ func (m *MockLinodeClient) ListRegions(ctx context.Context, opts *linodego.ListO
 }
 
 // ListTypes mocks the ListTypes method.
-func (m *MockLinodeClient) ListTypes(ctx context.Context, opts *linodego.ListOptions) ([]linodego.LinodeType, error) {
+func (m *MockClient) ListTypes(ctx context.Context, opts *linodego.ListOptions) ([]linodego.LinodeType, error) {
 	args := m.Called(ctx, opts)
 
 	types, ok := args.Get(0).([]linodego.LinodeType)
@@ -38,7 +38,7 @@ func (m *MockLinodeClient) ListTypes(ctx context.Context, opts *linodego.ListOpt
 }
 
 // ListKernels mocks the ListKernels method.
-func (m *MockLinodeClient) ListKernels(ctx context.Context, opts *linodego.ListOptions) ([]linodego.LinodeKernel, error) {
+func (m *MockClient) ListKernels(ctx context.Context, opts *linodego.ListOptions) ([]linodego.LinodeKernel, error) {
 	args := m.Called(ctx, opts)
 
 	kernels, ok := args.Get(0).([]linodego.LinodeKernel)

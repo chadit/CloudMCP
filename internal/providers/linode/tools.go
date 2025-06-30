@@ -23,10 +23,10 @@ type Service = linode.Service
 
 // Static errors for err113 compliance.
 var (
-	ErrUnknownTool          = errors.New("unknown tool")
-	ErrParametersNil        = errors.New("parameters cannot be nil")
-	ErrUnsupportedTool      = errors.New("unsupported tool")
-	ErrServiceNotInit       = errors.New("Linode service is not initialized")
+	ErrUnknownTool           = errors.New("unknown tool")
+	ErrParametersNil         = errors.New("parameters cannot be nil")
+	ErrUnsupportedTool       = errors.New("unsupported tool")
+	ErrServiceNotInit        = errors.New("Linode service is not initialized")
 	ErrAccountManagerMissing = errors.New("account manager is not available")
 )
 
@@ -331,7 +331,7 @@ func (trh *ToolRegistrationHelper) CreateCustomTool(
 	name, description string,
 	inputSchema mcp.ToolInputSchema,
 	handler func(context.Context, map[string]interface{}) (interface{}, error),
-) interfaces.Tool { //nolint:ireturn // Factory pattern requires returning interface
+) interfaces.Tool {
 	definition := mcp.Tool{
 		Name:        name,
 		Description: description,

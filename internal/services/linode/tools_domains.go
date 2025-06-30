@@ -12,6 +12,103 @@ import (
 	"github.com/chadit/CloudMCP/pkg/types"
 )
 
+// extractStringParam extracts a string parameter from request arguments.
+func extractStringParam(args map[string]interface{}, key string) string {
+	if value, ok := args[key].(string); ok {
+		return value
+	}
+	return ""
+}
+
+// extractIntParam extracts an integer parameter from request arguments.
+func extractIntParam(args map[string]interface{}, key string) int {
+	if value, ok := args[key].(float64); ok {
+		return int(value)
+	}
+	return 0
+}
+
+// extractStringSliceParam extracts a string slice parameter from request arguments.
+func extractStringSliceParam(args map[string]interface{}, key string) []string {
+	rawValue, exists := args[key]
+	if !exists {
+		return nil
+	}
+
+	slice, ok := rawValue.([]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := make([]string, 0, len(slice))
+
+	for _, item := range slice {
+		if str, strOK := item.(string); strOK {
+			result = append(result, str)
+		}
+	}
+	return result
+}
+
+// buildDomainUpdateOptions converts domain parameters to update options.
+func buildDomainUpdateOptions(params DomainUpdateParams) linodego.DomainUpdateOptions {
+	options := linodego.DomainUpdateOptions{}
+
+	if params.Domain != "" {
+		options.Domain = params.Domain
+	}
+	if params.Type != "" {
+		options.Type = linodego.DomainType(params.Type)
+	}
+	if params.SOAEmail != "" {
+		options.SOAEmail = params.SOAEmail
+	}
+	if params.Description != "" {
+		options.Description = params.Description
+	}
+	if params.RetrySec > 0 {
+		options.RetrySec = params.RetrySec
+	}
+	if params.ExpireSec > 0 {
+		options.ExpireSec = params.ExpireSec
+	}
+	if params.RefreshSec > 0 {
+		options.RefreshSec = params.RefreshSec
+	}
+	if params.TTLSec > 0 {
+		options.TTLSec = params.TTLSec
+	}
+	if len(params.Tags) > 0 {
+		options.Tags = params.Tags
+	}
+	if len(params.MasterIPs) > 0 {
+		options.MasterIPs = params.MasterIPs
+	}
+	if len(params.AXfrIPs) > 0 {
+		options.AXfrIPs = params.AXfrIPs
+	}
+
+	return options
+}
+
+// extractDomainUpdateParams extracts domain update parameters from request arguments.
+func extractDomainUpdateParams(args map[string]interface{}, domainID int) DomainUpdateParams {
+	return DomainUpdateParams{
+		DomainID:    domainID,
+		Domain:      extractStringParam(args, "domain"),
+		Type:        extractStringParam(args, "type"),
+		SOAEmail:    extractStringParam(args, "soa_email"),
+		Description: extractStringParam(args, "description"),
+		RetrySec:    extractIntParam(args, "retry_sec"),
+		ExpireSec:   extractIntParam(args, "expire_sec"),
+		RefreshSec:  extractIntParam(args, "refresh_sec"),
+		TTLSec:      extractIntParam(args, "ttl_sec"),
+		Tags:        extractStringSliceParam(args, "tags"),
+		MasterIPs:   extractStringSliceParam(args, "master_ips"),
+		AXfrIPs:     extractStringSliceParam(args, "axfr_ips"),
+	}
+}
+
 const (
 	// timeFormatLayout is the standard time format for displaying dates.
 	timeFormatLayout = "2006-01-02T15:04:05"
@@ -328,136 +425,14 @@ func (s *Service) handleDomainUpdate(ctx context.Context, request mcp.CallToolRe
 		return mcp.NewToolResultError(fmt.Sprintf("Invalid domain_id parameter: %v", parseErr)), nil
 	}
 
-	// Build domain update options.
-	domainParams := DomainUpdateParams{
-		DomainID: domainID,
-	}
-
-	// Optional parameters.
-	if domainName, domainNameOK := requestArguments["domain"].(string); domainNameOK {
-		domainParams.Domain = domainName
-	}
-
-	if domainType, domainTypeOK := requestArguments["type"].(string); domainTypeOK {
-		domainParams.Type = domainType
-	}
-
-	if soaEmail, soaEmailOK := requestArguments["soa_email"].(string); soaEmailOK {
-		domainParams.SOAEmail = soaEmail
-	}
-
-	if description, descriptionOK := requestArguments["description"].(string); descriptionOK {
-		domainParams.Description = description
-	}
-
-	if retrySec, retrySecOK := requestArguments["retry_sec"].(float64); retrySecOK {
-		domainParams.RetrySec = int(retrySec)
-	}
-
-	if expireSec, expireSecOK := requestArguments["expire_sec"].(float64); expireSecOK {
-		domainParams.ExpireSec = int(expireSec)
-	}
-
-	if refreshSec, refreshSecOK := requestArguments["refresh_sec"].(float64); refreshSecOK {
-		domainParams.RefreshSec = int(refreshSec)
-	}
-
-	if ttlSec, ttlSecOK := requestArguments["ttl_sec"].(float64); ttlSecOK {
-		domainParams.TTLSec = int(ttlSec)
-	}
-
-	if tagsRaw, tagsOK := requestArguments["tags"]; tagsOK {
-		if tagsSlice, tagsSliceOK := tagsRaw.([]interface{}); tagsSliceOK {
-			tagsList := make([]string, len(tagsSlice))
-
-			for tagIndex, tagEntry := range tagsSlice {
-				if tagString, tagStringOK := tagEntry.(string); tagStringOK {
-					tagsList[tagIndex] = tagString
-				}
-			}
-
-			domainParams.Tags = tagsList
-		}
-	}
-
-	if masterIPsRaw, masterIPsOK := requestArguments["master_ips"]; masterIPsOK {
-		if ipsSlice, ipsSliceOK := masterIPsRaw.([]interface{}); ipsSliceOK {
-			masterIPsList := make([]string, len(ipsSlice))
-
-			for ipIndex, ipEntry := range ipsSlice {
-				if ipString, ipStringOK := ipEntry.(string); ipStringOK {
-					masterIPsList[ipIndex] = ipString
-				}
-			}
-
-			domainParams.MasterIPs = masterIPsList
-		}
-	}
-
-	if axfrIPsRaw, axfrIPsOK := requestArguments["axfr_ips"]; axfrIPsOK {
-		if ipsSlice, ipsSliceOK := axfrIPsRaw.([]interface{}); ipsSliceOK {
-			axfrIPsList := make([]string, len(ipsSlice))
-
-			for ipIndex, ipEntry := range ipsSlice {
-				if ipString, ipStringOK := ipEntry.(string); ipStringOK {
-					axfrIPsList[ipIndex] = ipString
-				}
-			}
-
-			domainParams.AXfrIPs = axfrIPsList
-		}
-	}
+	domainParams := extractDomainUpdateParams(requestArguments, domainID)
 
 	account, accountErr := s.accountManager.GetCurrentAccount()
 	if accountErr != nil {
 		return mcp.NewToolResultError(accountErr.Error()), nil
 	}
 
-	updateOptions := linodego.DomainUpdateOptions{}
-
-	if domainParams.Domain != "" {
-		updateOptions.Domain = domainParams.Domain
-	}
-
-	if domainParams.Type != "" {
-		updateOptions.Type = linodego.DomainType(domainParams.Type)
-	}
-
-	if domainParams.SOAEmail != "" {
-		updateOptions.SOAEmail = domainParams.SOAEmail
-	}
-
-	if domainParams.Description != "" {
-		updateOptions.Description = domainParams.Description
-	}
-
-	if domainParams.RetrySec > 0 {
-		updateOptions.RetrySec = domainParams.RetrySec
-	}
-
-	if len(domainParams.MasterIPs) > 0 {
-		updateOptions.MasterIPs = domainParams.MasterIPs
-	}
-
-	if len(domainParams.AXfrIPs) > 0 {
-		updateOptions.AXfrIPs = domainParams.AXfrIPs
-	}
-
-	if domainParams.ExpireSec > 0 {
-		updateOptions.ExpireSec = domainParams.ExpireSec
-	}
-
-	if domainParams.RefreshSec > 0 {
-		updateOptions.RefreshSec = domainParams.RefreshSec
-	}
-
-	if domainParams.TTLSec > 0 {
-		updateOptions.TTLSec = domainParams.TTLSec
-	}
-
-	if len(domainParams.Tags) > 0 {
-		updateOptions.Tags = domainParams.Tags
-	}
+	updateOptions := buildDomainUpdateOptions(domainParams)
 
 	updatedDomain, updateErr := account.Client.UpdateDomain(ctx, domainParams.DomainID, updateOptions)
 	if updateErr != nil {

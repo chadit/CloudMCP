@@ -59,6 +59,7 @@ func (s *Service) handleInstancesList(ctx context.Context, _ mcp.CallToolRequest
 	for _, inst := range summaries {
 		resultText += fmt.Sprintf("ID: %d | %s\n", inst.ID, inst.Label)
 		resultText += fmt.Sprintf("  Status: %s | Region: %s | Type: %s\n", inst.Status, inst.Region, inst.Type)
+
 		if len(inst.IPv4) > 0 {
 			resultText += fmt.Sprintf("  IPv4: %v\n", inst.IPv4)
 		}
@@ -260,6 +261,7 @@ The instance is now being provisioned. Use linode_instance_get with ID %d to che
 
 func (s *Service) handleInstanceDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	arguments := request.GetArguments()
+
 	instanceID, err := parseIDFromArguments(arguments, "instance_id")
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
@@ -287,19 +289,15 @@ func (s *Service) handleInstanceDelete(ctx context.Context, request mcp.CallTool
 		"label", instance.Label,
 	)
 
-	return mcp.NewToolResultText(fmt.Sprintf(`Instance deleted successfully!
-
-Deleted Instance:
-- ID: %d
-- Label: %s
-- Region: %s
-- Type: %s
-
-The instance and all its disks have been permanently deleted.`,
+	return mcp.NewToolResultText(s.formatResourceDeleteSuccess(
+		"Instance",
 		instance.ID,
 		instance.Label,
-		instance.Region,
-		instance.Type,
+		map[string]string{
+			"Region": instance.Region,
+			"Type":   instance.Type,
+		},
+		"The instance and all its disks have been permanently deleted.",
 	)), nil
 }
 
@@ -367,6 +365,7 @@ The instance is now shutting down.`,
 
 func (s *Service) handleInstanceReboot(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	arguments := request.GetArguments()
+
 	instanceID, err := parseIDFromArguments(arguments, "instance_id")
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil

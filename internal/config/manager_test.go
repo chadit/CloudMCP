@@ -299,7 +299,7 @@ func TestTOMLConfigManager_Concurrency(t *testing.T) {
 
 	// Concurrent reads
 	go func() {
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			config := manager.GetConfig()
 			if config == nil {
 				t.Errorf("GetConfig should not return nil during concurrent access")
@@ -310,7 +310,7 @@ func TestTOMLConfigManager_Concurrency(t *testing.T) {
 
 	// Concurrent account operations
 	go func() {
-		for i := 0; i < 5; i++ {
+		for range 5 {
 			testAccount := configpkg.AccountConfig{
 				Token: "concurrent_token",
 				Label: "Concurrent Account",

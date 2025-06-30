@@ -3,7 +3,6 @@
 package linode_test
 
 import (
-	"context"
 	"encoding/json"
 	"testing"
 
@@ -39,7 +38,7 @@ func TestInstancesListIntegration(t *testing.T) {
 	service, cleanup := linode.SetupIntegrationTest(t)
 	defer cleanup()
 
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_instances_list",
@@ -118,7 +117,7 @@ func TestInstanceGetIntegration(t *testing.T) {
 	service, cleanup := linode.SetupIntegrationTest(t)
 	defer cleanup()
 
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_instance_get",
@@ -212,7 +211,7 @@ func TestInstanceCreateIntegration(t *testing.T) {
 	service, cleanup := linode.SetupIntegrationTest(t)
 	defer cleanup()
 
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_instance_create",
@@ -285,7 +284,7 @@ func TestInstanceNotFoundErrorIntegration(t *testing.T) {
 	service, cleanup := linode.SetupIntegrationTest(t)
 	defer cleanup()
 
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_instance_get",
@@ -332,7 +331,7 @@ func TestVolumesListIntegration(t *testing.T) {
 	service, cleanup := linode.SetupIntegrationTest(t)
 	defer cleanup()
 
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_volumes_list",

@@ -13,8 +13,8 @@ const (
 	defaultCacheTTLMinutes = 30
 )
 
-// LinodeClient defines the interface for Linode API operations used by the cache.
-type LinodeClient interface {
+// Client defines the interface for Linode API operations used by the cache.
+type Client interface {
 	ListRegions(ctx context.Context, opts *linodego.ListOptions) ([]linodego.Region, error)
 	ListTypes(ctx context.Context, opts *linodego.ListOptions) ([]linodego.LinodeType, error)
 	ListKernels(ctx context.Context, opts *linodego.ListOptions) ([]linodego.LinodeKernel, error)
@@ -53,16 +53,15 @@ func (c *Cache) isExpired() bool {
 	return time.Now().After(c.expiry)
 }
 
-// GetRegions returns cached regions or fetches them from the API if cache is expired.
-// This method is thread-safe and automatically refreshes stale data.
-func (c *Cache) GetRegions(ctx context.Context, client LinodeClient) ([]linodego.Region, error) { //nolint:dupl // Similar caching pattern needed for type safety
+// getCachedRegions provides caching logic for regions.
+func (c *Cache) getCachedRegions(ctx context.Context, client Client) ([]linodego.Region, error) {
 	c.mu.RLock()
 	if !c.isExpired() && len(c.regions) > 0 {
-		regions := make([]linodego.Region, len(c.regions))
-		copy(regions, c.regions)
+		result := make([]linodego.Region, len(c.regions))
+		copy(result, c.regions)
 		c.mu.RUnlock()
 
-		return regions, nil
+		return result, nil
 	}
 	c.mu.RUnlock()
 
@@ -72,105 +71,121 @@ func (c *Cache) GetRegions(ctx context.Context, client LinodeClient) ([]linodego
 
 	// Double-check pattern: another goroutine might have updated the cache
 	if !c.isExpired() && len(c.regions) > 0 {
-		regions := make([]linodego.Region, len(c.regions))
-		copy(regions, c.regions)
+		result := make([]linodego.Region, len(c.regions))
+		copy(result, c.regions)
 
-		return regions, nil
+		return result, nil
 	}
 
-	regions, err := client.ListRegions(ctx, nil)
+	data, err := client.ListRegions(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	c.regions = regions
+	c.regions = data
 	c.expiry = time.Now().Add(c.ttl)
 
 	// Return a copy to prevent external modifications
-	result := make([]linodego.Region, len(regions))
-	copy(result, regions)
+	result := make([]linodego.Region, len(data))
+	copy(result, data)
 
 	return result, nil
+}
+
+// getCachedTypes provides caching logic for types.
+func (c *Cache) getCachedTypes(ctx context.Context, client Client) ([]linodego.LinodeType, error) {
+	c.mu.RLock()
+	if !c.isExpired() && len(c.types) > 0 {
+		result := make([]linodego.LinodeType, len(c.types))
+		copy(result, c.types)
+		c.mu.RUnlock()
+
+		return result, nil
+	}
+	c.mu.RUnlock()
+
+	// Cache is expired or empty, fetch fresh data
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	// Double-check pattern: another goroutine might have updated the cache
+	if !c.isExpired() && len(c.types) > 0 {
+		result := make([]linodego.LinodeType, len(c.types))
+		copy(result, c.types)
+
+		return result, nil
+	}
+
+	data, err := client.ListTypes(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	c.types = data
+	c.expiry = time.Now().Add(c.ttl)
+
+	// Return a copy to prevent external modifications
+	result := make([]linodego.LinodeType, len(data))
+	copy(result, data)
+
+	return result, nil
+}
+
+// getCachedKernels provides caching logic for kernels.
+func (c *Cache) getCachedKernels(ctx context.Context, client Client) ([]linodego.LinodeKernel, error) {
+	c.mu.RLock()
+	if !c.isExpired() && len(c.kernels) > 0 {
+		result := make([]linodego.LinodeKernel, len(c.kernels))
+		copy(result, c.kernels)
+		c.mu.RUnlock()
+
+		return result, nil
+	}
+	c.mu.RUnlock()
+
+	// Cache is expired or empty, fetch fresh data
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	// Double-check pattern: another goroutine might have updated the cache
+	if !c.isExpired() && len(c.kernels) > 0 {
+		result := make([]linodego.LinodeKernel, len(c.kernels))
+		copy(result, c.kernels)
+
+		return result, nil
+	}
+
+	data, err := client.ListKernels(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	c.kernels = data
+	c.expiry = time.Now().Add(c.ttl)
+
+	// Return a copy to prevent external modifications
+	result := make([]linodego.LinodeKernel, len(data))
+	copy(result, data)
+
+	return result, nil
+}
+
+// GetRegions returns cached regions or fetches them from the API if cache is expired.
+// This method is thread-safe and automatically refreshes stale data.
+func (c *Cache) GetRegions(ctx context.Context, client Client) ([]linodego.Region, error) {
+	return c.getCachedRegions(ctx, client)
 }
 
 // GetTypes returns cached Linode types or fetches them from the API if cache is expired.
 // This method is thread-safe and automatically refreshes stale data.
-func (c *Cache) GetTypes(ctx context.Context, client LinodeClient) ([]linodego.LinodeType, error) { //nolint:dupl // Similar caching pattern needed for type safety
-	c.mu.RLock()
-	if !c.isExpired() && len(c.types) > 0 {
-		types := make([]linodego.LinodeType, len(c.types))
-		copy(types, c.types)
-		c.mu.RUnlock()
-
-		return types, nil
-	}
-	c.mu.RUnlock()
-
-	// Cache is expired or empty, fetch fresh data
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	// Double-check pattern: another goroutine might have updated the cache
-	if !c.isExpired() && len(c.types) > 0 {
-		types := make([]linodego.LinodeType, len(c.types))
-		copy(types, c.types)
-
-		return types, nil
-	}
-
-	types, err := client.ListTypes(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	c.types = types
-	c.expiry = time.Now().Add(c.ttl)
-
-	// Return a copy to prevent external modifications
-	result := make([]linodego.LinodeType, len(types))
-	copy(result, types)
-
-	return result, nil
+func (c *Cache) GetTypes(ctx context.Context, client Client) ([]linodego.LinodeType, error) {
+	return c.getCachedTypes(ctx, client)
 }
 
 // GetKernels returns cached kernels or fetches them from the API if cache is expired.
 // This method is thread-safe and automatically refreshes stale data.
-func (c *Cache) GetKernels(ctx context.Context, client LinodeClient) ([]linodego.LinodeKernel, error) {
-	c.mu.RLock()
-	if !c.isExpired() && len(c.kernels) > 0 {
-		kernels := make([]linodego.LinodeKernel, len(c.kernels))
-		copy(kernels, c.kernels)
-		c.mu.RUnlock()
-
-		return kernels, nil
-	}
-	c.mu.RUnlock()
-
-	// Cache is expired or empty, fetch fresh data
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	// Double-check pattern: another goroutine might have updated the cache
-	if !c.isExpired() && len(c.kernels) > 0 {
-		kernels := make([]linodego.LinodeKernel, len(c.kernels))
-		copy(kernels, c.kernels)
-
-		return kernels, nil
-	}
-
-	kernels, err := client.ListKernels(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	c.kernels = kernels
-	c.expiry = time.Now().Add(c.ttl)
-
-	// Return a copy to prevent external modifications
-	result := make([]linodego.LinodeKernel, len(kernels))
-	copy(result, kernels)
-
-	return result, nil
+func (c *Cache) GetKernels(ctx context.Context, client Client) ([]linodego.LinodeKernel, error) {
+	return c.getCachedKernels(ctx, client)
 }
 
 // InvalidateRegions forcefully removes cached region data, causing the next
