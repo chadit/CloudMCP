@@ -53,17 +53,9 @@ func TestHandleDatabasesList_AccountError(t *testing.T) {
 	}
 
 	result, err := service.CallToolForTesting(ctx, request)
-	require.NoError(t, err, "handleDatabasesList should not return error for account validation")
-	require.NotNil(t, result, "result should not be nil")
-
-	// Check that it's an error result
-	require.NotEmpty(t, result.Content, "result should have content")
-
-	if len(result.Content) > 0 {
-		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
-			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
-		}
-	}
+	require.Error(t, err, "handleDatabasesList should return an error when no accounts are configured")
+	require.Nil(t, result, "result should be nil when error occurs")
+	require.Contains(t, err.Error(), "account", "error should mention account issue")
 }
 
 // TestHandleMySQLDatabasesList_AccountError tests the handleMySQLDatabasesList function with account manager errors.
@@ -105,17 +97,9 @@ func TestHandleMySQLDatabasesList_AccountError(t *testing.T) {
 	}
 
 	result, err := service.CallToolForTesting(ctx, request)
-	require.NoError(t, err, "handleMySQLDatabasesList should not return error for account validation")
-	require.NotNil(t, result, "result should not be nil")
-
-	// Check that it's an error result
-	require.NotEmpty(t, result.Content, "result should have content")
-
-	if len(result.Content) > 0 {
-		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
-			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
-		}
-	}
+	require.Error(t, err, "handleMySQLDatabasesList should return an error when no accounts are configured")
+	require.Nil(t, result, "result should be nil when error occurs")
+	require.Contains(t, err.Error(), "account", "error should mention account issue")
 }
 
 // TestHandlePostgresDatabasesList_AccountError tests the handlePostgresDatabasesList function with account manager errors.
@@ -155,17 +139,9 @@ func TestHandlePostgresDatabasesList_AccountError(t *testing.T) {
 	}
 
 	result, err := service.CallToolForTesting(ctx, request)
-	require.NoError(t, err, "handlePostgresDatabasesList should not return error for account validation")
-	require.NotNil(t, result, "result should not be nil")
-
-	// Check that it's an error result
-	require.NotEmpty(t, result.Content, "result should have content")
-
-	if len(result.Content) > 0 {
-		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
-			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
-		}
-	}
+	require.Error(t, err, "handlePostgresDatabasesList should return an error when no accounts are configured")
+	require.Nil(t, result, "result should be nil when error occurs")
+	require.Contains(t, err.Error(), "account", "error should mention account issue")
 }
 
 // TestHandleMySQLDatabaseGet_AccountError tests the handleMySQLDatabaseGet function with account manager errors.
@@ -207,17 +183,9 @@ func TestHandleMySQLDatabaseGet_AccountError(t *testing.T) {
 	}
 
 	result, err := service.CallToolForTesting(ctx, request)
-	require.NoError(t, err, "handleMySQLDatabaseGet should not return error for account validation")
-	require.NotNil(t, result, "result should not be nil")
-
-	// Check that it's an error result
-	require.NotEmpty(t, result.Content, "result should have content")
-
-	if len(result.Content) > 0 {
-		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
-			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
-		}
-	}
+	require.Error(t, err, "handleMySQLDatabaseGet should return an error when no accounts are configured")
+	require.Nil(t, result, "result should be nil when error occurs")
+	require.Contains(t, err.Error(), "account", "error should mention account issue")
 }
 
 // TestHandlePostgresDatabaseGet_AccountError tests the handlePostgresDatabaseGet function with account manager errors.
@@ -259,17 +227,9 @@ func TestHandlePostgresDatabaseGet_AccountError(t *testing.T) {
 	}
 
 	result, err := service.CallToolForTesting(ctx, request)
-	require.NoError(t, err, "handlePostgresDatabaseGet should not return error for account validation")
-	require.NotNil(t, result, "result should not be nil")
-
-	// Check that it's an error result
-	require.NotEmpty(t, result.Content, "result should have content")
-
-	if len(result.Content) > 0 {
-		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
-			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
-		}
-	}
+	require.Error(t, err, "handlePostgresDatabaseGet should return an error when no accounts are configured")
+	require.Nil(t, result, "result should be nil when error occurs")
+	require.Contains(t, err.Error(), "account", "error should mention account issue")
 }
 
 // TestHandleMySQLDatabaseCreate_AccountError tests the handleMySQLDatabaseCreate function with account manager errors.
@@ -313,17 +273,9 @@ func TestHandleMySQLDatabaseCreate_AccountError(t *testing.T) {
 	}
 
 	result, err := service.CallToolForTesting(ctx, request)
-	require.NoError(t, err, "handleMySQLDatabaseCreate should not return error for account validation")
-	require.NotNil(t, result, "result should not be nil")
-
-	// Check that it's an error result
-	require.NotEmpty(t, result.Content, "result should have content")
-
-	if len(result.Content) > 0 {
-		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
-			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
-		}
-	}
+	require.Error(t, err, "handleMySQLDatabaseCreate should return an error when no accounts are configured")
+	require.Nil(t, result, "result should be nil when error occurs")
+	require.Contains(t, err.Error(), "account", "error should mention account issue")
 }
 
 // TestHandleMySQLDatabaseDelete_AccountError tests the handleMySQLDatabaseDelete function with account manager errors.
@@ -365,17 +317,9 @@ func TestHandleMySQLDatabaseDelete_AccountError(t *testing.T) {
 	}
 
 	result, err := service.CallToolForTesting(ctx, request)
-	require.NoError(t, err, "handleMySQLDatabaseDelete should not return error for account validation")
-	require.NotNil(t, result, "result should not be nil")
-
-	// Check that it's an error result
-	require.NotEmpty(t, result.Content, "result should have content")
-
-	if len(result.Content) > 0 {
-		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
-			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
-		}
-	}
+	require.Error(t, err, "handleMySQLDatabaseDelete should return an error when no accounts are configured")
+	require.Nil(t, result, "result should be nil when error occurs")
+	require.Contains(t, err.Error(), "account", "error should mention account issue")
 }
 
 // TestHandleMySQLDatabaseCredentialsReset_AccountError tests the handleMySQLDatabaseCredentialsReset function with account manager errors.
@@ -417,17 +361,9 @@ func TestHandleMySQLDatabaseCredentialsReset_AccountError(t *testing.T) {
 	}
 
 	result, err := service.CallToolForTesting(ctx, request)
-	require.NoError(t, err, "handleMySQLDatabaseCredentialsReset should not return error for account validation")
-	require.NotNil(t, result, "result should not be nil")
-
-	// Check that it's an error result
-	require.NotEmpty(t, result.Content, "result should have content")
-
-	if len(result.Content) > 0 {
-		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
-			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
-		}
-	}
+	require.Error(t, err, "handleMySQLDatabaseCredentialsReset should return an error when no accounts are configured")
+	require.Nil(t, result, "result should be nil when error occurs")
+	require.Contains(t, err.Error(), "account", "error should mention account issue")
 }
 
 // TestHandleDatabaseEnginesList_AccountError tests the handleDatabaseEnginesList function with account manager errors.
@@ -467,17 +403,9 @@ func TestHandleDatabaseEnginesList_AccountError(t *testing.T) {
 	}
 
 	result, err := service.CallToolForTesting(ctx, request)
-	require.NoError(t, err, "handleDatabaseEnginesList should not return error for account validation")
-	require.NotNil(t, result, "result should not be nil")
-
-	// Check that it's an error result
-	require.NotEmpty(t, result.Content, "result should have content")
-
-	if len(result.Content) > 0 {
-		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
-			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
-		}
-	}
+	require.Error(t, err, "handleDatabaseEnginesList should return an error when no accounts are configured")
+	require.Nil(t, result, "result should be nil when error occurs")
+	require.Contains(t, err.Error(), "account", "error should mention account issue")
 }
 
 // Note: Additional tests for successful database operations with mock Linode clients

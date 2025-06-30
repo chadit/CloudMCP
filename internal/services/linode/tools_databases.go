@@ -167,82 +167,104 @@ func (s *Service) handleDatabasesList(ctx context.Context, _ mcp.CallToolRequest
 	return mcp.NewToolResultText(stringBuilder.String()), nil
 }
 
+// handleDatabasesListGeneric is a generic helper for listing databases.
+func handleDatabasesListGeneric[T any](
+	ctx context.Context,
+	s *Service,
+	listFunc func(context.Context, *linodego.ListOptions) ([]T, error),
+	convertFunc func(T) TypedDatabaseSummary,
+	dbType, toolName, errorMsg string,
+) (*mcp.CallToolResult, error) {
+	databases, databasesErr := listFunc(ctx, nil)
+	if databasesErr != nil {
+		return nil, types.NewToolError("linode", toolName, //nolint:wrapcheck // types.NewToolError already wraps the error
+			errorMsg, databasesErr)
+	}
+
+	summaries := make([]TypedDatabaseSummary, 0, len(databases))
+	for _, database := range databases {
+		summaries = append(summaries, convertFunc(database))
+	}
+
+	return mcp.NewToolResultText(s.formatTypedDatabaseList(dbType, summaries)), nil
+}
+
+// convertMySQLDatabaseToSummary converts a MySQL database to a summary.
+func convertMySQLDatabaseToSummary(database linodego.MySQLDatabase) TypedDatabaseSummary {
+	return MySQLDatabaseSummary{
+		ID:          database.ID,
+		Label:       database.Label,
+		Engine:      database.Engine,
+		Version:     database.Version,
+		Region:      database.Region,
+		Type:        database.Type,
+		Status:      string(database.Status),
+		ClusterSize: database.ClusterSize,
+		Hosts: DatabaseHosts{
+			Primary:   database.Hosts.Primary,
+			Secondary: database.Hosts.Secondary,
+		},
+		Port:    database.Port,
+		Created: database.Created.Format(timeFormatLayout),
+		Updated: database.Updated.Format(timeFormatLayout),
+	}
+}
+
+// convertPostgresDatabaseToSummary converts a PostgreSQL database to a summary.
+func convertPostgresDatabaseToSummary(database linodego.PostgresDatabase) TypedDatabaseSummary {
+	return PostgresDatabaseSummary{
+		ID:          database.ID,
+		Label:       database.Label,
+		Engine:      database.Engine,
+		Version:     database.Version,
+		Region:      database.Region,
+		Type:        database.Type,
+		Status:      string(database.Status),
+		ClusterSize: database.ClusterSize,
+		Hosts: DatabaseHosts{
+			Primary:   database.Hosts.Primary,
+			Secondary: database.Hosts.Secondary,
+		},
+		Port:    database.Port,
+		Created: database.Created.Format(timeFormatLayout),
+		Updated: database.Updated.Format(timeFormatLayout),
+	}
+}
+
 // handleMySQLDatabasesList lists all MySQL databases.
 func (s *Service) handleMySQLDatabasesList(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	account, accountErr := s.accountManager.GetCurrentAccount()
-	if accountErr != nil {
-		return nil, fmt.Errorf("failed to get current account: %w", accountErr)
+	account, err := s.accountManager.GetCurrentAccount()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get current account: %w", err)
 	}
 
-	databases, databasesErr := account.Client.ListMySQLDatabases(ctx, nil)
-	if databasesErr != nil {
-		return nil, types.NewToolError("linode", "mysql_databases_list", //nolint:wrapcheck // types.NewToolError already wraps the error
-			"failed to list MySQL databases", databasesErr)
-	}
-
-	summaries := make([]MySQLDatabaseSummary, 0, len(databases))
-
-	for _, database := range databases {
-		summary := MySQLDatabaseSummary{
-			ID:          database.ID,
-			Label:       database.Label,
-			Engine:      database.Engine,
-			Version:     database.Version,
-			Region:      database.Region,
-			Type:        database.Type,
-			Status:      string(database.Status),
-			ClusterSize: database.ClusterSize,
-			Hosts: DatabaseHosts{
-				Primary:   database.Hosts.Primary,
-				Secondary: database.Hosts.Secondary,
-			},
-			Port:    database.Port,
-			Created: database.Created.Format(timeFormatLayout),
-			Updated: database.Updated.Format(timeFormatLayout),
-		}
-		summaries = append(summaries, summary)
-	}
-
-	return mcp.NewToolResultText(s.formatTypedDatabaseList("MySQL", summaries)), nil
+	return handleDatabasesListGeneric(
+		ctx,
+		s,
+		account.Client.ListMySQLDatabases,
+		convertMySQLDatabaseToSummary,
+		"MySQL",
+		"mysql_databases_list",
+		"failed to list MySQL databases",
+	)
 }
 
 // handlePostgresDatabasesList lists all PostgreSQL databases.
 func (s *Service) handlePostgresDatabasesList(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	account, accountErr := s.accountManager.GetCurrentAccount()
-	if accountErr != nil {
-		return nil, fmt.Errorf("failed to get current account: %w", accountErr)
+	account, err := s.accountManager.GetCurrentAccount()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get current account: %w", err)
 	}
 
-	databases, databasesErr := account.Client.ListPostgresDatabases(ctx, nil)
-	if databasesErr != nil {
-		return nil, types.NewToolError("linode", "postgres_databases_list", //nolint:wrapcheck // types.NewToolError already wraps the error
-			"failed to list PostgreSQL databases", databasesErr)
-	}
-
-	summaries := make([]PostgresDatabaseSummary, 0, len(databases))
-
-	for _, database := range databases {
-		summary := PostgresDatabaseSummary{
-			ID:          database.ID,
-			Label:       database.Label,
-			Engine:      database.Engine,
-			Version:     database.Version,
-			Region:      database.Region,
-			Type:        database.Type,
-			Status:      string(database.Status),
-			ClusterSize: database.ClusterSize,
-			Hosts: DatabaseHosts{
-				Primary:   database.Hosts.Primary,
-				Secondary: database.Hosts.Secondary,
-			},
-			Port:    database.Port,
-			Created: database.Created.Format(timeFormatLayout),
-			Updated: database.Updated.Format(timeFormatLayout),
-		}
-		summaries = append(summaries, summary)
-	}
-
-	return mcp.NewToolResultText(s.formatTypedDatabaseList("PostgreSQL", summaries)), nil
+	return handleDatabasesListGeneric(
+		ctx,
+		s,
+		account.Client.ListPostgresDatabases,
+		convertPostgresDatabaseToSummary,
+		"PostgreSQL",
+		"postgres_databases_list",
+		"failed to list PostgreSQL databases",
+	)
 }
 
 // TypedDatabaseSummary interface defines common methods for database summaries.

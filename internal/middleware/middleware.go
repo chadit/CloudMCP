@@ -333,7 +333,7 @@ func (bm *BaseMiddleware) Config() *Config {
 }
 
 // Logger returns the middleware logger.
-func (bm *BaseMiddleware) Logger() pkglogger.Logger { //nolint:ireturn // Logger interface is necessary for pluggable logging
+func (bm *BaseMiddleware) Logger() pkglogger.Logger {
 	return bm.logger
 }
 
