@@ -65,6 +65,7 @@ func BenchmarkConfigReload(b *testing.B) {
 
 	b.Run("ConfigReload", func(b *testing.B) {
 		b.ResetTimer()
+
 		for range b.N {
 			err := manager.Reload()
 			if err != nil {
@@ -75,6 +76,7 @@ func BenchmarkConfigReload(b *testing.B) {
 
 	b.Run("ConfigGetAfterReload", func(b *testing.B) {
 		b.ResetTimer()
+
 		for range b.N {
 			// Reload configuration
 			err := manager.Reload()
@@ -92,6 +94,7 @@ func BenchmarkConfigReload(b *testing.B) {
 
 	b.Run("ConfigSave", func(b *testing.B) {
 		b.ResetTimer()
+
 		for range b.N {
 			err := manager.Save()
 			if err != nil {
@@ -120,12 +123,12 @@ func BenchmarkConfigMemoryAllocation(b *testing.B) {
 	require.NoError(b, err, "Initial config creation should succeed")
 
 	// Add accounts for realistic memory usage
-	for i := 0; i < 10; i++ {
+	for accountIndex := range 10 {
 		err := manager.AddAccount(
-			"account"+string(rune('A'+i)),
+			"account"+string(rune('A'+accountIndex)),
 			configpkg.AccountConfig{
-				Token: "token-" + string(rune('A'+i)) + "-12345",
-				Label: "Account " + string(rune('A'+i)),
+				Token: "token-" + string(rune('A'+accountIndex)) + "-12345",
+				Label: "Account " + string(rune('A'+accountIndex)),
 			},
 		)
 		require.NoError(b, err, "Adding account should succeed")
@@ -137,6 +140,7 @@ func BenchmarkConfigMemoryAllocation(b *testing.B) {
 	b.Run("MemoryPerReload", func(b *testing.B) {
 		b.ReportAllocs()
 		b.ResetTimer()
+
 		for range b.N {
 			err := manager.Reload()
 			if err != nil {
@@ -148,6 +152,7 @@ func BenchmarkConfigMemoryAllocation(b *testing.B) {
 	b.Run("MemoryPerConfigGet", func(b *testing.B) {
 		b.ReportAllocs()
 		b.ResetTimer()
+
 		for range b.N {
 			config := manager.GetConfig()
 			if config == nil {
@@ -159,18 +164,19 @@ func BenchmarkConfigMemoryAllocation(b *testing.B) {
 	b.Run("MemoryPerAccountAdd", func(b *testing.B) {
 		b.ReportAllocs()
 		b.ResetTimer()
-		for i := range b.N {
-			accountName := "temp-account-" + string(rune(i%26+'A'))
+
+		for accountIndex := range b.N {
+			accountName := "temp-account-" + string(rune(accountIndex%26+'A'))
 			err := manager.AddAccount(accountName, configpkg.AccountConfig{
-				Token: "temp-token-" + string(rune(i%26+'A')),
-				Label: "Temporary Account " + string(rune(i%26+'A')),
+				Token: "temp-token-" + string(rune(accountIndex%26+'A')),
+				Label: "Temporary Account " + string(rune(accountIndex%26+'A')),
 			})
 			if err != nil {
 				b.Fatalf("Adding account failed: %v", err)
 			}
 
 			// Clean up to avoid memory accumulation affecting results
-			if i%10 == 9 {
+			if accountIndex%10 == 9 {
 				err := manager.RemoveAccount(accountName)
 				if err != nil {
 					// Account might not exist, which is fine for benchmark
@@ -222,6 +228,7 @@ func BenchmarkServiceReconfiguration(b *testing.B) {
 
 	b.Run("ServiceCreationWithConfig", func(b *testing.B) {
 		b.ResetTimer()
+
 		for range b.N {
 			config := manager.GetConfig()
 			if config == nil {
@@ -246,6 +253,7 @@ func BenchmarkServiceReconfiguration(b *testing.B) {
 
 	b.Run("ConfigReloadAndServiceUpdate", func(b *testing.B) {
 		b.ResetTimer()
+
 		for range b.N {
 			// Reload configuration
 			err := manager.Reload()
@@ -275,6 +283,7 @@ func BenchmarkServiceReconfiguration(b *testing.B) {
 	b.Run("MemoryPerServiceReconfiguration", func(b *testing.B) {
 		b.ReportAllocs()
 		b.ResetTimer()
+
 		for range b.N {
 			// Reload and recreate service
 			err := manager.Reload()
@@ -345,6 +354,7 @@ func BenchmarkConfigurationPersistence(b *testing.B) {
 
 	b.Run("ConfigurationLoading", func(b *testing.B) {
 		b.ResetTimer()
+
 		for range b.N {
 			manager := configpkg.NewTOMLConfigManager(configPath)
 			err := manager.LoadOrCreate()
@@ -360,6 +370,7 @@ func BenchmarkConfigurationPersistence(b *testing.B) {
 		require.NoError(b, err, "Initial load should succeed")
 
 		b.ResetTimer()
+
 		for range b.N {
 			err := manager.Save()
 			if err != nil {
@@ -370,6 +381,7 @@ func BenchmarkConfigurationPersistence(b *testing.B) {
 
 	b.Run("FileIOOperations", func(b *testing.B) {
 		b.ResetTimer()
+
 		for range b.N {
 			// Read file
 			_, err := os.ReadFile(configPath)
@@ -396,6 +408,7 @@ func BenchmarkConfigurationPersistence(b *testing.B) {
 
 		b.ReportAllocs()
 		b.ResetTimer()
+
 		for range b.N {
 			// Complete persistence cycle
 			err := manager.Reload()
@@ -430,12 +443,12 @@ func BenchmarkConcurrentConfigAccess(b *testing.B) {
 	require.NoError(b, err, "Initial config creation should succeed")
 
 	// Add accounts for realistic concurrent testing
-	for i := 0; i < 5; i++ {
+	for accountIndex := range 5 {
 		err := manager.AddAccount(
-			"account"+string(rune('1'+i)),
+			"account"+string(rune('1'+accountIndex)),
 			configpkg.AccountConfig{
-				Token: "token-" + string(rune('1'+i)) + "-concurrent",
-				Label: "Concurrent Account " + string(rune('1'+i)),
+				Token: "token-" + string(rune('1'+accountIndex)) + "-concurrent",
+				Label: "Concurrent Account " + string(rune('1'+accountIndex)),
 			},
 		)
 		require.NoError(b, err, "Adding account should succeed")

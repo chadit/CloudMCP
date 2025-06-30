@@ -3,7 +3,6 @@
 package linode_test
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -114,7 +113,7 @@ func TestSystemToolsIntegration(t *testing.T) {
 	defer server.Close()
 
 	service := CreateHTTPTestService(t, server.URL)
-	ctx := context.Background()
+	ctx := t.Context()
 
 	err := service.Initialize(ctx)
 	require.NoError(t, err, "service initialization should succeed")
@@ -198,7 +197,7 @@ func TestSystemErrorHandlingIntegration(t *testing.T) {
 	defer server.Close()
 
 	service := CreateHTTPTestService(t, server.URL)
-	ctx := context.Background()
+	ctx := t.Context()
 
 	err := service.Initialize(ctx)
 	require.NoError(t, err, "service initialization should succeed")

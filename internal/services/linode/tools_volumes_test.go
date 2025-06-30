@@ -1,7 +1,6 @@
 package linode_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -31,6 +30,8 @@ import (
 // **Purpose**: This test ensures volumes list command fails appropriately when account configuration is invalid.
 // Note: Full integration testing with mock Linode client requires interface abstraction (future improvement).
 func TestHandleVolumesList_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create minimal service with empty account manager
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -44,7 +45,7 @@ func TestHandleVolumesList_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test volumes list request with empty account manager
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_volumes_list",
@@ -74,6 +75,8 @@ func TestHandleVolumesList_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleVolumeGet_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -87,7 +90,7 @@ func TestHandleVolumeGet_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test volume get request with no accounts and valid parameter
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_volume_get",
@@ -117,6 +120,8 @@ func TestHandleVolumeGet_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures volume get validates required parameters properly.
 func TestHandleVolumeGet_MissingParameter(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -134,7 +139,7 @@ func TestHandleVolumeGet_MissingParameter(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test volume get request with missing volume_id parameter
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_volume_get",
@@ -170,6 +175,8 @@ func TestHandleVolumeGet_MissingParameter(t *testing.T) {
 //
 // **Purpose**: This test ensures volume get validates parameter types properly.
 func TestHandleVolumeGet_InvalidParameter(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -187,7 +194,7 @@ func TestHandleVolumeGet_InvalidParameter(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test volume get request with invalid volume_id parameter type
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_volume_get",
@@ -225,6 +232,8 @@ func TestHandleVolumeGet_InvalidParameter(t *testing.T) {
 //
 // **Purpose**: This test ensures volume create validates all required parameters properly.
 func TestHandleVolumeCreate_MissingRequiredParameters(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -242,7 +251,7 @@ func TestHandleVolumeCreate_MissingRequiredParameters(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test volume create request with missing required parameters
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_volume_create",
@@ -278,6 +287,8 @@ func TestHandleVolumeCreate_MissingRequiredParameters(t *testing.T) {
 //
 // **Purpose**: This test ensures volume create validates parameter completeness properly.
 func TestHandleVolumeCreate_PartialParameters(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -295,7 +306,7 @@ func TestHandleVolumeCreate_PartialParameters(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test volume create request with only partial required parameters
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_volume_create",
@@ -334,6 +345,8 @@ func TestHandleVolumeCreate_PartialParameters(t *testing.T) {
 //
 // **Purpose**: This test ensures volume create validates size constraints properly.
 func TestHandleVolumeCreate_InvalidSize(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -351,7 +364,7 @@ func TestHandleVolumeCreate_InvalidSize(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test volume create request with invalid size (too small)
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_volume_create",
@@ -390,6 +403,8 @@ func TestHandleVolumeCreate_InvalidSize(t *testing.T) {
 //
 // **Purpose**: This test ensures volume delete validates required parameters properly.
 func TestHandleVolumeDelete_MissingParameter(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -407,7 +422,7 @@ func TestHandleVolumeDelete_MissingParameter(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test volume delete request with missing volume_id parameter
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_volume_delete",
@@ -443,6 +458,8 @@ func TestHandleVolumeDelete_MissingParameter(t *testing.T) {
 //
 // **Purpose**: This test ensures volume attach validates required parameters properly.
 func TestHandleVolumeAttach_MissingParameters(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -460,7 +477,7 @@ func TestHandleVolumeAttach_MissingParameters(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test volume attach request with missing required parameters
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_volume_attach",
@@ -500,6 +517,8 @@ func TestHandleVolumeAttach_MissingParameters(t *testing.T) {
 //
 // **Purpose**: This test ensures volume detach validates required parameters properly.
 func TestHandleVolumeDetach_MissingParameter(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -517,7 +536,7 @@ func TestHandleVolumeDetach_MissingParameter(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test volume detach request with missing volume_id parameter
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_volume_detach",

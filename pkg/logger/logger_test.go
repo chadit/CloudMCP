@@ -15,7 +15,9 @@ import (
 
 func TestNew_DefaultConfig(t *testing.T) {
 	t.Parallel()
+
 	log := logger.New("info")
+
 	require.NotNil(t, log, "Logger should not be nil")
 
 	// Test that it's a slogWrapper - using interface, so no internal access needed
@@ -24,6 +26,7 @@ func TestNew_DefaultConfig(t *testing.T) {
 
 func TestNewWithConfig_LogLevels(t *testing.T) {
 	t.Parallel()
+
 	tests := []struct {
 		name          string
 		level         string
@@ -64,6 +67,7 @@ func TestNewWithConfig_LogLevels(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			config := logger.LogConfig{
 				Level: tt.level,
 			}
@@ -325,7 +329,7 @@ func TestLogger_JSONFormat(t *testing.T) {
 	require.Equal(t, "test message", logEntry["msg"], "Message should be in msg field")
 	require.Equal(t, "INFO", logEntry["level"], "Level should be INFO")
 	require.Equal(t, "value1", logEntry["key1"], "Custom key1 should be present")
-	require.Equal(t, float64(42), logEntry["key2"], "Custom key2 should be present")
+	require.InDelta(t, float64(42), logEntry["key2"], 0.001, "Custom key2 should be present")
 	require.Equal(t, true, logEntry["key3"], "Custom key3 should be present")
 	require.Contains(t, logEntry, "time", "Time field should be present")
 }
@@ -353,6 +357,7 @@ func TestLogConfig_Validation(t *testing.T) {
 	for i, config := range configs {
 		t.Run(string(rune('A'+i)), func(t *testing.T) {
 			t.Parallel()
+
 			log := logger.NewWithConfig(config)
 			require.NotNil(t, log, "Logger should be created with any valid config")
 

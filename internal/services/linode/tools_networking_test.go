@@ -1,7 +1,6 @@
 package linode_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -30,6 +29,8 @@ import (
 //
 // **Purpose**: This test ensures reserved IPs list command fails appropriately when account configuration is invalid.
 func TestHandleReservedIPsList_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create minimal service with empty account manager
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -43,7 +44,7 @@ func TestHandleReservedIPsList_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test reserved IPs list request with empty account manager
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_reserved_ips_list",
@@ -75,6 +76,8 @@ func TestHandleReservedIPsList_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleReservedIPGet_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -86,7 +89,7 @@ func TestHandleReservedIPGet_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test reserved IP get request with no accounts and valid parameter
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_reserved_ip_get",
@@ -118,6 +121,8 @@ func TestHandleReservedIPGet_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleReservedIPAllocate_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -129,7 +134,7 @@ func TestHandleReservedIPAllocate_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test reserved IP allocate request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_reserved_ip_allocate",
@@ -169,6 +174,8 @@ func TestHandleReservedIPAllocate_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleReservedIPAssign_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -180,7 +187,7 @@ func TestHandleReservedIPAssign_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test reserved IP assign request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_reserved_ip_assign",
@@ -220,6 +227,8 @@ func TestHandleReservedIPAssign_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleReservedIPUpdate_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -231,7 +240,7 @@ func TestHandleReservedIPUpdate_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test reserved IP update request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_reserved_ip_update",
@@ -264,6 +273,8 @@ func TestHandleReservedIPUpdate_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleVLANsList_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -275,7 +286,7 @@ func TestHandleVLANsList_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test VLANs list request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_vlans_list",
@@ -305,6 +316,8 @@ func TestHandleVLANsList_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleIPv6PoolsList_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -316,7 +329,7 @@ func TestHandleIPv6PoolsList_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test IPv6 pools list request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_ipv6_pools_list",
@@ -346,6 +359,8 @@ func TestHandleIPv6PoolsList_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleIPv6RangesList_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -357,7 +372,7 @@ func TestHandleIPv6RangesList_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test IPv6 ranges list request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_ipv6_ranges_list",

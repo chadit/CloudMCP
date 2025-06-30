@@ -151,6 +151,7 @@ func (c *ConfigAdapter) SetValue(key string, value interface{}) {
 	if c.data == nil {
 		c.data = make(map[string]interface{})
 	}
+
 	c.data[key] = value
 }
 

@@ -1,7 +1,6 @@
 package linode_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -30,6 +29,8 @@ import (
 //
 // **Purpose**: This test ensures LKE clusters list command fails appropriately when account configuration is invalid.
 func TestHandleLKEClustersList_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create minimal service with empty account manager
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -43,7 +44,7 @@ func TestHandleLKEClustersList_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test LKE clusters list request with empty account manager
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_lke_clusters_list",
@@ -81,6 +82,8 @@ func TestHandleLKEClustersList_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleLKEClusterGet_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -92,7 +95,7 @@ func TestHandleLKEClusterGet_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test LKE cluster get request with no accounts and valid parameter
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_lke_cluster_get",
@@ -130,6 +133,8 @@ func TestHandleLKEClusterGet_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleLKEClusterCreate_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -141,7 +146,7 @@ func TestHandleLKEClusterCreate_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test LKE cluster create request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_lke_cluster_create",
@@ -181,6 +186,8 @@ func TestHandleLKEClusterCreate_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleLKEClusterUpdate_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -192,7 +199,7 @@ func TestHandleLKEClusterUpdate_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test LKE cluster update request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_lke_cluster_update",
@@ -231,6 +238,8 @@ func TestHandleLKEClusterUpdate_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleLKEClusterDelete_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -242,7 +251,7 @@ func TestHandleLKEClusterDelete_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test LKE cluster delete request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_lke_cluster_delete",
@@ -280,6 +289,8 @@ func TestHandleLKEClusterDelete_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleLKENodePoolCreate_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -291,7 +302,7 @@ func TestHandleLKENodePoolCreate_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test LKE node pool create request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_lke_node_pool_create",
@@ -331,6 +342,8 @@ func TestHandleLKENodePoolCreate_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleLKENodePoolUpdate_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -342,7 +355,7 @@ func TestHandleLKENodePoolUpdate_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test LKE node pool update request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_lke_node_pool_update",
@@ -382,6 +395,8 @@ func TestHandleLKENodePoolUpdate_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleLKENodePoolDelete_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -393,7 +408,7 @@ func TestHandleLKENodePoolDelete_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test LKE node pool delete request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_lke_node_pool_delete",
@@ -432,6 +447,8 @@ func TestHandleLKENodePoolDelete_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleLKEKubeconfig_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -443,7 +460,7 @@ func TestHandleLKEKubeconfig_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test LKE kubeconfig request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_lke_kubeconfig",

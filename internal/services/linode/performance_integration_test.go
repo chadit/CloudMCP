@@ -34,7 +34,7 @@ func BenchmarkHandlerPerformance(b *testing.B) {
 	defer server.Close()
 
 	service := createHTTPTestServiceForBenchmark(b, server.URL)
-	ctx := context.Background()
+	ctx := b.Context()
 
 	err := service.Initialize(ctx)
 	if err != nil {
@@ -52,7 +52,7 @@ func BenchmarkHandlerPerformance(b *testing.B) {
 		b.ResetTimer()
 		b.ReportAllocs()
 
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			result, err := service.handleAccountGet(ctx, request)
 			if err != nil {
 				b.Fatalf("handler error: %v", err)
@@ -74,7 +74,7 @@ func BenchmarkHandlerPerformance(b *testing.B) {
 		b.ResetTimer()
 		b.ReportAllocs()
 
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			result, err := service.handleInstancesList(ctx, request)
 			if err != nil {
 				b.Fatalf("handler error: %v", err)
@@ -98,7 +98,7 @@ func BenchmarkHandlerPerformance(b *testing.B) {
 		b.ResetTimer()
 		b.ReportAllocs()
 
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			result, err := service.handleInstanceGet(ctx, request)
 			if err != nil {
 				b.Fatalf("handler error: %v", err)
@@ -120,7 +120,7 @@ func BenchmarkHandlerPerformance(b *testing.B) {
 		b.ResetTimer()
 		b.ReportAllocs()
 
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			result, err := service.handleVolumesList(ctx, request)
 			if err != nil {
 				b.Fatalf("handler error: %v", err)
@@ -154,7 +154,7 @@ func TestHandlerLatency(t *testing.T) {
 	defer server.Close()
 
 	service := CreateHTTPTestService(t, server.URL)
-	ctx := context.Background()
+	ctx := b.Context()
 
 	err := service.Initialize(ctx)
 	require.NoError(t, err, "service initialization should succeed")
@@ -251,7 +251,7 @@ func TestPerformanceThresholds(t *testing.T) {
 	defer server.Close()
 
 	service := CreateHTTPTestService(t, server.URL)
-	ctx := context.Background()
+	ctx := b.Context()
 
 	err := service.Initialize(ctx)
 	require.NoError(t, err, "service initialization should succeed")
@@ -371,7 +371,7 @@ func TestMemoryUsage(t *testing.T) {
 	defer server.Close()
 
 	service := CreateHTTPTestService(t, server.URL)
-	ctx := context.Background()
+	ctx := b.Context()
 
 	err := service.Initialize(ctx)
 	require.NoError(t, err, "service initialization should succeed")
@@ -430,7 +430,7 @@ func TestMemoryUsage(t *testing.T) {
 			// Measure memory allocation
 			memResult := testing.Benchmark(func(b *testing.B) {
 				b.ReportAllocs()
-				for i := 0; i < b.N; i++ {
+				for range b.N {
 					result, err := tc.handler(ctx, tc.request)
 					if err != nil {
 						b.Fatalf("handler error: %v", err)

@@ -614,7 +614,7 @@ func createBenchmarkTestServer() *httptest.Server {
 	serverMux.HandleFunc("/v4/volumes", func(responseWriter http.ResponseWriter, _ *http.Request) {
 		volumesList := make([]map[string]any, benchmarkVolumeCount)
 
-		for volumeIndex := 0; volumeIndex < benchmarkVolumeCount; volumeIndex++ {
+		for volumeIndex := range benchmarkVolumeCount {
 			volumesList[volumeIndex] = map[string]any{
 				"id":           benchmarkStartingVolumeID + volumeIndex,
 				"label":        fmt.Sprintf("bench-volume-%d", volumeIndex+1),
@@ -645,7 +645,7 @@ func createBenchmarkTestServer() *httptest.Server {
 		imagesList := make([]map[string]any, benchmarkImageCount)
 		imageTypeOptions := []string{"manual", "automatic", "public"}
 
-		for imageIndex := 0; imageIndex < benchmarkImageCount; imageIndex++ {
+		for imageIndex := range benchmarkImageCount {
 			imagesList[imageIndex] = map[string]any{
 				"id":          fmt.Sprintf("linode/benchmark-%d", imageIndex+1),
 				"label":       fmt.Sprintf("Benchmark Image %d", imageIndex+1),
@@ -677,7 +677,7 @@ func createBenchmarkTestServer() *httptest.Server {
 		regionsList := make([]map[string]any, benchmarkRegionCount)
 		regionNameOptions := []string{"us-east", "us-west", "eu-west", "ap-south", "ca-central"}
 
-		for regionIndex := 0; regionIndex < benchmarkRegionCount; regionIndex++ {
+		for regionIndex := range benchmarkRegionCount {
 			regionsList[regionIndex] = map[string]any{
 				"id":           fmt.Sprintf("%s-%d", regionNameOptions[regionIndex%len(regionNameOptions)], regionIndex/len(regionNameOptions)+1),
 				"label":        fmt.Sprintf("Benchmark Region %d", regionIndex+1),
@@ -703,7 +703,7 @@ func createBenchmarkTestServer() *httptest.Server {
 		typesList := make([]map[string]any, benchmarkTypeCount)
 		typeClassOptions := []string{"nanode", "standard", "dedicated", "high-memory"}
 
-		for typeIndex := 0; typeIndex < benchmarkTypeCount; typeIndex++ {
+		for typeIndex := range benchmarkTypeCount {
 			typesList[typeIndex] = map[string]any{
 				"id":          fmt.Sprintf("%s-%d", typeClassOptions[typeIndex%len(typeClassOptions)], typeIndex+1),
 				"label":       fmt.Sprintf("Benchmark Type %d", typeIndex+1),

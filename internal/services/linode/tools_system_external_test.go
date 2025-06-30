@@ -1,7 +1,6 @@
 package linode_test
 
 import (
-	"context"
 	"encoding/json"
 	"testing"
 
@@ -48,6 +47,8 @@ func getTextContent(t *testing.T, result *mcp.CallToolResult) string {
 //
 // **Purpose**: This test ensures the version tool provides complete diagnostic information through exported API.
 func TestSystemVersionTool(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -70,7 +71,7 @@ func TestSystemVersionTool(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test system version request
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "cloudmcp_version",
@@ -123,6 +124,8 @@ func TestSystemVersionTool(t *testing.T) {
 //
 // **Purpose**: This test ensures JSON version tool provides machine-readable data through exported API.
 func TestSystemVersionJSONTool(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -145,7 +148,7 @@ func TestSystemVersionJSONTool(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test system version JSON request
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "cloudmcp_version_json",
@@ -158,6 +161,7 @@ func TestSystemVersionJSONTool(t *testing.T) {
 
 	// Parse JSON response
 	jsonText := getTextContent(t, result)
+
 	var jsonResponse map[string]interface{}
 	err = json.Unmarshal([]byte(jsonText), &jsonResponse)
 	require.NoError(t, err, "response should be valid JSON")
@@ -170,8 +174,8 @@ func TestSystemVersionJSONTool(t *testing.T) {
 	require.Equal(t, "test-account (Test Account)", jsonResponse["current_account"], "should show current account")
 
 	// Verify cloudmcp version object
-	cloudmcpObj, ok := jsonResponse["cloudmcp"].(map[string]interface{})
-	require.True(t, ok, "cloudmcp should be an object")
+	cloudmcpObj, isObject := jsonResponse["cloudmcp"].(map[string]interface{})
+	require.True(t, isObject, "cloudmcp should be an object")
 
 	// Verify version fields
 	require.Equal(t, "1.0.0", cloudmcpObj["version"], "should contain correct version")
@@ -212,6 +216,8 @@ func TestSystemVersionJSONTool(t *testing.T) {
 //
 // **Purpose**: This test ensures version tool robustness through exported API.
 func TestSystemVersionTool_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create minimal service with empty account manager
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -224,7 +230,7 @@ func TestSystemVersionTool_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test system version request with empty account manager
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "cloudmcp_version",
@@ -241,6 +247,7 @@ func TestSystemVersionTool_AccountError(t *testing.T) {
 		"should still contain version header")
 	require.Contains(t, versionText, "Version: 1.0.0",
 		"should still contain CloudMCP version")
+
 	// Note: Account will show as "unknown" when no accounts are configured
 }
 
@@ -261,6 +268,8 @@ func TestSystemVersionTool_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures version information consistency across different output formats through exported API.
 func TestVersionInfoConsistencyThroughAPI(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -281,7 +290,7 @@ func TestVersionInfoConsistencyThroughAPI(t *testing.T) {
 
 	// Create service with proper testing constructor
 	service := linode.NewForTesting(cfg, log, accountManager)
-	ctx := context.Background()
+	ctx := t.Context()
 
 	// Get text version
 	textRequest := mcp.CallToolRequest{
@@ -305,37 +314,38 @@ func TestVersionInfoConsistencyThroughAPI(t *testing.T) {
 
 	// Parse JSON to compare with text
 	jsonText := getTextContent(t, jsonResult)
+
 	var jsonResponse map[string]interface{}
 	err = json.Unmarshal([]byte(jsonText), &jsonResponse)
 	require.NoError(t, err, "JSON should be valid")
 
-	cloudmcpObj, ok := jsonResponse["cloudmcp"].(map[string]interface{})
-	require.True(t, ok, "cloudmcp field should be a map")
+	cloudmcpObj, isMap := jsonResponse["cloudmcp"].(map[string]interface{})
+	require.True(t, isMap, "cloudmcp field should be a map")
 
 	// Verify version consistency
 	textContent := getTextContent(t, textResult)
-	version, ok := cloudmcpObj["version"].(string)
-	require.True(t, ok, "version should be a string")
+	version, isVersionString := cloudmcpObj["version"].(string)
+	require.True(t, isVersionString, "version should be a string")
 	require.Contains(t, textContent, version,
 		"text should contain same version as JSON")
-	
-	apiVersion, ok := cloudmcpObj["api_version"].(string)
-	require.True(t, ok, "api_version should be a string")
+
+	apiVersion, isAPIVersionString := cloudmcpObj["api_version"].(string)
+	require.True(t, isAPIVersionString, "api_version should be a string")
 	require.Contains(t, textContent, apiVersion,
 		"text should contain same API version as JSON")
 
 	// Verify account consistency
-	expectedAccount, ok := jsonResponse["current_account"].(string)
-	require.True(t, ok, "current_account should be a string")
+	expectedAccount, isAccountString := jsonResponse["current_account"].(string)
+	require.True(t, isAccountString, "current_account should be a string")
 	require.Contains(t, textContent, expectedAccount,
 		"text should contain same account as JSON")
 
 	// Verify feature consistency
-	features, ok := cloudmcpObj["features"].(map[string]interface{})
-	require.True(t, ok, "features should be a map")
-	
-	linodeCoverage, ok := features["linode_api_coverage"].(string)
-	require.True(t, ok, "linode_api_coverage should be a string")
+	features, isFeaturesMap := cloudmcpObj["features"].(map[string]interface{})
+	require.True(t, isFeaturesMap, "features should be a map")
+
+	linodeCoverage, isCoverageString := features["linode_api_coverage"].(string)
+	require.True(t, isCoverageString, "linode_api_coverage should be a string")
 	require.Contains(t, textContent, linodeCoverage,
 		"text should contain same API coverage as JSON")
 }
@@ -356,6 +366,8 @@ func TestVersionInfoConsistencyThroughAPI(t *testing.T) {
 //
 // **Purpose**: This test ensures version constants are properly configured for accurate reporting.
 func TestVersionConstants(t *testing.T) {
+	t.Parallel()
+
 	versionInfo := version.Get()
 
 	// Verify core version information

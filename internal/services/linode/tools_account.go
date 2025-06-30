@@ -57,6 +57,7 @@ func (s *Service) handleAccountList(_ context.Context, _ mcp.CallToolRequest) (*
 func (s *Service) handleAccountSwitch(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	arguments := request.GetArguments()
 	accountName, ok := arguments["account_name"].(string)
+
 	if !ok || accountName == "" {
 		return mcp.NewToolResultError("account_name is required"), nil
 	}

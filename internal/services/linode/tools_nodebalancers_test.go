@@ -1,7 +1,6 @@
 package linode_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -30,6 +29,8 @@ import (
 //
 // **Purpose**: This test ensures NodeBalancers list command fails appropriately when account configuration is invalid.
 func TestHandleNodeBalancersList_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create minimal service with empty account manager
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -43,7 +44,7 @@ func TestHandleNodeBalancersList_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test NodeBalancers list request with empty account manager
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_nodebalancers_list",
@@ -81,6 +82,8 @@ func TestHandleNodeBalancersList_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleNodeBalancerGet_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -92,7 +95,7 @@ func TestHandleNodeBalancerGet_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test NodeBalancer get request with no accounts and valid parameter
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_nodebalancer_get",
@@ -130,6 +133,8 @@ func TestHandleNodeBalancerGet_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleNodeBalancerCreate_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -141,7 +146,7 @@ func TestHandleNodeBalancerCreate_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test NodeBalancer create request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_nodebalancer_create",
@@ -180,6 +185,8 @@ func TestHandleNodeBalancerCreate_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleNodeBalancerUpdate_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -191,7 +198,7 @@ func TestHandleNodeBalancerUpdate_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test NodeBalancer update request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_nodebalancer_update",
@@ -230,6 +237,8 @@ func TestHandleNodeBalancerUpdate_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleNodeBalancerDelete_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -241,7 +250,7 @@ func TestHandleNodeBalancerDelete_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test NodeBalancer delete request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_nodebalancer_delete",
@@ -279,6 +288,8 @@ func TestHandleNodeBalancerDelete_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleNodeBalancerConfigCreate_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -290,7 +301,7 @@ func TestHandleNodeBalancerConfigCreate_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test NodeBalancer config create request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_nodebalancer_config_create",
@@ -330,6 +341,8 @@ func TestHandleNodeBalancerConfigCreate_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleNodeBalancerConfigUpdate_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -341,7 +354,7 @@ func TestHandleNodeBalancerConfigUpdate_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test NodeBalancer config update request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_nodebalancer_config_update",
@@ -382,6 +395,8 @@ func TestHandleNodeBalancerConfigUpdate_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleNodeBalancerConfigDelete_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -393,7 +408,7 @@ func TestHandleNodeBalancerConfigDelete_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test NodeBalancer config delete request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_nodebalancer_config_delete",

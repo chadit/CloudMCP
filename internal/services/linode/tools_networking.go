@@ -28,60 +28,61 @@ func (s *Service) handleReservedIPsList(ctx context.Context, _ mcp.CallToolReque
 			"failed to list IP addresses", err)
 	}
 
-	var reservedIPs []ReservedIPSummary
-	for _, ip := range ips {
+	reservedIPs := make([]ReservedIPSummary, 0, len(ips))
+	for _, ipAddress := range ips {
 		// Only include reserved IPs (not assigned to instances)
-		if ip.LinodeID == 0 {
+		if ipAddress.LinodeID == 0 {
 			summary := ReservedIPSummary{
-				Address:    ip.Address,
-				Gateway:    ip.Gateway,
-				SubnetMask: ip.SubnetMask,
-				Prefix:     ip.Prefix,
-				Type:       string(ip.Type),
-				Public:     ip.Public,
-				RDNS:       ip.RDNS,
-				LinodeID:   intPtr(ip.LinodeID),
-				Region:     ip.Region,
+				Address:    ipAddress.Address,
+				Gateway:    ipAddress.Gateway,
+				SubnetMask: ipAddress.SubnetMask,
+				Prefix:     ipAddress.Prefix,
+				Type:       string(ipAddress.Type),
+				Public:     ipAddress.Public,
+				RDNS:       ipAddress.RDNS,
+				LinodeID:   intPtr(ipAddress.LinodeID),
+				Region:     ipAddress.Region,
 			}
 			reservedIPs = append(reservedIPs, summary)
 		}
 	}
 
-	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Found %d reserved IP addresses:\n\n", len(reservedIPs)))
+	var stringBuilder strings.Builder
+	stringBuilder.WriteString(fmt.Sprintf("Found %d reserved IP addresses:\n\n", len(reservedIPs)))
 
-	for _, ip := range reservedIPs {
+	for _, ipAddress := range reservedIPs {
 		assignment := ipAssignmentUnassigned
-		if ip.LinodeID != nil && *ip.LinodeID > 0 {
-			assignment = fmt.Sprintf("Assigned to Linode %d", *ip.LinodeID)
+		if ipAddress.LinodeID != nil && *ipAddress.LinodeID > 0 {
+			assignment = fmt.Sprintf("Assigned to Linode %d", *ipAddress.LinodeID)
 		}
 
-		visibility := "Private"
-		if ip.Public {
-			visibility = "Public"
+		visibility := visibilityPrivate
+		if ipAddress.Public {
+			visibility = visibilityPublic
 		}
 
-		fmt.Fprintf(&sb, "Address: %s (%s %s)\n", ip.Address, ip.Type, visibility)
-		fmt.Fprintf(&sb, "  Gateway: %s | Prefix: %d\n", ip.Gateway, ip.Prefix)
-		fmt.Fprintf(&sb, "  Region: %s | %s\n", ip.Region, assignment)
-		if ip.RDNS != "" {
-			fmt.Fprintf(&sb, "  RDNS: %s\n", ip.RDNS)
+		fmt.Fprintf(&stringBuilder, "Address: %s (%s %s)\n", ipAddress.Address, ipAddress.Type, visibility)
+		fmt.Fprintf(&stringBuilder, "  Gateway: %s | Prefix: %d\n", ipAddress.Gateway, ipAddress.Prefix)
+		fmt.Fprintf(&stringBuilder, "  Region: %s | %s\n", ipAddress.Region, assignment)
+		if ipAddress.RDNS != "" {
+			fmt.Fprintf(&stringBuilder, "  RDNS: %s\n", ipAddress.RDNS)
 		}
-		sb.WriteString("\n")
+
+		stringBuilder.WriteString("\n")
 	}
 
 	if len(reservedIPs) == 0 {
 		return mcp.NewToolResultText("No reserved IP addresses found."), nil
 	}
 
-	return mcp.NewToolResultText(sb.String()), nil
+	return mcp.NewToolResultText(stringBuilder.String()), nil
 }
 
 // handleReservedIPGet gets details of a specific reserved IP address.
 func (s *Service) handleReservedIPGet(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	arguments := request.GetArguments()
-	address, ok := arguments["address"].(string)
-	if !ok || address == "" {
+	address, addressExists := arguments["address"].(string)
+	if !addressExists || address == "" {
 		return mcp.NewToolResultError("address parameter is required"), nil
 	}
 
@@ -90,50 +91,51 @@ func (s *Service) handleReservedIPGet(ctx context.Context, request mcp.CallToolR
 		return nil, err
 	}
 
-	ip, err := account.Client.GetIPAddress(ctx, address)
+	ipAddress, err := account.Client.GetIPAddress(ctx, address)
 	if err != nil {
 		return nil, types.NewToolError("linode", "reserved_ip_get", //nolint:wrapcheck // types.NewToolError already wraps the error
 			"failed to get IP address "+address, err)
 	}
 
 	detail := ReservedIPDetail{
-		Address:    ip.Address,
-		Gateway:    ip.Gateway,
-		SubnetMask: ip.SubnetMask,
-		Prefix:     ip.Prefix,
-		Type:       string(ip.Type),
-		Public:     ip.Public,
-		RDNS:       ip.RDNS,
-		LinodeID:   intPtr(ip.LinodeID),
-		Region:     ip.Region,
+		Address:    ipAddress.Address,
+		Gateway:    ipAddress.Gateway,
+		SubnetMask: ipAddress.SubnetMask,
+		Prefix:     ipAddress.Prefix,
+		Type:       string(ipAddress.Type),
+		Public:     ipAddress.Public,
+		RDNS:       ipAddress.RDNS,
+		LinodeID:   intPtr(ipAddress.LinodeID),
+		Region:     ipAddress.Region,
 	}
 
-	var sb strings.Builder
-	fmt.Fprintf(&sb, "IP Address Details:\n")
-	fmt.Fprintf(&sb, "Address: %s\n", detail.Address)
-	fmt.Fprintf(&sb, "Type: %s\n", detail.Type)
-	fmt.Fprintf(&sb, "Gateway: %s\n", detail.Gateway)
-	fmt.Fprintf(&sb, "Subnet Mask: %s\n", detail.SubnetMask)
-	fmt.Fprintf(&sb, "Prefix: %d\n", detail.Prefix)
-	fmt.Fprintf(&sb, "Region: %s\n", detail.Region)
+	var stringBuilder strings.Builder
+	fmt.Fprintf(&stringBuilder, "IP Address Details:\n")
+	fmt.Fprintf(&stringBuilder, "Address: %s\n", detail.Address)
+	fmt.Fprintf(&stringBuilder, "Type: %s\n", detail.Type)
+	fmt.Fprintf(&stringBuilder, "Gateway: %s\n", detail.Gateway)
+	fmt.Fprintf(&stringBuilder, "Subnet Mask: %s\n", detail.SubnetMask)
+	fmt.Fprintf(&stringBuilder, "Prefix: %d\n", detail.Prefix)
+	fmt.Fprintf(&stringBuilder, "Region: %s\n", detail.Region)
 
-	visibility := "Private"
+	visibility := visibilityPrivate
 	if detail.Public {
-		visibility = "Public"
+		visibility = visibilityPublic
 	}
-	fmt.Fprintf(&sb, "Visibility: %s\n", visibility)
+
+	fmt.Fprintf(&stringBuilder, "Visibility: %s\n", visibility)
 
 	if detail.LinodeID != nil && *detail.LinodeID > 0 {
-		fmt.Fprintf(&sb, "Assigned to Linode: %d\n", *detail.LinodeID)
+		fmt.Fprintf(&stringBuilder, "Assigned to Linode: %d\n", *detail.LinodeID)
 	} else {
-		fmt.Fprintf(&sb, "Assignment: %s\n", ipAssignmentUnassigned)
+		fmt.Fprintf(&stringBuilder, "Assignment: %s\n", ipAssignmentUnassigned)
 	}
 
 	if detail.RDNS != "" {
-		fmt.Fprintf(&sb, "Reverse DNS: %s\n", detail.RDNS)
+		fmt.Fprintf(&stringBuilder, "Reverse DNS: %s\n", detail.RDNS)
 	}
 
-	return mcp.NewToolResultText(sb.String()), nil
+	return mcp.NewToolResultText(stringBuilder.String()), nil
 }
 
 // handleReservedIPAllocate allocates a new reserved IP address.
@@ -161,23 +163,23 @@ func (s *Service) handleReservedIPAllocate(ctx context.Context, request mcp.Call
 		allocateOpts.LinodeID = params.LinodeID
 	}
 
-	ip, err := account.Client.AllocateReserveIP(ctx, allocateOpts)
+	ipAddress, err := account.Client.AllocateReserveIP(ctx, allocateOpts)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to allocate reserved IP: %v", err)), nil
 	}
 
 	assignment := ipAssignmentUnassigned
-	if ip.LinodeID > 0 {
-		assignment = fmt.Sprintf("Assigned to Linode %d", ip.LinodeID)
+	if ipAddress.LinodeID > 0 {
+		assignment = fmt.Sprintf("Assigned to Linode %d", ipAddress.LinodeID)
 	}
 
-	visibility := "Private"
-	if ip.Public {
-		visibility = "Public"
+	visibility := visibilityPrivate
+	if ipAddress.Public {
+		visibility = visibilityPublic
 	}
 
 	return mcp.NewToolResultText(fmt.Sprintf("Reserved IP allocated successfully:\nAddress: %s\nType: %s (%s)\nRegion: %s\nAssignment: %s",
-		ip.Address, ip.Type, visibility, ip.Region, assignment)), nil
+		ipAddress.Address, ipAddress.Type, visibility, ipAddress.Region, assignment)), nil
 }
 
 // handleReservedIPAssign assigns a reserved IP to a Linode or unassigns it.
@@ -232,17 +234,17 @@ func (s *Service) handleReservedIPUpdate(ctx context.Context, request mcp.CallTo
 
 	updateOpts := linodego.IPAddressUpdateOptions{}
 
-	if rdns, ok := arguments["rdns"].(string); ok {
+	if rdns, rdnsExists := arguments["rdns"].(string); rdnsExists {
 		updateOpts.RDNS = &rdns
 	}
 
-	ip, err := account.Client.UpdateIPAddress(ctx, address, updateOpts)
+	ipAddress, err := account.Client.UpdateIPAddress(ctx, address, updateOpts)
 	if err != nil {
 		return nil, types.NewToolError("linode", "reserved_ip_update", //nolint:wrapcheck // types.NewToolError already wraps the error
 			"failed to update IP address "+address, err)
 	}
 
-	return mcp.NewToolResultText(fmt.Sprintf("IP address updated successfully:\nAddress: %s\nReverse DNS: %s", ip.Address, ip.RDNS)), nil
+	return mcp.NewToolResultText(fmt.Sprintf("IP address updated successfully:\nAddress: %s\nReverse DNS: %s", ipAddress.Address, ipAddress.RDNS)), nil
 }
 
 // handleVLANsList lists all VLANs.
@@ -258,7 +260,7 @@ func (s *Service) handleVLANsList(ctx context.Context, _ mcp.CallToolRequest) (*
 			"failed to list VLANs", err)
 	}
 
-	var summaries []VLANSummary
+	summaries := make([]VLANSummary, 0, len(vlans))
 	for _, vlan := range vlans {
 		summary := VLANSummary{
 			Label:   vlan.Label,
@@ -271,25 +273,26 @@ func (s *Service) handleVLANsList(ctx context.Context, _ mcp.CallToolRequest) (*
 
 	// Remove unused result variable
 
-	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Found %d VLANs:\n\n", len(summaries)))
+	var stringBuilder strings.Builder
+	stringBuilder.WriteString(fmt.Sprintf("Found %d VLANs:\n\n", len(summaries)))
 
 	for _, vlan := range summaries {
-		fmt.Fprintf(&sb, "Label: %s (%s)\n", vlan.Label, vlan.Region)
+		fmt.Fprintf(&stringBuilder, "Label: %s (%s)\n", vlan.Label, vlan.Region)
 		if len(vlan.Linodes) > 0 {
-			fmt.Fprintf(&sb, "  Attached Linodes: %v\n", vlan.Linodes)
+			fmt.Fprintf(&stringBuilder, "  Attached Linodes: %v\n", vlan.Linodes)
 		} else {
-			fmt.Fprintf(&sb, "  Attached Linodes: None\n")
+			fmt.Fprintf(&stringBuilder, "  Attached Linodes: None\n")
 		}
-		fmt.Fprintf(&sb, "  Created: %s\n", vlan.Created)
-		sb.WriteString("\n")
+
+		fmt.Fprintf(&stringBuilder, "  Created: %s\n", vlan.Created)
+		stringBuilder.WriteString("\n")
 	}
 
 	if len(summaries) == 0 {
 		return mcp.NewToolResultText("No VLANs found."), nil
 	}
 
-	return mcp.NewToolResultText(sb.String()), nil
+	return mcp.NewToolResultText(stringBuilder.String()), nil
 }
 
 // handleIPv6PoolsList lists all IPv6 pools.
@@ -305,7 +308,7 @@ func (s *Service) handleIPv6PoolsList(ctx context.Context, _ mcp.CallToolRequest
 			"failed to list IPv6 pools", err)
 	}
 
-	var summaries []IPv6PoolSummary
+	summaries := make([]IPv6PoolSummary, 0, len(pools))
 	for _, pool := range pools {
 		summary := IPv6PoolSummary{
 			Range:  pool.Range,
@@ -316,20 +319,20 @@ func (s *Service) handleIPv6PoolsList(ctx context.Context, _ mcp.CallToolRequest
 
 	// Remove unused result variable
 
-	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Found %d IPv6 pools:\n\n", len(summaries)))
+	var stringBuilder strings.Builder
+	stringBuilder.WriteString(fmt.Sprintf("Found %d IPv6 pools:\n\n", len(summaries)))
 
 	for _, pool := range summaries {
-		fmt.Fprintf(&sb, "Range: %s\n", pool.Range)
-		fmt.Fprintf(&sb, "  Region: %s\n", pool.Region)
-		sb.WriteString("\n")
+		fmt.Fprintf(&stringBuilder, "Range: %s\n", pool.Range)
+		fmt.Fprintf(&stringBuilder, "  Region: %s\n", pool.Region)
+		stringBuilder.WriteString("\n")
 	}
 
 	if len(summaries) == 0 {
 		return mcp.NewToolResultText("No IPv6 pools found."), nil
 	}
 
-	return mcp.NewToolResultText(sb.String()), nil
+	return mcp.NewToolResultText(stringBuilder.String()), nil
 }
 
 // handleIPv6RangesList lists all IPv6 ranges.
@@ -345,7 +348,7 @@ func (s *Service) handleIPv6RangesList(ctx context.Context, _ mcp.CallToolReques
 			"failed to list IPv6 ranges", err)
 	}
 
-	var summaries []IPv6RangeSummary
+	summaries := make([]IPv6RangeSummary, 0, len(ranges))
 	for _, ipRange := range ranges {
 		summary := IPv6RangeSummary{
 			Range:       ipRange.Range,
@@ -358,21 +361,21 @@ func (s *Service) handleIPv6RangesList(ctx context.Context, _ mcp.CallToolReques
 
 	// Remove unused result variable
 
-	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Found %d IPv6 ranges:\n\n", len(summaries)))
+	var stringBuilder strings.Builder
+	stringBuilder.WriteString(fmt.Sprintf("Found %d IPv6 ranges:\n\n", len(summaries)))
 
 	for _, ipRange := range summaries {
-		fmt.Fprintf(&sb, "Range: %s/%d\n", ipRange.Range, ipRange.Prefix)
-		fmt.Fprintf(&sb, "  Region: %s\n", ipRange.Region)
-		fmt.Fprintf(&sb, "  Route Target: %s\n", ipRange.RouteTarget)
-		sb.WriteString("\n")
+		fmt.Fprintf(&stringBuilder, "Range: %s/%d\n", ipRange.Range, ipRange.Prefix)
+		fmt.Fprintf(&stringBuilder, "  Region: %s\n", ipRange.Region)
+		fmt.Fprintf(&stringBuilder, "  Route Target: %s\n", ipRange.RouteTarget)
+		stringBuilder.WriteString("\n")
 	}
 
 	if len(summaries) == 0 {
 		return mcp.NewToolResultText("No IPv6 ranges found."), nil
 	}
 
-	return mcp.NewToolResultText(sb.String()), nil
+	return mcp.NewToolResultText(stringBuilder.String()), nil
 }
 
 // intPtr function already defined in tools_domains.go

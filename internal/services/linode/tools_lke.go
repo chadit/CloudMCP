@@ -28,7 +28,7 @@ func (s *Service) handleLKEClustersList(ctx context.Context, _ mcp.CallToolReque
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to list LKE clusters: %v", err)), nil
 	}
 
-	var summaries []LKEClusterSummary
+	summaries := make([]LKEClusterSummary, 0, len(clusters))
 	for _, cluster := range clusters {
 		summary := LKEClusterSummary{
 			ID:         cluster.ID,
@@ -46,8 +46,9 @@ func (s *Service) handleLKEClustersList(ctx context.Context, _ mcp.CallToolReque
 		summaries = append(summaries, summary)
 	}
 
-	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Found %d LKE clusters:\n\n", len(summaries)))
+	var stringBuilder strings.Builder
+
+	stringBuilder.WriteString(fmt.Sprintf("Found %d LKE clusters:\n\n", len(summaries)))
 
 	for _, cluster := range summaries {
 		haStatus := haStatusStandard
@@ -55,18 +56,19 @@ func (s *Service) handleLKEClustersList(ctx context.Context, _ mcp.CallToolReque
 			haStatus = haStatusHighAvailability
 		}
 
-		fmt.Fprintf(&sb, "ID: %d | %s (%s)\n", cluster.ID, cluster.Label, cluster.Region)
-		fmt.Fprintf(&sb, "  Status: %s\n", cluster.Status)
-		fmt.Fprintf(&sb, "  Kubernetes Version: %s\n", cluster.K8sVersion)
-		fmt.Fprintf(&sb, "  Control Plane: %s\n", haStatus)
+		fmt.Fprintf(&stringBuilder, "ID: %d | %s (%s)\n", cluster.ID, cluster.Label, cluster.Region)
+		fmt.Fprintf(&stringBuilder, "  Status: %s\n", cluster.Status)
+		fmt.Fprintf(&stringBuilder, "  Kubernetes Version: %s\n", cluster.K8sVersion)
+		fmt.Fprintf(&stringBuilder, "  Control Plane: %s\n", haStatus)
 		if len(cluster.Tags) > 0 {
-			fmt.Fprintf(&sb, "  Tags: %s\n", strings.Join(cluster.Tags, ", "))
+			fmt.Fprintf(&stringBuilder, "  Tags: %s\n", strings.Join(cluster.Tags, ", "))
 		}
-		fmt.Fprintf(&sb, "  Updated: %s\n", cluster.Updated)
-		sb.WriteString("\n")
+
+		fmt.Fprintf(&stringBuilder, "  Updated: %s\n", cluster.Updated)
+		stringBuilder.WriteString("\n")
 	}
 
-	return mcp.NewToolResultText(sb.String()), nil
+	return mcp.NewToolResultText(stringBuilder.String()), nil
 }
 
 // handleLKEClusterGet gets details of a specific LKE cluster.
@@ -92,17 +94,17 @@ func (s *Service) handleLKEClusterGet(ctx context.Context, request mcp.CallToolR
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get cluster node pools: %v", err)), nil
 	}
 
-	var nodePools []LKENodePool
+	nodePools := make([]LKENodePool, 0, len(pools))
 	for _, pool := range pools {
-		var disks []LKENodePoolDisk
+		disks := make([]LKENodePoolDisk, 0, len(pool.Disks))
 		for _, disk := range pool.Disks {
 			disks = append(disks, LKENodePoolDisk{
 				Size: disk.Size,
-				Type: string(disk.Type),
+				Type: disk.Type,
 			})
 		}
 
-		var nodes []LKENode
+		nodes := make([]LKENode, 0, len(pool.Linodes))
 		for _, node := range pool.Linodes {
 			nodes = append(nodes, LKENode{
 				ID:         node.ID,
@@ -142,63 +144,65 @@ func (s *Service) handleLKEClusterGet(ctx context.Context, request mcp.CallToolR
 		NodePools: nodePools,
 	}
 
-	var sb strings.Builder
-	fmt.Fprintf(&sb, "LKE Cluster Details:\n")
-	fmt.Fprintf(&sb, "ID: %d\n", detail.ID)
-	fmt.Fprintf(&sb, "Label: %s\n", detail.Label)
-	fmt.Fprintf(&sb, "Region: %s\n", detail.Region)
-	fmt.Fprintf(&sb, "Status: %s\n", detail.Status)
-	fmt.Fprintf(&sb, "Kubernetes Version: %s\n", detail.K8sVersion)
+	var stringBuilder strings.Builder
+	fmt.Fprintf(&stringBuilder, "LKE Cluster Details:\n")
+	fmt.Fprintf(&stringBuilder, "ID: %d\n", detail.ID)
+	fmt.Fprintf(&stringBuilder, "Label: %s\n", detail.Label)
+	fmt.Fprintf(&stringBuilder, "Region: %s\n", detail.Region)
+	fmt.Fprintf(&stringBuilder, "Status: %s\n", detail.Status)
+	fmt.Fprintf(&stringBuilder, "Kubernetes Version: %s\n", detail.K8sVersion)
 
 	haStatus := haStatusStandard
 	if detail.ControlPlane.HighAvailability {
 		haStatus = haStatusHighAvailability
 	}
-	fmt.Fprintf(&sb, "Control Plane: %s\n", haStatus)
-	fmt.Fprintf(&sb, "Created: %s\n", detail.Created)
-	fmt.Fprintf(&sb, "Updated: %s\n\n", detail.Updated)
+
+	fmt.Fprintf(&stringBuilder, "Control Plane: %s\n", haStatus)
+	fmt.Fprintf(&stringBuilder, "Created: %s\n", detail.Created)
+	fmt.Fprintf(&stringBuilder, "Updated: %s\n\n", detail.Updated)
 
 	if len(detail.Tags) > 0 {
-		fmt.Fprintf(&sb, "Tags: %s\n\n", strings.Join(detail.Tags, ", "))
+		fmt.Fprintf(&stringBuilder, "Tags: %s\n\n", strings.Join(detail.Tags, ", "))
 	}
 
 	if len(detail.NodePools) > 0 {
-		fmt.Fprintf(&sb, "Node Pools:\n")
+		fmt.Fprintf(&stringBuilder, "Node Pools:\n")
 		for i, pool := range detail.NodePools {
-			fmt.Fprintf(&sb, "  %d. Pool ID: %d\n", i+1, pool.ID)
-			fmt.Fprintf(&sb, "     Type: %s\n", pool.Type)
-			fmt.Fprintf(&sb, "     Count: %d nodes\n", pool.Count)
+			fmt.Fprintf(&stringBuilder, "  %d. Pool ID: %d\n", i+1, pool.ID)
+			fmt.Fprintf(&stringBuilder, "     Type: %s\n", pool.Type)
+			fmt.Fprintf(&stringBuilder, "     Count: %d nodes\n", pool.Count)
 
 			if pool.Autoscaler.Enabled {
-				fmt.Fprintf(&sb, "     Autoscaler: Enabled (Min: %d, Max: %d)\n", pool.Autoscaler.Min, pool.Autoscaler.Max)
+				fmt.Fprintf(&stringBuilder, "     Autoscaler: Enabled (Min: %d, Max: %d)\n", pool.Autoscaler.Min, pool.Autoscaler.Max)
 			} else {
-				fmt.Fprintf(&sb, "     Autoscaler: %s\n", autoscalerStatusDisabled)
+				fmt.Fprintf(&stringBuilder, "     Autoscaler: %s\n", autoscalerStatusDisabled)
 			}
 
 			if len(pool.Disks) > 0 {
-				fmt.Fprintf(&sb, "     Disks:\n")
+				fmt.Fprintf(&stringBuilder, "     Disks:\n")
 				for _, disk := range pool.Disks {
-					fmt.Fprintf(&sb, "       - %s: %d GB\n", disk.Type, disk.Size)
+					fmt.Fprintf(&stringBuilder, "       - %s: %d GB\n", disk.Type, disk.Size)
 				}
 			}
 
 			if len(pool.Nodes) > 0 {
-				fmt.Fprintf(&sb, "     Nodes:\n")
+				fmt.Fprintf(&stringBuilder, "     Nodes:\n")
 				for _, node := range pool.Nodes {
-					fmt.Fprintf(&sb, "       - %s (Instance: %d, Status: %s)\n", node.ID, node.InstanceID, node.Status)
+					fmt.Fprintf(&stringBuilder, "       - %s (Instance: %d, Status: %s)\n", node.ID, node.InstanceID, node.Status)
 				}
 			}
 
 			if len(pool.Tags) > 0 {
-				fmt.Fprintf(&sb, "     Tags: %s\n", strings.Join(pool.Tags, ", "))
+				fmt.Fprintf(&stringBuilder, "     Tags: %s\n", strings.Join(pool.Tags, ", "))
 			}
-			sb.WriteString("\n")
+
+			stringBuilder.WriteString("\n")
 		}
 	} else {
-		sb.WriteString("No node pools found.\n")
+		stringBuilder.WriteString("No node pools found.\n")
 	}
 
-	return mcp.NewToolResultText(sb.String()), nil
+	return mcp.NewToolResultText(stringBuilder.String()), nil
 }
 
 // handleLKEClusterCreate creates a new LKE cluster.
@@ -213,9 +217,9 @@ func (s *Service) handleLKEClusterCreate(ctx context.Context, request mcp.CallTo
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	var nodePools []linodego.LKENodePoolCreateOptions
+	nodePools := make([]linodego.LKENodePoolCreateOptions, 0, len(params.NodePools))
 	for _, pool := range params.NodePools {
-		var disks []linodego.LKENodePoolDisk
+		disks := make([]linodego.LKENodePoolDisk, 0, len(pool.Disks))
 		for _, disk := range pool.Disks {
 			disks = append(disks, linodego.LKENodePoolDisk{
 				Size: disk.Size,
@@ -340,7 +344,7 @@ func (s *Service) handleLKENodePoolCreate(ctx context.Context, request mcp.CallT
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	var disks []linodego.LKENodePoolDisk
+	disks := make([]linodego.LKENodePoolDisk, 0, len(params.Disks))
 	for _, disk := range params.Disks {
 		disks = append(disks, linodego.LKENodePoolDisk{
 			Size: disk.Size,
@@ -462,13 +466,13 @@ func (s *Service) handleLKEKubeconfig(ctx context.Context, request mcp.CallToolR
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to decode kubeconfig: %v", err)), nil
 	}
 
-	var sb strings.Builder
-	fmt.Fprintf(&sb, "Kubeconfig for LKE cluster %d:\n\n", params.ClusterID)
-	fmt.Fprintf(&sb, "```yaml\n%s\n```\n\n", string(kubeconfigBytes))
-	fmt.Fprintf(&sb, "To use this kubeconfig:\n")
-	fmt.Fprintf(&sb, "1. Save the content to a file (e.g., ~/.kube/config)\n")
-	fmt.Fprintf(&sb, "2. Set KUBECONFIG environment variable: export KUBECONFIG=~/.kube/config\n")
-	fmt.Fprintf(&sb, "3. Test connection: kubectl get nodes\n")
+	var stringBuilder strings.Builder
+	fmt.Fprintf(&stringBuilder, "Kubeconfig for LKE cluster %d:\n\n", params.ClusterID)
+	fmt.Fprintf(&stringBuilder, "```yaml\n%s\n```\n\n", string(kubeconfigBytes))
+	fmt.Fprintf(&stringBuilder, "To use this kubeconfig:\n")
+	fmt.Fprintf(&stringBuilder, "1. Save the content to a file (e.g., ~/.kube/config)\n")
+	fmt.Fprintf(&stringBuilder, "2. Set KUBECONFIG environment variable: export KUBECONFIG=~/.kube/config\n")
+	fmt.Fprintf(&stringBuilder, "3. Test connection: kubectl get nodes\n")
 
-	return mcp.NewToolResultText(sb.String()), nil
+	return mcp.NewToolResultText(stringBuilder.String()), nil
 }

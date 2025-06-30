@@ -94,7 +94,7 @@ func TestConfigReloadIntegration(t *testing.T) {
 		require.NotNil(t, service, "Service should not be nil")
 
 		// Initialize service
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		ctx, cancel := context.WithTimeout(t.Context(), 30*time.Second)
 		defer cancel()
 
 		err = service.Initialize(ctx)

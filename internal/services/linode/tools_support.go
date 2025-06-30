@@ -20,7 +20,7 @@ func (s *Service) handleSupportTicketsList(ctx context.Context, _ mcp.CallToolRe
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to list support tickets: %v", err)), nil
 	}
 
-	var summaries []SupportTicketSummary
+	summaries := make([]SupportTicketSummary, 0, len(tickets))
 	for _, ticket := range tickets {
 		var entity SupportTicketEntity
 		if ticket.Entity != nil {
@@ -53,37 +53,39 @@ func (s *Service) handleSupportTicketsList(ctx context.Context, _ mcp.CallToolRe
 		summaries = append(summaries, summary)
 	}
 
-	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Found %d support tickets:\n\n", len(summaries)))
+	var stringBuilder strings.Builder
+
+	stringBuilder.WriteString(fmt.Sprintf("Found %d support tickets:\n\n", len(summaries)))
 
 	for _, ticket := range summaries {
-		fmt.Fprintf(&sb, "ID: %d | %s\n", ticket.ID, ticket.Summary)
-		fmt.Fprintf(&sb, "  Status: %s", ticket.Status)
+		fmt.Fprintf(&stringBuilder, "ID: %d | %s\n", ticket.ID, ticket.Summary)
+		fmt.Fprintf(&stringBuilder, "  Status: %s", ticket.Status)
 		if ticket.Closeable {
-			fmt.Fprintf(&sb, " (Closeable)")
+			fmt.Fprintf(&stringBuilder, " (Closeable)")
 		}
-		fmt.Fprintf(&sb, "\n")
+		fmt.Fprintf(&stringBuilder, "\n")
 
 		if ticket.Entity.Type != "" {
-			fmt.Fprintf(&sb, "  Related: %s %s (ID: %d)\n", ticket.Entity.Type, ticket.Entity.Label, ticket.Entity.ID)
+			fmt.Fprintf(&stringBuilder, "  Related: %s %s (ID: %d)\n", ticket.Entity.Type, ticket.Entity.Label, ticket.Entity.ID)
 		}
 
 		if ticket.OpenedBy != "" {
-			fmt.Fprintf(&sb, "  Opened by: %s", ticket.OpenedBy)
+			fmt.Fprintf(&stringBuilder, "  Opened by: %s", ticket.OpenedBy)
+
 			if ticket.Opened != "" {
-				fmt.Fprintf(&sb, " on %s", ticket.Opened)
+				fmt.Fprintf(&stringBuilder, " on %s", ticket.Opened)
 			}
-			fmt.Fprintf(&sb, "\n")
+			fmt.Fprintf(&stringBuilder, "\n")
 		}
 
 		if ticket.UpdatedBy != "" && ticket.Updated != "" {
-			fmt.Fprintf(&sb, "  Last updated by: %s on %s\n", ticket.UpdatedBy, ticket.Updated)
+			fmt.Fprintf(&stringBuilder, "  Last updated by: %s on %s\n", ticket.UpdatedBy, ticket.Updated)
 		}
 
-		sb.WriteString("\n")
+		stringBuilder.WriteString("\n")
 	}
 
-	return mcp.NewToolResultText(sb.String()), nil
+	return mcp.NewToolResultText(stringBuilder.String()), nil
 }
 
 // handleSupportTicketGet gets details of a specific support ticket.
@@ -129,6 +131,7 @@ func (s *Service) handleSupportTicketGet(ctx context.Context, request mcp.CallTo
 	if ticket.Opened != nil {
 		detail.Opened = ticket.Opened.Format("2006-01-02T15:04:05")
 	}
+
 	if ticket.Updated != nil {
 		detail.Updated = ticket.Updated.Format("2006-01-02T15:04:05")
 	}
@@ -136,60 +139,63 @@ func (s *Service) handleSupportTicketGet(ctx context.Context, request mcp.CallTo
 		detail.ClosedBy = ticket.Closed.Format("2006-01-02T15:04:05")
 	}
 
-	var sb strings.Builder
-	fmt.Fprintf(&sb, "Support Ticket Details:\n")
-	fmt.Fprintf(&sb, "ID: %d\n", detail.ID)
-	fmt.Fprintf(&sb, "Summary: %s\n", detail.Summary)
-	fmt.Fprintf(&sb, "Status: %s", detail.Status)
+	var stringBuilder strings.Builder
+	fmt.Fprintf(&stringBuilder, "Support Ticket Details:\n")
+	fmt.Fprintf(&stringBuilder, "ID: %d\n", detail.ID)
+	fmt.Fprintf(&stringBuilder, "Summary: %s\n", detail.Summary)
+	fmt.Fprintf(&stringBuilder, "Status: %s", detail.Status)
 	if detail.Closeable {
-		fmt.Fprintf(&sb, " (Closeable)")
+		fmt.Fprintf(&stringBuilder, " (Closeable)")
 	}
-	fmt.Fprintf(&sb, "\n\n")
+	fmt.Fprintf(&stringBuilder, "\n\n")
 
-	fmt.Fprintf(&sb, "Description:\n%s\n\n", detail.Description)
+	fmt.Fprintf(&stringBuilder, "Description:\n%s\n\n", detail.Description)
 
 	if detail.Entity.Type != "" {
-		fmt.Fprintf(&sb, "Related Entity:\n")
-		fmt.Fprintf(&sb, "  Type: %s\n", detail.Entity.Type)
-		fmt.Fprintf(&sb, "  Label: %s\n", detail.Entity.Label)
-		fmt.Fprintf(&sb, "  ID: %d\n", detail.Entity.ID)
+		fmt.Fprintf(&stringBuilder, "Related Entity:\n")
+		fmt.Fprintf(&stringBuilder, "  Type: %s\n", detail.Entity.Type)
+		fmt.Fprintf(&stringBuilder, "  Label: %s\n", detail.Entity.Label)
+		fmt.Fprintf(&stringBuilder, "  ID: %d\n", detail.Entity.ID)
 		if detail.Entity.URL != "" {
-			fmt.Fprintf(&sb, "  URL: %s\n", detail.Entity.URL)
+			fmt.Fprintf(&stringBuilder, "  URL: %s\n", detail.Entity.URL)
 		}
-		sb.WriteString("\n")
+		stringBuilder.WriteString("\n")
 	}
 
 	if detail.OpenedBy != "" {
-		fmt.Fprintf(&sb, "Opened by: %s", detail.OpenedBy)
+		fmt.Fprintf(&stringBuilder, "Opened by: %s", detail.OpenedBy)
+
 		if detail.Opened != "" {
-			fmt.Fprintf(&sb, " on %s", detail.Opened)
+			fmt.Fprintf(&stringBuilder, " on %s", detail.Opened)
 		}
-		fmt.Fprintf(&sb, "\n")
+
+		fmt.Fprintf(&stringBuilder, "\n")
 	}
 
 	if detail.UpdatedBy != "" && detail.Updated != "" {
-		fmt.Fprintf(&sb, "Last updated by: %s on %s\n", detail.UpdatedBy, detail.Updated)
+		fmt.Fprintf(&stringBuilder, "Last updated by: %s on %s\n", detail.UpdatedBy, detail.Updated)
 	}
 
 	if detail.ClosedBy != "" {
-		fmt.Fprintf(&sb, "Closed on: %s\n", detail.ClosedBy)
+		fmt.Fprintf(&stringBuilder, "Closed on: %s\n", detail.ClosedBy)
 	}
 
 	if len(detail.Attachments) > 0 {
-		fmt.Fprintf(&sb, "\nAttachments:\n")
+		fmt.Fprintf(&stringBuilder, "\nAttachments:\n")
+
 		for _, attachment := range detail.Attachments {
-			fmt.Fprintf(&sb, "  - %s\n", attachment)
+			fmt.Fprintf(&stringBuilder, "  - %s\n", attachment)
 		}
 	}
 
 	if detail.GravatarID != "" {
-		fmt.Fprintf(&sb, "\nContact Gravatar ID: %s\n", detail.GravatarID)
+		fmt.Fprintf(&stringBuilder, "\nContact Gravatar ID: %s\n", detail.GravatarID)
 	}
 
 	// Note about functionality limitations
-	fmt.Fprintf(&sb, "\nNote: This is a read-only view. Ticket creation and replies are not yet supported by the current linodego library version.")
+	fmt.Fprintf(&stringBuilder, "\nNote: This is a read-only view. Ticket creation and replies are not yet supported by the current linodego library version.")
 
-	return mcp.NewToolResultText(sb.String()), nil
+	return mcp.NewToolResultText(stringBuilder.String()), nil
 }
 
 // handleSupportTicketCreate creates a new support ticket.

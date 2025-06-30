@@ -35,7 +35,6 @@ func TestCreateOptimizedLinodeClient(t *testing.T) {
 	client := linode.CreateOptimizedLinodeClient("test-token", config)
 
 	require.NotNil(t, client, "Client should not be nil")
-
 	// Verify the client was created successfully
 	// Note: We can't easily test the internal configuration without exposing internals
 	// but we can verify the client is functional by checking it's not nil
@@ -255,6 +254,7 @@ func TestHTTPClientCreation_TokenHandling(t *testing.T) {
 	for _, token := range tokens {
 		t.Run("token_"+token, func(t *testing.T) {
 			t.Parallel()
+
 			client := linode.CreateOptimizedLinodeClient(token, config)
 			require.NotNil(t, client, "Client should be created regardless of token format")
 
@@ -270,6 +270,7 @@ func TestPerformanceStructs(t *testing.T) {
 
 	t.Run("PerformanceTest struct", func(t *testing.T) {
 		t.Parallel()
+
 		test := linode.PerformanceTest{
 			RequestCount:    100,
 			ConcurrentUsers: 10,
@@ -285,6 +286,7 @@ func TestPerformanceStructs(t *testing.T) {
 
 	t.Run("BenchmarkResult struct", func(t *testing.T) {
 		t.Parallel()
+
 		result := linode.BenchmarkResult{
 			TotalRequests:      100,
 			SuccessfulRequests: 95,

@@ -30,6 +30,8 @@ import (
 // **Purpose**: This test ensures images list command fails appropriately when account configuration is invalid.
 // Note: Full integration testing with mock Linode client requires interface abstraction (future improvement).
 func TestHandleImagesList_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create minimal service with empty account manager
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -73,6 +75,8 @@ func TestHandleImagesList_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleImageGet_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -116,6 +120,8 @@ func TestHandleImageGet_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures image get validates required parameters properly.
 func TestHandleImageGet_MissingParameter(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -169,6 +175,8 @@ func TestHandleImageGet_MissingParameter(t *testing.T) {
 //
 // **Purpose**: This test ensures image get validates parameter content as well as presence.
 func TestHandleImageGet_EmptyParameter(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -224,6 +232,8 @@ func TestHandleImageGet_EmptyParameter(t *testing.T) {
 //
 // **Purpose**: This test ensures image create validates all required parameters properly.
 func TestHandleImageCreate_MissingRequiredParameters(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -277,6 +287,8 @@ func TestHandleImageCreate_MissingRequiredParameters(t *testing.T) {
 //
 // **Purpose**: This test ensures image create validates parameter completeness properly.
 func TestHandleImageCreate_PartialParameters(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -333,6 +345,8 @@ func TestHandleImageCreate_PartialParameters(t *testing.T) {
 //
 // **Purpose**: This test ensures image update validates required parameters properly.
 func TestHandleImageUpdate_MissingParameter(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -386,6 +400,8 @@ func TestHandleImageUpdate_MissingParameter(t *testing.T) {
 //
 // **Purpose**: This test ensures image delete validates required parameters properly.
 func TestHandleImageDelete_MissingParameter(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -439,6 +455,8 @@ func TestHandleImageDelete_MissingParameter(t *testing.T) {
 //
 // **Purpose**: This test ensures image replicate validates required parameters properly.
 func TestHandleImageReplicate_MissingParameter(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -492,6 +510,8 @@ func TestHandleImageReplicate_MissingParameter(t *testing.T) {
 //
 // **Purpose**: This test ensures image upload create validates required parameters properly.
 func TestHandleImageUploadCreate_MissingParameter(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{

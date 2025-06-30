@@ -1352,54 +1352,9 @@ func (s *Service) RegisterTools(server interface{}) error {
 		Name:        "linode_domain_record_create",
 		Description: "Create a new domain record",
 		InputSchema: mcp.ToolInputSchema{
-			Type: "object",
-			Properties: map[string]any{
-				"domain_id": map[string]any{
-					"type":        "number",
-					"description": "ID of the domain",
-				},
-				"type": map[string]any{
-					"type":        "string",
-					"description": "Record type (A, AAAA, CNAME, MX, TXT, SRV, PTR, CAA, NS)",
-				},
-				"name": map[string]any{
-					"type":        "string",
-					"description": "Record name (subdomain)",
-				},
-				"target": map[string]any{
-					"type":        "string",
-					"description": "Record target (IP, hostname, etc.)",
-				},
-				"priority": map[string]any{
-					"type":        "number",
-					"description": "Record priority (for MX and SRV records)",
-				},
-				"weight": map[string]any{
-					"type":        "number",
-					"description": "Record weight (for SRV records)",
-				},
-				"port": map[string]any{
-					"type":        "number",
-					"description": "Record port (for SRV records)",
-				},
-				"service": map[string]any{
-					"type":        "string",
-					"description": "Service name (for SRV records)",
-				},
-				"protocol": map[string]any{
-					"type":        "string",
-					"description": "Protocol name (for SRV records)",
-				},
-				"ttl_sec": map[string]any{
-					"type":        "number",
-					"description": "TTL in seconds",
-				},
-				"tag": map[string]any{
-					"type":        "string",
-					"description": "CAA record tag",
-				},
-			},
-			Required: []string{"domain_id", "type", "target"},
+			Type:       "object",
+			Properties: s.buildDomainRecordProperties(false),
+			Required:   []string{"domain_id", "type", "target"},
 		},
 	}, s.handleDomainRecordCreate)
 
@@ -1407,58 +1362,9 @@ func (s *Service) RegisterTools(server interface{}) error {
 		Name:        "linode_domain_record_update",
 		Description: "Update a domain record",
 		InputSchema: mcp.ToolInputSchema{
-			Type: "object",
-			Properties: map[string]any{
-				"domain_id": map[string]any{
-					"type":        "number",
-					"description": "ID of the domain",
-				},
-				"record_id": map[string]any{
-					"type":        "number",
-					"description": "ID of the record to update",
-				},
-				"type": map[string]any{
-					"type":        "string",
-					"description": "New record type",
-				},
-				"name": map[string]any{
-					"type":        "string",
-					"description": "New record name",
-				},
-				"target": map[string]any{
-					"type":        "string",
-					"description": "New record target",
-				},
-				"priority": map[string]any{
-					"type":        "number",
-					"description": "New record priority",
-				},
-				"weight": map[string]any{
-					"type":        "number",
-					"description": "New record weight",
-				},
-				"port": map[string]any{
-					"type":        "number",
-					"description": "New record port",
-				},
-				"service": map[string]any{
-					"type":        "string",
-					"description": "New service name",
-				},
-				"protocol": map[string]any{
-					"type":        "string",
-					"description": "New protocol name",
-				},
-				"ttl_sec": map[string]any{
-					"type":        "number",
-					"description": "New TTL in seconds",
-				},
-				"tag": map[string]any{
-					"type":        "string",
-					"description": "New CAA record tag",
-				},
-			},
-			Required: []string{"domain_id", "record_id"},
+			Type:       "object",
+			Properties: s.buildDomainRecordProperties(true),
+			Required:   []string{"domain_id", "record_id"},
 		},
 	}, s.handleDomainRecordUpdate)
 
@@ -2920,42 +2826,114 @@ func (s *Service) CallToolForTesting(ctx context.Context, request mcp.CallToolRe
 
 // GetTextContentForTesting extracts text content from CallToolResult for testing.
 // This allows external test packages to access the text content helper function.
-func GetTextContentForTesting(t interface {
+func GetTextContentForTesting(testingInterface interface {
 	Helper()
 	Errorf(format string, args ...interface{})
 	FailNow()
 }, result *mcp.CallToolResult,
 ) string {
-	t.Helper()
+	testingInterface.Helper()
 
 	if result == nil {
-		t.Errorf("result should not be nil")
+		testingInterface.Errorf("result should not be nil")
 
 		return ""
 	}
 
 	if len(result.Content) == 0 {
-		t.Errorf("result should have content")
+		testingInterface.Errorf("result should have content")
 
 		return ""
 	}
 
 	if len(result.Content) != 1 {
-		t.Errorf("result should have exactly one content item, got %d", len(result.Content))
+		testingInterface.Errorf("result should have exactly one content item, got %d", len(result.Content))
 
 		return ""
 	}
 
 	textContent, ok := result.Content[0].(mcp.TextContent)
 	if !ok {
-		t.Errorf("result content should be text content")
-		t.FailNow()
+		testingInterface.Errorf("result content should be text content")
+		testingInterface.FailNow()
 	}
 
 	if textContent.Text == "" {
-		t.Errorf("result text should not be empty")
-		t.FailNow()
+		testingInterface.Errorf("result text should not be empty")
+		testingInterface.FailNow()
 	}
 
 	return textContent.Text
+}
+
+// buildDomainRecordProperties builds the common domain record properties for schema definitions.
+func (s *Service) buildDomainRecordProperties(isUpdate bool) map[string]any {
+	properties := map[string]any{
+		"domain_id": map[string]any{
+			"type":        "number",
+			"description": "ID of the domain",
+		},
+	}
+
+	if isUpdate {
+		properties["record_id"] = map[string]any{
+			"type":        "number",
+			"description": "ID of the record to update",
+		}
+	}
+
+	descriptionPrefix := ""
+	if isUpdate {
+		descriptionPrefix = "New "
+	}
+
+	// Add common record properties
+	recordProperties := map[string]map[string]any{
+		"type": {
+			"type":        "string",
+			"description": descriptionPrefix + "record type" + func() string { if !isUpdate { return " (A, AAAA, CNAME, MX, TXT, SRV, PTR, CAA, NS)" }; return "" }(),
+		},
+		"name": {
+			"type":        "string",
+			"description": descriptionPrefix + "record name" + func() string { if !isUpdate { return " (subdomain)" }; return "" }(),
+		},
+		"target": {
+			"type":        "string",
+			"description": descriptionPrefix + "record target" + func() string { if !isUpdate { return " (IP, hostname, etc.)" }; return "" }(),
+		},
+		"priority": {
+			"type":        "number",
+			"description": descriptionPrefix + "record priority" + func() string { if !isUpdate { return " (for MX and SRV records)" }; return "" }(),
+		},
+		"weight": {
+			"type":        "number",
+			"description": descriptionPrefix + "record weight" + func() string { if !isUpdate { return " (for SRV records)" }; return "" }(),
+		},
+		"port": {
+			"type":        "number",
+			"description": descriptionPrefix + "record port" + func() string { if !isUpdate { return " (for SRV records)" }; return "" }(),
+		},
+		"service": {
+			"type":        "string",
+			"description": descriptionPrefix + "service name" + func() string { if !isUpdate { return " (for SRV records)" }; return "" }(),
+		},
+		"protocol": {
+			"type":        "string",
+			"description": descriptionPrefix + "protocol name" + func() string { if !isUpdate { return " (for SRV records)" }; return "" }(),
+		},
+		"ttl_sec": {
+			"type":        "number",
+			"description": descriptionPrefix + "TTL in seconds",
+		},
+		"tag": {
+			"type":        "string",
+			"description": descriptionPrefix + "CAA record tag",
+		},
+	}
+
+	for key, value := range recordProperties {
+		properties[key] = value
+	}
+
+	return properties
 }

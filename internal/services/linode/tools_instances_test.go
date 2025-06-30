@@ -30,6 +30,10 @@ import (
 // **Purpose**: This test ensures instances list command fails appropriately when account configuration is invalid.
 // Note: Full integration testing with mock Linode client requires interface abstraction (future improvement).
 func TestHandleInstancesList_AccountError(t *testing.T) {
+	t.Parallel()
+
+	t.Parallel()
+
 	// Create minimal service with empty account manager
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -73,6 +77,8 @@ func TestHandleInstancesList_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleInstanceGet_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -116,6 +122,8 @@ func TestHandleInstanceGet_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures instance get validates required parameters properly.
 func TestHandleInstanceGet_MissingParameter(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -169,6 +177,8 @@ func TestHandleInstanceGet_MissingParameter(t *testing.T) {
 //
 // **Purpose**: This test ensures instance get validates parameter types properly.
 func TestHandleInstanceGet_InvalidParameter(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -224,6 +234,8 @@ func TestHandleInstanceGet_InvalidParameter(t *testing.T) {
 //
 // **Purpose**: This test ensures instance create validates all required parameters properly.
 func TestHandleInstanceCreate_MissingRequiredParameters(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -277,6 +289,8 @@ func TestHandleInstanceCreate_MissingRequiredParameters(t *testing.T) {
 //
 // **Purpose**: This test ensures instance create validates parameter completeness properly.
 func TestHandleInstanceCreate_PartialParameters(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -333,6 +347,8 @@ func TestHandleInstanceCreate_PartialParameters(t *testing.T) {
 //
 // **Purpose**: This test ensures instance delete validates required parameters properly.
 func TestHandleInstanceDelete_MissingParameter(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -386,6 +402,8 @@ func TestHandleInstanceDelete_MissingParameter(t *testing.T) {
 //
 // **Purpose**: This test ensures instance boot validates required parameters properly.
 func TestHandleInstanceBoot_MissingParameter(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -439,6 +457,8 @@ func TestHandleInstanceBoot_MissingParameter(t *testing.T) {
 //
 // **Purpose**: This test ensures instance shutdown validates required parameters properly.
 func TestHandleInstanceShutdown_MissingParameter(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -492,6 +512,8 @@ func TestHandleInstanceShutdown_MissingParameter(t *testing.T) {
 //
 // **Purpose**: This test ensures instance reboot validates required parameters properly.
 func TestHandleInstanceReboot_MissingParameter(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -547,6 +569,10 @@ func TestHandleInstanceReboot_MissingParameter(t *testing.T) {
 //
 // **Purpose**: This test ensures instance boot parameter validation works correctly and account errors are handled.
 func TestHandleInstanceBoot_ValidParameters(t *testing.T) {
+	t.Parallel()
+
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
