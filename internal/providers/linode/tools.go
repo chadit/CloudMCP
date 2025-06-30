@@ -26,7 +26,7 @@ var (
 	ErrUnknownTool           = errors.New("unknown tool")
 	ErrParametersNil         = errors.New("parameters cannot be nil")
 	ErrUnsupportedTool       = errors.New("unsupported tool")
-	ErrServiceNotInit        = errors.New("Linode service is not initialized")
+	ErrServiceNotInit        = errors.New("linode service is not initialized")
 	ErrAccountManagerMissing = errors.New("account manager is not available")
 )
 
@@ -53,7 +53,7 @@ func (st *SampleTool) Definition() mcp.Tool {
 }
 
 // Execute handles the tool execution.
-func (st *SampleTool) Execute(_ context.Context, params map[string]interface{}) (interface{}, error) {
+func (st *SampleTool) Execute(_ context.Context, _ map[string]interface{}) (interface{}, error) {
 	// Log the execution
 	st.logger.Info("Executing sample tool", "name", st.name)
 

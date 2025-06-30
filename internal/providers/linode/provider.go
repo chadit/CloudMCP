@@ -294,10 +294,3 @@ func (f *Factory) ValidateConfig(config interfaces.Config) error {
 
 	return provider.ValidateConfig(config)
 }
-
-// init registers the Linode provider with the global registry.
-// This allows the provider to be discovered and used automatically.
-func init() {
-	// Note: In a real implementation, you might want to make this registration
-	// optional or configurable to avoid automatic registration
-}

@@ -53,16 +53,9 @@ func TestHandleNodeBalancersList_AccountError(t *testing.T) {
 	}
 
 	result, err := service.CallToolForTesting(ctx, request)
-	require.NoError(t, err, "handleNodeBalancersList should not return error for account validation")
-	require.NotNil(t, result, "result should not be nil")
-
-	// Check that it's an error result
-	require.NotEmpty(t, result.Content, "result should have content")
-	if len(result.Content) > 0 {
-		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
-			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
-		}
-	}
+	require.Error(t, err, "handleNodeBalancersList should return an error when no accounts are configured")
+	require.Nil(t, result, "result should be nil when error occurs")
+	require.Contains(t, err.Error(), "account", "error should mention account issue")
 }
 
 // TestHandleNodeBalancerGet_AccountError tests the handleNodeBalancerGet function with account manager errors.
@@ -106,16 +99,9 @@ func TestHandleNodeBalancerGet_AccountError(t *testing.T) {
 	}
 
 	result, err := service.CallToolForTesting(ctx, request)
-	require.NoError(t, err, "handleNodeBalancerGet should not return error for account validation")
-	require.NotNil(t, result, "result should not be nil")
-
-	// Check that it's an error result
-	require.NotEmpty(t, result.Content, "result should have content")
-	if len(result.Content) > 0 {
-		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
-			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
-		}
-	}
+	require.Error(t, err, "handleNodeBalancerGet should return an error when no accounts are configured")
+	require.Nil(t, result, "result should be nil when error occurs")
+	require.Contains(t, err.Error(), "account", "error should mention account issue")
 }
 
 // TestHandleNodeBalancerCreate_AccountError tests the handleNodeBalancerCreate function with account manager errors.
@@ -158,16 +144,9 @@ func TestHandleNodeBalancerCreate_AccountError(t *testing.T) {
 	}
 
 	result, err := service.CallToolForTesting(ctx, request)
-	require.NoError(t, err, "handleNodeBalancerCreate should not return error for account validation")
-	require.NotNil(t, result, "result should not be nil")
-
-	// Check that it's an error result
-	require.NotEmpty(t, result.Content, "result should have content")
-	if len(result.Content) > 0 {
-		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
-			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
-		}
-	}
+	require.Error(t, err, "handleNodeBalancerCreate should return an error when no accounts are configured")
+	require.Nil(t, result, "result should be nil when error occurs")
+	require.Contains(t, err.Error(), "account", "error should mention account issue")
 }
 
 // TestHandleNodeBalancerUpdate_AccountError tests the handleNodeBalancerUpdate function with account manager errors.
@@ -210,16 +189,9 @@ func TestHandleNodeBalancerUpdate_AccountError(t *testing.T) {
 	}
 
 	result, err := service.CallToolForTesting(ctx, request)
-	require.NoError(t, err, "handleNodeBalancerUpdate should not return error for account validation")
-	require.NotNil(t, result, "result should not be nil")
-
-	// Check that it's an error result
-	require.NotEmpty(t, result.Content, "result should have content")
-	if len(result.Content) > 0 {
-		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
-			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
-		}
-	}
+	require.Error(t, err, "handleNodeBalancerUpdate should return an error when no accounts are configured")
+	require.Nil(t, result, "result should be nil when error occurs")
+	require.Contains(t, err.Error(), "account", "error should mention account issue")
 }
 
 // TestHandleNodeBalancerDelete_AccountError tests the handleNodeBalancerDelete function with account manager errors.
@@ -261,16 +233,9 @@ func TestHandleNodeBalancerDelete_AccountError(t *testing.T) {
 	}
 
 	result, err := service.CallToolForTesting(ctx, request)
-	require.NoError(t, err, "handleNodeBalancerDelete should not return error for account validation")
-	require.NotNil(t, result, "result should not be nil")
-
-	// Check that it's an error result
-	require.NotEmpty(t, result.Content, "result should have content")
-	if len(result.Content) > 0 {
-		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
-			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
-		}
-	}
+	require.Error(t, err, "handleNodeBalancerDelete should return an error when no accounts are configured")
+	require.Nil(t, result, "result should be nil when error occurs")
+	require.Contains(t, err.Error(), "account", "error should mention account issue")
 }
 
 // TestHandleNodeBalancerConfigCreate_AccountError tests the handleNodeBalancerConfigCreate function with account manager errors.
@@ -314,16 +279,9 @@ func TestHandleNodeBalancerConfigCreate_AccountError(t *testing.T) {
 	}
 
 	result, err := service.CallToolForTesting(ctx, request)
-	require.NoError(t, err, "handleNodeBalancerConfigCreate should not return error for account validation")
-	require.NotNil(t, result, "result should not be nil")
-
-	// Check that it's an error result
-	require.NotEmpty(t, result.Content, "result should have content")
-	if len(result.Content) > 0 {
-		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
-			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
-		}
-	}
+	require.Error(t, err, "handleNodeBalancerConfigCreate should return an error when no accounts are configured")
+	require.Nil(t, result, "result should be nil when error occurs")
+	require.Contains(t, err.Error(), "account", "error should mention account issue")
 }
 
 // TestHandleNodeBalancerConfigUpdate_AccountError tests the handleNodeBalancerConfigUpdate function with account manager errors.
@@ -368,16 +326,9 @@ func TestHandleNodeBalancerConfigUpdate_AccountError(t *testing.T) {
 	}
 
 	result, err := service.CallToolForTesting(ctx, request)
-	require.NoError(t, err, "handleNodeBalancerConfigUpdate should not return error for account validation")
-	require.NotNil(t, result, "result should not be nil")
-
-	// Check that it's an error result
-	require.NotEmpty(t, result.Content, "result should have content")
-	if len(result.Content) > 0 {
-		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
-			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
-		}
-	}
+	require.Error(t, err, "handleNodeBalancerConfigUpdate should return an error when no accounts are configured")
+	require.Nil(t, result, "result should be nil when error occurs")
+	require.Contains(t, err.Error(), "account", "error should mention account issue")
 }
 
 // TestHandleNodeBalancerConfigDelete_AccountError tests the handleNodeBalancerConfigDelete function with account manager errors.
@@ -420,16 +371,9 @@ func TestHandleNodeBalancerConfigDelete_AccountError(t *testing.T) {
 	}
 
 	result, err := service.CallToolForTesting(ctx, request)
-	require.NoError(t, err, "handleNodeBalancerConfigDelete should not return error for account validation")
-	require.NotNil(t, result, "result should not be nil")
-
-	// Check that it's an error result
-	require.NotEmpty(t, result.Content, "result should have content")
-	if len(result.Content) > 0 {
-		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
-			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
-		}
-	}
+	require.Error(t, err, "handleNodeBalancerConfigDelete should return an error when no accounts are configured")
+	require.Nil(t, result, "result should be nil when error occurs")
+	require.Contains(t, err.Error(), "account", "error should mention account issue")
 }
 
 // Note: Additional tests for successful NodeBalancer operations with mock Linode clients
