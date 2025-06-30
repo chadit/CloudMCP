@@ -29,6 +29,8 @@ import (
 // **Purpose**: This test ensures account command fails appropriately when account configuration is invalid.
 // Note: Full integration testing with mock Linode client requires interface abstraction (future improvement).
 func TestHandleAccountGet_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create minimal service with empty account manager
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -75,6 +77,8 @@ func TestHandleAccountGet_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures account list command provides complete multi-account visibility.
 func TestHandleAccountList(t *testing.T) {
+	t.Parallel()
+
 	// Create completely isolated test service for this test only
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -140,6 +144,8 @@ func TestHandleAccountList(t *testing.T) {
 //
 // **Purpose**: This test ensures account list works correctly in minimal configuration scenarios.
 func TestHandleAccountList_SingleAccount(t *testing.T) {
+	t.Parallel()
+
 	// Create completely isolated test service for this test only
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -200,6 +206,8 @@ func TestHandleAccountList_SingleAccount(t *testing.T) {
 //
 // **Purpose**: This test ensures account switching fails gracefully with invalid input.
 func TestHandleAccountSwitch_InvalidAccount(t *testing.T) {
+	t.Parallel()
+
 	// Create completely isolated test service for this test only
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -266,6 +274,8 @@ func TestHandleAccountSwitch_InvalidAccount(t *testing.T) {
 //
 // **Purpose**: This test ensures account switching validates required parameters properly.
 func TestHandleAccountSwitch_MissingParameter(t *testing.T) {
+	t.Parallel()
+
 	// Create completely isolated test service for this test only
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -328,6 +338,8 @@ func TestHandleAccountSwitch_MissingParameter(t *testing.T) {
 //
 // **Purpose**: This test ensures account switching validates parameter content as well as presence.
 func TestHandleAccountSwitch_EmptyParameter(t *testing.T) {
+	t.Parallel()
+
 	// Create completely isolated test service for this test only
 	log := logger.New("debug")
 	cfg := &config.Config{

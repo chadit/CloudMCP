@@ -97,14 +97,14 @@ Updated: %s`,
 			resultText += fmt.Sprintf(" (%s)", volume.LinodeLabel)
 		}
 		if volume.FilesystemPath != "" {
-			resultText += fmt.Sprintf("\nMount Path: %s", volume.FilesystemPath)
+			resultText += "\nMount Path: " + volume.FilesystemPath
 		}
 	} else {
 		resultText += "\n\nStatus: Unattached"
 	}
 
 	if len(volume.Tags) > 0 {
-		resultText += fmt.Sprintf("\n\nTags: %s", strings.Join(volume.Tags, ", "))
+		resultText += "\n\nTags: " + strings.Join(volume.Tags, ", ")
 	}
 
 	return mcp.NewToolResultText(resultText), nil
@@ -179,7 +179,7 @@ Status: %s`,
 	if volume.LinodeID != nil && *volume.LinodeID > 0 {
 		resultText += fmt.Sprintf("\nAttached to Linode: %d", *volume.LinodeID)
 		if volume.FilesystemPath != "" {
-			resultText += fmt.Sprintf("\nMount Path: %s", volume.FilesystemPath)
+			resultText += "\nMount Path: " + volume.FilesystemPath
 		}
 	}
 

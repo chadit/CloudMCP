@@ -1,7 +1,11 @@
+// Package main provides a setup utility for configuring CloudMCP with Claude Code and VS Code.
+// It automates the installation and configuration of CloudMCP as an MCP server, creating
+// necessary configuration files and wrapper scripts for seamless integration.
 package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -87,6 +91,9 @@ const (
 	filePermExecutable = 0o700 // Read/write/execute for owner only
 )
 
+// ErrInvalidFilePath indicates a file path is outside allowed directories.
+var ErrInvalidFilePath = errors.New("invalid file path")
+
 type config struct {
 	showHelp   bool
 	forceSetup bool
@@ -108,6 +115,65 @@ func parseFlags() *config {
 	flag.Parse()
 
 	return cfg
+}
+
+// safeReadFile reads a file with path validation to prevent directory traversal attacks.
+func safeReadFile(path string) ([]byte, error) {
+	cleanPath := filepath.Clean(path)
+
+	// Validate path is within expected directories
+	if !isValidConfigPath(cleanPath) {
+		return nil, fmt.Errorf("%w: %s", ErrInvalidFilePath, cleanPath)
+	}
+
+	data, err := os.ReadFile(cleanPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file %s: %w", cleanPath, err)
+	}
+
+	return data, nil
+}
+
+// isValidConfigPath validates that a path is within expected configuration directories.
+func isValidConfigPath(path string) bool {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return false
+	}
+
+	// Expected configuration directories
+	validPrefixes := []string{
+		filepath.Join(homeDir, ".claude"),
+		filepath.Join(homeDir, ".config"),
+		filepath.Join(homeDir, "Library", "Application Support"),
+		filepath.Join(homeDir, "AppData"),
+	}
+
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return false
+	}
+
+	// Check if path starts with any valid prefix
+	for _, prefix := range validPrefixes {
+		absPrefix, err := filepath.Abs(prefix)
+		if err != nil {
+			continue
+		}
+
+		// Check if path is within this prefix directory
+		rel, err := filepath.Rel(absPrefix, absPath)
+		if err != nil {
+			continue
+		}
+
+		// Path is valid if it doesn't escape the prefix directory
+		if !strings.HasPrefix(rel, "..") {
+			return true
+		}
+	}
+
+	return false
 }
 
 func main() {
@@ -319,7 +385,7 @@ func setupClaudeCode(wrapperPath string, forceSetup bool) {
 	homeDir, _ := os.UserHomeDir()
 	claudeConfigPath := filepath.Join(homeDir, ".claude.json")
 
-	if data, err := os.ReadFile(claudeConfigPath); err == nil {
+	if data, err := safeReadFile(claudeConfigPath); err == nil {
 		if strings.Contains(string(data), "cloud-mcp") && !forceSetup {
 			fmt.Println("✓ CloudMCP already configured in Claude Code")
 
@@ -362,7 +428,7 @@ func setupClaudeDesktop(wrapperPath string, forceSetup bool) {
 	}
 
 	// Read existing config
-	data, err := os.ReadFile(configPath)
+	data, err := safeReadFile(configPath)
 	if err != nil {
 		fmt.Printf("⚠️  Cannot read Claude Desktop config: %v\n", err)
 
@@ -378,8 +444,8 @@ func setupClaudeDesktop(wrapperPath string, forceSetup bool) {
 
 	// Parse config
 	var config map[string]interface{}
-	if err := json.Unmarshal(data, &config); err != nil {
-		fmt.Printf("⚠️  Cannot parse Claude Desktop config: %v\n", err)
+	if unmarshalErr := json.Unmarshal(data, &config); unmarshalErr != nil {
+		fmt.Printf("⚠️  Cannot parse Claude Desktop config: %v\n", unmarshalErr)
 
 		return
 	}
@@ -466,7 +532,7 @@ func setupVSCode(wrapperPath string, forceSetup bool) {
 	}
 
 	// Read existing settings
-	data, err := os.ReadFile(settingsPath)
+	data, err := safeReadFile(settingsPath)
 	if err != nil {
 		fmt.Printf("⚠️  Cannot read VS Code settings: %v\n", err)
 
@@ -598,7 +664,7 @@ func removeFromClaudeDesktop(homeDir string) {
 func removeCloudMCPFromClaudeConfig(homeDir string) {
 	configPath := filepath.Join(homeDir, "Library", "Application Support", "Claude", "claude_desktop_config.json")
 
-	data, err := os.ReadFile(configPath)
+	data, err := safeReadFile(configPath)
 	if err != nil {
 		return
 	}
@@ -640,7 +706,7 @@ func removeFromVSCode(homeDir string) {
 	}
 
 	for _, settingsPath := range settingsPaths {
-		if data, err := os.ReadFile(settingsPath); err == nil {
+		if data, err := safeReadFile(settingsPath); err == nil {
 			if strings.Contains(string(data), "cloud-mcp") {
 				fmt.Printf("⚠️  Please manually remove cloud-mcp from VS Code settings: %s\n", settingsPath)
 

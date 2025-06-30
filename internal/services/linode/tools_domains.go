@@ -2,6 +2,7 @@ package linode
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -11,20 +12,41 @@ import (
 	"github.com/chadit/CloudMCP/pkg/types"
 )
 
+const (
+	// timeFormatLayout is the standard time format for displaying dates.
+	timeFormatLayout = "2006-01-02T15:04:05"
+	// defaultDNSRoot represents the root domain symbol.
+	defaultDNSRoot = "@"
+)
+
+var (
+	// ErrInvalidArgumentsFormat is returned when arguments are not in the expected format.
+	ErrInvalidArgumentsFormat = errors.New("invalid arguments format")
+	// ErrMissingDomainName is returned when domain name is missing or empty.
+	ErrMissingDomainName = errors.New("domain is required")
+	// ErrMissingDomainType is returned when domain type is missing or empty.
+	ErrMissingDomainType = errors.New("type is required")
+	// ErrMissingRecordType is returned when record type is missing or empty.
+	ErrMissingRecordType = errors.New("type is required")
+	// ErrMissingRecordTarget is returned when record target is missing or empty.
+	ErrMissingRecordTarget = errors.New("target is required")
+)
+
 // handleDomainsList lists all domains.
 func (s *Service) handleDomainsList(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	account, err := s.accountManager.GetCurrentAccount()
-	if err != nil {
-		return nil, err
+	account, accountErr := s.accountManager.GetCurrentAccount()
+	if accountErr != nil {
+		return nil, fmt.Errorf("failed to get current account: %w", accountErr)
 	}
 
-	domains, err := account.Client.ListDomains(ctx, nil)
-	if err != nil {
+	domains, domainsErr := account.Client.ListDomains(ctx, nil)
+	if domainsErr != nil {
 		return nil, types.NewToolError("linode", "domains_list", //nolint:wrapcheck // types.NewToolError already wraps the error
-			"failed to list domains", err)
+			"failed to list domains", domainsErr)
 	}
 
-	var summaries []DomainSummary
+	summaries := make([]DomainSummary, 0, len(domains))
+
 	for _, domain := range domains {
 		summary := DomainSummary{
 			ID:          domain.ID,
@@ -37,58 +59,65 @@ func (s *Service) handleDomainsList(ctx context.Context, _ mcp.CallToolRequest) 
 			MasterIPs:   domain.MasterIPs,
 			AXfrIPs:     domain.AXfrIPs,
 			Tags:        domain.Tags,
-			Created:     "", // Domain doesn't have Created field
-			Updated:     "", // Domain doesn't have Updated field
+			Created:     "", // Domain doesn't have Created field.
+			Updated:     "", // Domain doesn't have Updated field.
 		}
 		summaries = append(summaries, summary)
 	}
 
-	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Found %d domains:\n\n", len(summaries)))
+	var stringBuilder strings.Builder
 
-	for _, domain := range summaries {
-		fmt.Fprintf(&sb, "ID: %d | %s (%s)\n", domain.ID, domain.Domain, domain.Type)
-		fmt.Fprintf(&sb, "  Status: %s\n", domain.Status)
-		if domain.Description != "" {
-			fmt.Fprintf(&sb, "  Description: %s\n", domain.Description)
+	stringBuilder.WriteString(fmt.Sprintf("Found %d domains:\n\n", len(summaries)))
+
+	for _, domainEntry := range summaries {
+		fmt.Fprintf(&stringBuilder, "ID: %d | %s (%s)\n", domainEntry.ID, domainEntry.Domain, domainEntry.Type)
+		fmt.Fprintf(&stringBuilder, "  Status: %s\n", domainEntry.Status)
+
+		if domainEntry.Description != "" {
+			fmt.Fprintf(&stringBuilder, "  Description: %s\n", domainEntry.Description)
 		}
-		fmt.Fprintf(&sb, "  SOA Email: %s\n", domain.SOAEmail)
-		if len(domain.MasterIPs) > 0 {
-			fmt.Fprintf(&sb, "  Master IPs: %s\n", strings.Join(domain.MasterIPs, ", "))
+
+		fmt.Fprintf(&stringBuilder, "  SOA Email: %s\n", domainEntry.SOAEmail)
+
+		if len(domainEntry.MasterIPs) > 0 {
+			fmt.Fprintf(&stringBuilder, "  Master IPs: %s\n", strings.Join(domainEntry.MasterIPs, ", "))
 		}
-		if len(domain.Tags) > 0 {
-			fmt.Fprintf(&sb, "  Tags: %s\n", strings.Join(domain.Tags, ", "))
+
+		if len(domainEntry.Tags) > 0 {
+			fmt.Fprintf(&stringBuilder, "  Tags: %s\n", strings.Join(domainEntry.Tags, ", "))
 		}
-		sb.WriteString("\n")
+
+		stringBuilder.WriteString("\n")
 	}
 
 	if len(summaries) == 0 {
 		return mcp.NewToolResultText("No domains found."), nil
 	}
 
-	return mcp.NewToolResultText(sb.String()), nil
+	return mcp.NewToolResultText(stringBuilder.String()), nil
 }
 
 // handleDomainGet gets details of a specific domain.
 func (s *Service) handleDomainGet(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	arguments := request.GetArguments()
-	domainID, err := parseIDFromArguments(arguments, "domain_id")
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+	requestArguments := request.GetArguments()
+	domainID, parseErr := parseIDFromArguments(requestArguments, "domain_id")
+
+	if parseErr != nil {
+		return mcp.NewToolResultError(parseErr.Error()), nil
 	}
 
-	account, err := s.accountManager.GetCurrentAccount()
-	if err != nil {
-		return nil, err
+	account, accountErr := s.accountManager.GetCurrentAccount()
+	if accountErr != nil {
+		return nil, fmt.Errorf("failed to get current account: %w", accountErr)
 	}
 
-	domain, err := account.Client.GetDomain(ctx, domainID)
-	if err != nil {
+	domain, domainErr := account.Client.GetDomain(ctx, domainID)
+	if domainErr != nil {
 		return nil, types.NewToolError("linode", "domain_get", //nolint:wrapcheck // types.NewToolError already wraps the error
-			fmt.Sprintf("failed to get domain %d", domainID), err)
+			fmt.Sprintf("failed to get domain %d", domainID), domainErr)
 	}
 
-	detail := DomainDetail{
+	domainDetail := DomainDetail{
 		ID:          domain.ID,
 		Domain:      domain.Domain,
 		Type:        string(domain.Type),
@@ -99,161 +128,188 @@ func (s *Service) handleDomainGet(ctx context.Context, request mcp.CallToolReque
 		MasterIPs:   domain.MasterIPs,
 		AXfrIPs:     domain.AXfrIPs,
 		Tags:        domain.Tags,
-		Created:     "", // Domain doesn't have Created field
-		Updated:     "", // Domain doesn't have Updated field
+		Created:     "", // Domain doesn't have Created field.
+		Updated:     "", // Domain doesn't have Updated field.
 		ExpireSec:   domain.ExpireSec,
 		RefreshSec:  domain.RefreshSec,
 		TTLSec:      domain.TTLSec,
 	}
 
-	var sb strings.Builder
-	fmt.Fprintf(&sb, "Domain Details:\n")
-	fmt.Fprintf(&sb, "ID: %d\n", detail.ID)
-	fmt.Fprintf(&sb, "Domain: %s\n", detail.Domain)
-	fmt.Fprintf(&sb, "Type: %s\n", detail.Type)
-	fmt.Fprintf(&sb, "Status: %s\n", detail.Status)
-	if detail.Description != "" {
-		fmt.Fprintf(&sb, "Description: %s\n", detail.Description)
-	}
-	fmt.Fprintf(&sb, "SOA Email: %s\n", detail.SOAEmail)
-	fmt.Fprintf(&sb, "TTL: %d seconds\n", detail.TTLSec)
-	fmt.Fprintf(&sb, "Refresh: %d seconds\n", detail.RefreshSec)
-	fmt.Fprintf(&sb, "Retry: %d seconds\n", detail.RetrySec)
-	fmt.Fprintf(&sb, "Expire: %d seconds\n", detail.ExpireSec)
-	fmt.Fprintf(&sb, "Created: %s\n", detail.Created)
-	fmt.Fprintf(&sb, "Updated: %s\n\n", detail.Updated)
+	var stringBuilder strings.Builder
 
-	if len(detail.MasterIPs) > 0 {
-		fmt.Fprintf(&sb, "Master IPs: %s\n", strings.Join(detail.MasterIPs, ", "))
-	}
-	if len(detail.AXfrIPs) > 0 {
-		fmt.Fprintf(&sb, "AXFR IPs: %s\n", strings.Join(detail.AXfrIPs, ", "))
-	}
-	if len(detail.Tags) > 0 {
-		fmt.Fprintf(&sb, "Tags: %s\n", strings.Join(detail.Tags, ", "))
+	fmt.Fprintf(&stringBuilder, "Domain Details:\n")
+	fmt.Fprintf(&stringBuilder, "ID: %d\n", domainDetail.ID)
+	fmt.Fprintf(&stringBuilder, "Domain: %s\n", domainDetail.Domain)
+	fmt.Fprintf(&stringBuilder, "Type: %s\n", domainDetail.Type)
+	fmt.Fprintf(&stringBuilder, "Status: %s\n", domainDetail.Status)
+
+	if domainDetail.Description != "" {
+		fmt.Fprintf(&stringBuilder, "Description: %s\n", domainDetail.Description)
 	}
 
-	return mcp.NewToolResultText(sb.String()), nil
+	fmt.Fprintf(&stringBuilder, "SOA Email: %s\n", domainDetail.SOAEmail)
+	fmt.Fprintf(&stringBuilder, "TTL: %d seconds\n", domainDetail.TTLSec)
+	fmt.Fprintf(&stringBuilder, "Refresh: %d seconds\n", domainDetail.RefreshSec)
+	fmt.Fprintf(&stringBuilder, "Retry: %d seconds\n", domainDetail.RetrySec)
+	fmt.Fprintf(&stringBuilder, "Expire: %d seconds\n", domainDetail.ExpireSec)
+	fmt.Fprintf(&stringBuilder, "Created: %s\n", domainDetail.Created)
+	fmt.Fprintf(&stringBuilder, "Updated: %s\n\n", domainDetail.Updated)
+
+	if len(domainDetail.MasterIPs) > 0 {
+		fmt.Fprintf(&stringBuilder, "Master IPs: %s\n", strings.Join(domainDetail.MasterIPs, ", "))
+	}
+
+	if len(domainDetail.AXfrIPs) > 0 {
+		fmt.Fprintf(&stringBuilder, "AXFR IPs: %s\n", strings.Join(domainDetail.AXfrIPs, ", "))
+	}
+
+	if len(domainDetail.Tags) > 0 {
+		fmt.Fprintf(&stringBuilder, "Tags: %s\n", strings.Join(domainDetail.Tags, ", "))
+	}
+
+	return mcp.NewToolResultText(stringBuilder.String()), nil
 }
 
 // handleDomainCreate creates a new domain.
 func (s *Service) handleDomainCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	arguments, ok := request.Params.Arguments.(map[string]interface{})
-	if !ok {
-		return mcp.NewToolResultError("Invalid arguments format"), nil
+	requestArguments, argumentsOK := request.Params.Arguments.(map[string]interface{})
+	if !argumentsOK {
+		return mcp.NewToolResultError(ErrInvalidArgumentsFormat.Error()), nil
 	}
 
-	// Parse required parameters
-	domainName, ok := arguments["domain"].(string)
-	if !ok || domainName == "" {
-		return mcp.NewToolResultError("domain is required"), nil
+	// Parse required parameters.
+	domainName, domainNameOK := requestArguments["domain"].(string)
+	if !domainNameOK || domainName == "" {
+		return mcp.NewToolResultError(ErrMissingDomainName.Error()), nil
 	}
 
-	domainType, ok := arguments["type"].(string)
-	if !ok || domainType == "" {
-		return mcp.NewToolResultError("type is required"), nil
+	domainType, domainTypeOK := requestArguments["type"].(string)
+	if !domainTypeOK || domainType == "" {
+		return mcp.NewToolResultError(ErrMissingDomainType.Error()), nil
 	}
 
-	// Build domain create options
-	params := DomainCreateParams{
+	// Build domain create options.
+	domainParams := DomainCreateParams{
 		Domain: domainName,
 		Type:   domainType,
 	}
 
-	// Optional parameters
-	if soaEmail, ok := arguments["soa_email"].(string); ok {
-		params.SOAEmail = soaEmail
+	// Optional parameters.
+	if soaEmail, soaEmailOK := requestArguments["soa_email"].(string); soaEmailOK {
+		domainParams.SOAEmail = soaEmail
 	}
-	if description, ok := arguments["description"].(string); ok {
-		params.Description = description
+
+	if description, descriptionOK := requestArguments["description"].(string); descriptionOK {
+		domainParams.Description = description
 	}
-	if retrySec, ok := arguments["retry_sec"].(float64); ok {
-		params.RetrySec = int(retrySec)
+
+	if retrySec, retrySecOK := requestArguments["retry_sec"].(float64); retrySecOK {
+		domainParams.RetrySec = int(retrySec)
 	}
-	if expireSec, ok := arguments["expire_sec"].(float64); ok {
-		params.ExpireSec = int(expireSec)
+
+	if expireSec, expireSecOK := requestArguments["expire_sec"].(float64); expireSecOK {
+		domainParams.ExpireSec = int(expireSec)
 	}
-	if refreshSec, ok := arguments["refresh_sec"].(float64); ok {
-		params.RefreshSec = int(refreshSec)
+
+	if refreshSec, refreshSecOK := requestArguments["refresh_sec"].(float64); refreshSecOK {
+		domainParams.RefreshSec = int(refreshSec)
 	}
-	if ttlSec, ok := arguments["ttl_sec"].(float64); ok {
-		params.TTLSec = int(ttlSec)
+
+	if ttlSec, ttlSecOK := requestArguments["ttl_sec"].(float64); ttlSecOK {
+		domainParams.TTLSec = int(ttlSec)
 	}
-	if tagsRaw, ok := arguments["tags"]; ok {
-		if tagsSlice, ok := tagsRaw.([]interface{}); ok {
-			tags := make([]string, len(tagsSlice))
-			for i, tag := range tagsSlice {
-				if tagStr, ok := tag.(string); ok {
-					tags[i] = tagStr
+
+	if tagsRaw, tagsOK := requestArguments["tags"]; tagsOK {
+		if tagsSlice, tagsSliceOK := tagsRaw.([]interface{}); tagsSliceOK {
+			tagsList := make([]string, len(tagsSlice))
+
+			for tagIndex, tagEntry := range tagsSlice {
+				if tagString, tagStringOK := tagEntry.(string); tagStringOK {
+					tagsList[tagIndex] = tagString
 				}
 			}
-			params.Tags = tags
-		}
-	}
-	if masterIPsRaw, ok := arguments["master_ips"]; ok {
-		if ipsSlice, ok := masterIPsRaw.([]interface{}); ok {
-			ips := make([]string, len(ipsSlice))
-			for i, ip := range ipsSlice {
-				if ipStr, ok := ip.(string); ok {
-					ips[i] = ipStr
-				}
-			}
-			params.MasterIPs = ips
-		}
-	}
-	if axfrIPsRaw, ok := arguments["axfr_ips"]; ok {
-		if ipsSlice, ok := axfrIPsRaw.([]interface{}); ok {
-			ips := make([]string, len(ipsSlice))
-			for i, ip := range ipsSlice {
-				if ipStr, ok := ip.(string); ok {
-					ips[i] = ipStr
-				}
-			}
-			params.AXfrIPs = ips
+
+			domainParams.Tags = tagsList
 		}
 	}
 
-	account, err := s.accountManager.GetCurrentAccount()
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+	if masterIPsRaw, masterIPsOK := requestArguments["master_ips"]; masterIPsOK {
+		if ipsSlice, ipsSliceOK := masterIPsRaw.([]interface{}); ipsSliceOK {
+			masterIPsList := make([]string, len(ipsSlice))
+
+			for ipIndex, ipEntry := range ipsSlice {
+				if ipString, ipStringOK := ipEntry.(string); ipStringOK {
+					masterIPsList[ipIndex] = ipString
+				}
+			}
+
+			domainParams.MasterIPs = masterIPsList
+		}
 	}
 
-	createOpts := linodego.DomainCreateOptions{
-		Domain: params.Domain,
-		Type:   linodego.DomainType(params.Type),
+	if axfrIPsRaw, axfrIPsOK := requestArguments["axfr_ips"]; axfrIPsOK {
+		if ipsSlice, ipsSliceOK := axfrIPsRaw.([]interface{}); ipsSliceOK {
+			axfrIPsList := make([]string, len(ipsSlice))
+
+			for ipIndex, ipEntry := range ipsSlice {
+				if ipString, ipStringOK := ipEntry.(string); ipStringOK {
+					axfrIPsList[ipIndex] = ipString
+				}
+			}
+
+			domainParams.AXfrIPs = axfrIPsList
+		}
 	}
 
-	if params.SOAEmail != "" {
-		createOpts.SOAEmail = params.SOAEmail
-	}
-	if params.Description != "" {
-		createOpts.Description = params.Description
-	}
-	if params.RetrySec > 0 {
-		createOpts.RetrySec = params.RetrySec
-	}
-	if len(params.MasterIPs) > 0 {
-		createOpts.MasterIPs = params.MasterIPs
-	}
-	if len(params.AXfrIPs) > 0 {
-		createOpts.AXfrIPs = params.AXfrIPs
-	}
-	if params.ExpireSec > 0 {
-		createOpts.ExpireSec = params.ExpireSec
-	}
-	if params.RefreshSec > 0 {
-		createOpts.RefreshSec = params.RefreshSec
-	}
-	if params.TTLSec > 0 {
-		createOpts.TTLSec = params.TTLSec
-	}
-	if len(params.Tags) > 0 {
-		createOpts.Tags = params.Tags
+	account, accountErr := s.accountManager.GetCurrentAccount()
+	if accountErr != nil {
+		return mcp.NewToolResultError(accountErr.Error()), nil
 	}
 
-	createdDomain, err := account.Client.CreateDomain(ctx, createOpts)
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to create domain: %v", err)), nil
+	createOptions := linodego.DomainCreateOptions{
+		Domain: domainParams.Domain,
+		Type:   linodego.DomainType(domainParams.Type),
+	}
+
+	if domainParams.SOAEmail != "" {
+		createOptions.SOAEmail = domainParams.SOAEmail
+	}
+
+	if domainParams.Description != "" {
+		createOptions.Description = domainParams.Description
+	}
+
+	if domainParams.RetrySec > 0 {
+		createOptions.RetrySec = domainParams.RetrySec
+	}
+
+	if len(domainParams.MasterIPs) > 0 {
+		createOptions.MasterIPs = domainParams.MasterIPs
+	}
+
+	if len(domainParams.AXfrIPs) > 0 {
+		createOptions.AXfrIPs = domainParams.AXfrIPs
+	}
+
+	if domainParams.ExpireSec > 0 {
+		createOptions.ExpireSec = domainParams.ExpireSec
+	}
+
+	if domainParams.RefreshSec > 0 {
+		createOptions.RefreshSec = domainParams.RefreshSec
+	}
+
+	if domainParams.TTLSec > 0 {
+		createOptions.TTLSec = domainParams.TTLSec
+	}
+
+	if len(domainParams.Tags) > 0 {
+		createOptions.Tags = domainParams.Tags
+	}
+
+	createdDomain, createErr := account.Client.CreateDomain(ctx, createOptions)
+	if createErr != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to create domain: %v", createErr)), nil
 	}
 
 	return mcp.NewToolResultText(fmt.Sprintf("Domain created successfully:\nID: %d\nDomain: %s\nType: %s\nStatus: %s",
@@ -262,186 +318,213 @@ func (s *Service) handleDomainCreate(ctx context.Context, request mcp.CallToolRe
 
 // handleDomainUpdate updates an existing domain.
 func (s *Service) handleDomainUpdate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	arguments, ok := request.Params.Arguments.(map[string]interface{})
-	if !ok {
-		return mcp.NewToolResultError("Invalid arguments format"), nil
+	requestArguments, argumentsOK := request.Params.Arguments.(map[string]interface{})
+	if !argumentsOK {
+		return mcp.NewToolResultError(ErrInvalidArgumentsFormat.Error()), nil
 	}
 
-	domainID, err := parseIDFromArguments(arguments, "domain_id")
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Invalid domain_id parameter: %v", err)), nil
+	domainID, parseErr := parseIDFromArguments(requestArguments, "domain_id")
+	if parseErr != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Invalid domain_id parameter: %v", parseErr)), nil
 	}
 
-	// Build domain update options
-	params := DomainUpdateParams{
+	// Build domain update options.
+	domainParams := DomainUpdateParams{
 		DomainID: domainID,
 	}
 
-	// Optional parameters
-	if domain, ok := arguments["domain"].(string); ok {
-		params.Domain = domain
+	// Optional parameters.
+	if domainName, domainNameOK := requestArguments["domain"].(string); domainNameOK {
+		domainParams.Domain = domainName
 	}
-	if domainType, ok := arguments["type"].(string); ok {
-		params.Type = domainType
+
+	if domainType, domainTypeOK := requestArguments["type"].(string); domainTypeOK {
+		domainParams.Type = domainType
 	}
-	if soaEmail, ok := arguments["soa_email"].(string); ok {
-		params.SOAEmail = soaEmail
+
+	if soaEmail, soaEmailOK := requestArguments["soa_email"].(string); soaEmailOK {
+		domainParams.SOAEmail = soaEmail
 	}
-	if description, ok := arguments["description"].(string); ok {
-		params.Description = description
+
+	if description, descriptionOK := requestArguments["description"].(string); descriptionOK {
+		domainParams.Description = description
 	}
-	if retrySec, ok := arguments["retry_sec"].(float64); ok {
-		params.RetrySec = int(retrySec)
+
+	if retrySec, retrySecOK := requestArguments["retry_sec"].(float64); retrySecOK {
+		domainParams.RetrySec = int(retrySec)
 	}
-	if expireSec, ok := arguments["expire_sec"].(float64); ok {
-		params.ExpireSec = int(expireSec)
+
+	if expireSec, expireSecOK := requestArguments["expire_sec"].(float64); expireSecOK {
+		domainParams.ExpireSec = int(expireSec)
 	}
-	if refreshSec, ok := arguments["refresh_sec"].(float64); ok {
-		params.RefreshSec = int(refreshSec)
+
+	if refreshSec, refreshSecOK := requestArguments["refresh_sec"].(float64); refreshSecOK {
+		domainParams.RefreshSec = int(refreshSec)
 	}
-	if ttlSec, ok := arguments["ttl_sec"].(float64); ok {
-		params.TTLSec = int(ttlSec)
+
+	if ttlSec, ttlSecOK := requestArguments["ttl_sec"].(float64); ttlSecOK {
+		domainParams.TTLSec = int(ttlSec)
 	}
-	if tagsRaw, ok := arguments["tags"]; ok {
-		if tagsSlice, ok := tagsRaw.([]interface{}); ok {
-			tags := make([]string, len(tagsSlice))
-			for i, tag := range tagsSlice {
-				if tagStr, ok := tag.(string); ok {
-					tags[i] = tagStr
+
+	if tagsRaw, tagsOK := requestArguments["tags"]; tagsOK {
+		if tagsSlice, tagsSliceOK := tagsRaw.([]interface{}); tagsSliceOK {
+			tagsList := make([]string, len(tagsSlice))
+
+			for tagIndex, tagEntry := range tagsSlice {
+				if tagString, tagStringOK := tagEntry.(string); tagStringOK {
+					tagsList[tagIndex] = tagString
 				}
 			}
-			params.Tags = tags
-		}
-	}
-	if masterIPsRaw, ok := arguments["master_ips"]; ok {
-		if ipsSlice, ok := masterIPsRaw.([]interface{}); ok {
-			ips := make([]string, len(ipsSlice))
-			for i, ip := range ipsSlice {
-				if ipStr, ok := ip.(string); ok {
-					ips[i] = ipStr
-				}
-			}
-			params.MasterIPs = ips
-		}
-	}
-	if axfrIPsRaw, ok := arguments["axfr_ips"]; ok {
-		if ipsSlice, ok := axfrIPsRaw.([]interface{}); ok {
-			ips := make([]string, len(ipsSlice))
-			for i, ip := range ipsSlice {
-				if ipStr, ok := ip.(string); ok {
-					ips[i] = ipStr
-				}
-			}
-			params.AXfrIPs = ips
+
+			domainParams.Tags = tagsList
 		}
 	}
 
-	account, err := s.accountManager.GetCurrentAccount()
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+	if masterIPsRaw, masterIPsOK := requestArguments["master_ips"]; masterIPsOK {
+		if ipsSlice, ipsSliceOK := masterIPsRaw.([]interface{}); ipsSliceOK {
+			masterIPsList := make([]string, len(ipsSlice))
+
+			for ipIndex, ipEntry := range ipsSlice {
+				if ipString, ipStringOK := ipEntry.(string); ipStringOK {
+					masterIPsList[ipIndex] = ipString
+				}
+			}
+
+			domainParams.MasterIPs = masterIPsList
+		}
 	}
 
-	updateOpts := linodego.DomainUpdateOptions{}
+	if axfrIPsRaw, axfrIPsOK := requestArguments["axfr_ips"]; axfrIPsOK {
+		if ipsSlice, ipsSliceOK := axfrIPsRaw.([]interface{}); ipsSliceOK {
+			axfrIPsList := make([]string, len(ipsSlice))
 
-	if params.Domain != "" {
-		updateOpts.Domain = params.Domain
-	}
-	if params.Type != "" {
-		updateOpts.Type = linodego.DomainType(params.Type)
-	}
-	if params.SOAEmail != "" {
-		updateOpts.SOAEmail = params.SOAEmail
-	}
-	if params.Description != "" {
-		updateOpts.Description = params.Description
-	}
-	if params.RetrySec > 0 {
-		updateOpts.RetrySec = params.RetrySec
-	}
-	if len(params.MasterIPs) > 0 {
-		updateOpts.MasterIPs = params.MasterIPs
-	}
-	if len(params.AXfrIPs) > 0 {
-		updateOpts.AXfrIPs = params.AXfrIPs
-	}
-	if params.ExpireSec > 0 {
-		updateOpts.ExpireSec = params.ExpireSec
-	}
-	if params.RefreshSec > 0 {
-		updateOpts.RefreshSec = params.RefreshSec
-	}
-	if params.TTLSec > 0 {
-		updateOpts.TTLSec = params.TTLSec
-	}
-	if len(params.Tags) > 0 {
-		updateOpts.Tags = params.Tags
+			for ipIndex, ipEntry := range ipsSlice {
+				if ipString, ipStringOK := ipEntry.(string); ipStringOK {
+					axfrIPsList[ipIndex] = ipString
+				}
+			}
+
+			domainParams.AXfrIPs = axfrIPsList
+		}
 	}
 
-	domain, err := account.Client.UpdateDomain(ctx, params.DomainID, updateOpts)
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to update domain: %v", err)), nil
+	account, accountErr := s.accountManager.GetCurrentAccount()
+	if accountErr != nil {
+		return mcp.NewToolResultError(accountErr.Error()), nil
+	}
+
+	updateOptions := linodego.DomainUpdateOptions{}
+
+	if domainParams.Domain != "" {
+		updateOptions.Domain = domainParams.Domain
+	}
+
+	if domainParams.Type != "" {
+		updateOptions.Type = linodego.DomainType(domainParams.Type)
+	}
+
+	if domainParams.SOAEmail != "" {
+		updateOptions.SOAEmail = domainParams.SOAEmail
+	}
+
+	if domainParams.Description != "" {
+		updateOptions.Description = domainParams.Description
+	}
+
+	if domainParams.RetrySec > 0 {
+		updateOptions.RetrySec = domainParams.RetrySec
+	}
+
+	if len(domainParams.MasterIPs) > 0 {
+		updateOptions.MasterIPs = domainParams.MasterIPs
+	}
+
+	if len(domainParams.AXfrIPs) > 0 {
+		updateOptions.AXfrIPs = domainParams.AXfrIPs
+	}
+
+	if domainParams.ExpireSec > 0 {
+		updateOptions.ExpireSec = domainParams.ExpireSec
+	}
+
+	if domainParams.RefreshSec > 0 {
+		updateOptions.RefreshSec = domainParams.RefreshSec
+	}
+
+	if domainParams.TTLSec > 0 {
+		updateOptions.TTLSec = domainParams.TTLSec
+	}
+
+	if len(domainParams.Tags) > 0 {
+		updateOptions.Tags = domainParams.Tags
+	}
+
+	updatedDomain, updateErr := account.Client.UpdateDomain(ctx, domainParams.DomainID, updateOptions)
+	if updateErr != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to update domain: %v", updateErr)), nil
 	}
 
 	return mcp.NewToolResultText(fmt.Sprintf("Domain updated successfully:\nID: %d\nDomain: %s\nType: %s\nStatus: %s",
-		domain.ID, domain.Domain, domain.Type, domain.Status)), nil
+		updatedDomain.ID, updatedDomain.Domain, updatedDomain.Type, updatedDomain.Status)), nil
 }
 
 // handleDomainDelete deletes a domain.
 func (s *Service) handleDomainDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	arguments, ok := request.Params.Arguments.(map[string]interface{})
-	if !ok {
-		return mcp.NewToolResultError("Invalid arguments format"), nil
+	requestArguments, argumentsOK := request.Params.Arguments.(map[string]interface{})
+	if !argumentsOK {
+		return mcp.NewToolResultError(ErrInvalidArgumentsFormat.Error()), nil
 	}
 
-	domainID, err := parseIDFromArguments(arguments, "domain_id")
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Invalid domain_id parameter: %v", err)), nil
+	domainID, parseErr := parseIDFromArguments(requestArguments, "domain_id")
+	if parseErr != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Invalid domain_id parameter: %v", parseErr)), nil
 	}
 
-	params := DomainDeleteParams{
+	domainParams := DomainDeleteParams{
 		DomainID: domainID,
 	}
 
-	account, err := s.accountManager.GetCurrentAccount()
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+	account, accountErr := s.accountManager.GetCurrentAccount()
+	if accountErr != nil {
+		return mcp.NewToolResultError(accountErr.Error()), nil
 	}
 
-	err = account.Client.DeleteDomain(ctx, params.DomainID)
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to delete domain: %v", err)), nil
+	deleteErr := account.Client.DeleteDomain(ctx, domainParams.DomainID)
+	if deleteErr != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to delete domain: %v", deleteErr)), nil
 	}
 
-	return mcp.NewToolResultText(fmt.Sprintf("Domain %d deleted successfully", params.DomainID)), nil
+	return mcp.NewToolResultText(fmt.Sprintf("Domain %d deleted successfully", domainParams.DomainID)), nil
 }
 
 // handleDomainRecordsList lists all records for a domain.
 func (s *Service) handleDomainRecordsList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	arguments, ok := request.Params.Arguments.(map[string]interface{})
-	if !ok {
-		return mcp.NewToolResultError("Invalid arguments format"), nil
+	requestArguments, argumentsOK := request.Params.Arguments.(map[string]interface{})
+	if !argumentsOK {
+		return mcp.NewToolResultError(ErrInvalidArgumentsFormat.Error()), nil
 	}
 
-	domainID, err := parseIDFromArguments(arguments, "domain_id")
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Invalid domain_id parameter: %v", err)), nil
+	domainID, parseErr := parseIDFromArguments(requestArguments, "domain_id")
+	if parseErr != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Invalid domain_id parameter: %v", parseErr)), nil
 	}
 
-	params := DomainRecordsListParams{
+	domainParams := DomainRecordsListParams{
 		DomainID: domainID,
 	}
 
-	account, err := s.accountManager.GetCurrentAccount()
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+	account, accountErr := s.accountManager.GetCurrentAccount()
+	if accountErr != nil {
+		return mcp.NewToolResultError(accountErr.Error()), nil
 	}
 
-	records, err := account.Client.ListDomainRecords(ctx, params.DomainID, nil)
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to list domain records: %v", err)), nil
+	records, recordsErr := account.Client.ListDomainRecords(ctx, domainParams.DomainID, nil)
+	if recordsErr != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to list domain records: %v", recordsErr)), nil
 	}
 
-	var recordList []DomainRecord
+	recordList := make([]DomainRecord, 0, len(records))
+
 	for _, record := range records {
 		recordList = append(recordList, DomainRecord{
 			ID:       record.ID,
@@ -455,81 +538,90 @@ func (s *Service) handleDomainRecordsList(ctx context.Context, request mcp.CallT
 			Protocol: stringPtrValue(record.Protocol),
 			TTLSec:   record.TTLSec,
 			Tag:      stringPtrValue(record.Tag),
-			Created:  record.Created.Format("2006-01-02T15:04:05"),
-			Updated:  record.Updated.Format("2006-01-02T15:04:05"),
+			Created:  record.Created.Format(timeFormatLayout),
+			Updated:  record.Updated.Format(timeFormatLayout),
 		})
 	}
 
-	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Found %d domain records:\n\n", len(recordList)))
+	var stringBuilder strings.Builder
 
-	// Group records by type for better readability
+	stringBuilder.WriteString(fmt.Sprintf("Found %d domain records:\n\n", len(recordList)))
+
+	// Group records by type for better readability.
 	recordsByType := make(map[string][]DomainRecord)
 	for _, record := range recordList {
 		recordsByType[record.Type] = append(recordsByType[record.Type], record)
 	}
 
-	for recordType, records := range recordsByType {
-		fmt.Fprintf(&sb, "%s Records:\n", recordType)
-		for _, record := range records {
-			name := record.Name
-			if name == "" {
-				name = "@"
+	for recordType, recordsForType := range recordsByType {
+		fmt.Fprintf(&stringBuilder, "%s Records:\n", recordType)
+
+		for _, record := range recordsForType {
+			recordName := record.Name
+			if recordName == "" {
+				recordName = defaultDNSRoot
 			}
-			fmt.Fprintf(&sb, "  ID: %d | %s -> %s", record.ID, name, record.Target)
+
+			fmt.Fprintf(&stringBuilder, "  ID: %d | %s -> %s", record.ID, recordName, record.Target)
+
 			if record.Priority > 0 {
-				fmt.Fprintf(&sb, " (Priority: %d)", record.Priority)
+				fmt.Fprintf(&stringBuilder, " (Priority: %d)", record.Priority)
 			}
+
 			if record.Weight > 0 {
-				fmt.Fprintf(&sb, " (Weight: %d)", record.Weight)
+				fmt.Fprintf(&stringBuilder, " (Weight: %d)", record.Weight)
 			}
+
 			if record.Port > 0 {
-				fmt.Fprintf(&sb, " (Port: %d)", record.Port)
+				fmt.Fprintf(&stringBuilder, " (Port: %d)", record.Port)
 			}
+
 			if record.TTLSec > 0 {
-				fmt.Fprintf(&sb, " (TTL: %ds)", record.TTLSec)
+				fmt.Fprintf(&stringBuilder, " (TTL: %ds)", record.TTLSec)
 			}
-			sb.WriteString("\n")
+
+			stringBuilder.WriteString("\n")
 		}
-		sb.WriteString("\n")
+
+		stringBuilder.WriteString("\n")
 	}
 
-	return mcp.NewToolResultText(sb.String()), nil
+	return mcp.NewToolResultText(stringBuilder.String()), nil
 }
 
 // handleDomainRecordGet gets details of a specific domain record.
 func (s *Service) handleDomainRecordGet(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	arguments, ok := request.Params.Arguments.(map[string]interface{})
-	if !ok {
-		return mcp.NewToolResultError("Invalid arguments format"), nil
+	requestArguments, argumentsOK := request.Params.Arguments.(map[string]interface{})
+	if !argumentsOK {
+		return mcp.NewToolResultError(ErrInvalidArgumentsFormat.Error()), nil
 	}
 
-	domainID, err := parseIDFromArguments(arguments, "domain_id")
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Invalid domain_id parameter: %v", err)), nil
+	domainID, domainParseErr := parseIDFromArguments(requestArguments, "domain_id")
+	if domainParseErr != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Invalid domain_id parameter: %v", domainParseErr)), nil
 	}
 
-	recordID, err := parseIDFromArguments(arguments, "record_id")
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Invalid record_id parameter: %v", err)), nil
+	recordID, recordParseErr := parseIDFromArguments(requestArguments, "record_id")
+	if recordParseErr != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Invalid record_id parameter: %v", recordParseErr)), nil
 	}
 
-	params := DomainRecordGetParams{
+	recordParams := DomainRecordGetParams{
 		DomainID: domainID,
 		RecordID: recordID,
 	}
 
-	account, err := s.accountManager.GetCurrentAccount()
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+	account, accountErr := s.accountManager.GetCurrentAccount()
+	if accountErr != nil {
+		return mcp.NewToolResultError(accountErr.Error()), nil
 	}
 
-	record, err := account.Client.GetDomainRecord(ctx, params.DomainID, params.RecordID)
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to get domain record: %v", err)), nil
+	record, recordErr := account.Client.GetDomainRecord(ctx, recordParams.DomainID, recordParams.RecordID)
+	if recordErr != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to get domain record: %v", recordErr)), nil
 	}
 
-	detail := DomainRecord{
+	recordDetail := DomainRecord{
 		ID:       record.ID,
 		Type:     string(record.Type),
 		Name:     record.Name,
@@ -541,281 +633,321 @@ func (s *Service) handleDomainRecordGet(ctx context.Context, request mcp.CallToo
 		Protocol: stringPtrValue(record.Protocol),
 		TTLSec:   record.TTLSec,
 		Tag:      stringPtrValue(record.Tag),
-		Created:  record.Created.Format("2006-01-02T15:04:05"),
-		Updated:  record.Updated.Format("2006-01-02T15:04:05"),
+		Created:  record.Created.Format(timeFormatLayout),
+		Updated:  record.Updated.Format(timeFormatLayout),
 	}
 
-	var sb strings.Builder
-	fmt.Fprintf(&sb, "Domain Record Details:\n")
-	fmt.Fprintf(&sb, "ID: %d\n", detail.ID)
-	fmt.Fprintf(&sb, "Type: %s\n", detail.Type)
-	fmt.Fprintf(&sb, "Name: %s\n", detail.Name)
-	fmt.Fprintf(&sb, "Target: %s\n", detail.Target)
-	if detail.Priority > 0 {
-		fmt.Fprintf(&sb, "Priority: %d\n", detail.Priority)
-	}
-	if detail.Weight > 0 {
-		fmt.Fprintf(&sb, "Weight: %d\n", detail.Weight)
-	}
-	if detail.Port > 0 {
-		fmt.Fprintf(&sb, "Port: %d\n", detail.Port)
-	}
-	if detail.Service != "" {
-		fmt.Fprintf(&sb, "Service: %s\n", detail.Service)
-	}
-	if detail.Protocol != "" {
-		fmt.Fprintf(&sb, "Protocol: %s\n", detail.Protocol)
-	}
-	if detail.Tag != "" {
-		fmt.Fprintf(&sb, "Tag: %s\n", detail.Tag)
-	}
-	fmt.Fprintf(&sb, "TTL: %d seconds\n", detail.TTLSec)
-	fmt.Fprintf(&sb, "Created: %s\n", detail.Created)
-	fmt.Fprintf(&sb, "Updated: %s\n", detail.Updated)
+	var stringBuilder strings.Builder
 
-	return mcp.NewToolResultText(sb.String()), nil
+	fmt.Fprintf(&stringBuilder, "Domain Record Details:\n")
+	fmt.Fprintf(&stringBuilder, "ID: %d\n", recordDetail.ID)
+	fmt.Fprintf(&stringBuilder, "Type: %s\n", recordDetail.Type)
+	fmt.Fprintf(&stringBuilder, "Name: %s\n", recordDetail.Name)
+	fmt.Fprintf(&stringBuilder, "Target: %s\n", recordDetail.Target)
+
+	if recordDetail.Priority > 0 {
+		fmt.Fprintf(&stringBuilder, "Priority: %d\n", recordDetail.Priority)
+	}
+
+	if recordDetail.Weight > 0 {
+		fmt.Fprintf(&stringBuilder, "Weight: %d\n", recordDetail.Weight)
+	}
+
+	if recordDetail.Port > 0 {
+		fmt.Fprintf(&stringBuilder, "Port: %d\n", recordDetail.Port)
+	}
+
+	if recordDetail.Service != "" {
+		fmt.Fprintf(&stringBuilder, "Service: %s\n", recordDetail.Service)
+	}
+
+	if recordDetail.Protocol != "" {
+		fmt.Fprintf(&stringBuilder, "Protocol: %s\n", recordDetail.Protocol)
+	}
+
+	if recordDetail.Tag != "" {
+		fmt.Fprintf(&stringBuilder, "Tag: %s\n", recordDetail.Tag)
+	}
+
+	fmt.Fprintf(&stringBuilder, "TTL: %d seconds\n", recordDetail.TTLSec)
+	fmt.Fprintf(&stringBuilder, "Created: %s\n", recordDetail.Created)
+	fmt.Fprintf(&stringBuilder, "Updated: %s\n", recordDetail.Updated)
+
+	return mcp.NewToolResultText(stringBuilder.String()), nil
 }
 
 // handleDomainRecordCreate creates a new domain record.
 func (s *Service) handleDomainRecordCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	arguments, ok := request.Params.Arguments.(map[string]interface{})
-	if !ok {
-		return mcp.NewToolResultError("Invalid arguments format"), nil
+	requestArguments, argumentsOK := request.Params.Arguments.(map[string]interface{})
+	if !argumentsOK {
+		return mcp.NewToolResultError(ErrInvalidArgumentsFormat.Error()), nil
 	}
 
-	domainID, err := parseIDFromArguments(arguments, "domain_id")
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Invalid domain_id parameter: %v", err)), nil
+	domainID, parseErr := parseIDFromArguments(requestArguments, "domain_id")
+	if parseErr != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Invalid domain_id parameter: %v", parseErr)), nil
 	}
 
-	// Parse required parameters
-	recordType, ok := arguments["type"].(string)
-	if !ok || recordType == "" {
-		return mcp.NewToolResultError("type is required"), nil
+	// Parse required parameters.
+	recordType, recordTypeOK := requestArguments["type"].(string)
+	if !recordTypeOK || recordType == "" {
+		return mcp.NewToolResultError(ErrMissingRecordType.Error()), nil
 	}
 
-	target, ok := arguments["target"].(string)
-	if !ok || target == "" {
-		return mcp.NewToolResultError("target is required"), nil
+	target, targetOK := requestArguments["target"].(string)
+	if !targetOK || target == "" {
+		return mcp.NewToolResultError(ErrMissingRecordTarget.Error()), nil
 	}
 
-	// Build record create options
-	params := DomainRecordCreateParams{
+	// Build record create options.
+	recordParams := DomainRecordCreateParams{
 		DomainID: domainID,
 		Type:     recordType,
 		Target:   target,
 	}
 
-	// Optional parameters
-	if name, ok := arguments["name"].(string); ok {
-		params.Name = name
-	}
-	if priority, ok := arguments["priority"].(float64); ok {
-		params.Priority = int(priority)
-	}
-	if weight, ok := arguments["weight"].(float64); ok {
-		params.Weight = int(weight)
-	}
-	if port, ok := arguments["port"].(float64); ok {
-		params.Port = int(port)
-	}
-	if service, ok := arguments["service"].(string); ok {
-		params.Service = service
-	}
-	if protocol, ok := arguments["protocol"].(string); ok {
-		params.Protocol = protocol
-	}
-	if ttlSec, ok := arguments["ttl_sec"].(float64); ok {
-		params.TTLSec = int(ttlSec)
-	}
-	if tag, ok := arguments["tag"].(string); ok {
-		params.Tag = tag
+	// Optional parameters.
+	if recordName, recordNameOK := requestArguments["name"].(string); recordNameOK {
+		recordParams.Name = recordName
 	}
 
-	account, err := s.accountManager.GetCurrentAccount()
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+	if priority, priorityOK := requestArguments["priority"].(float64); priorityOK {
+		recordParams.Priority = int(priority)
 	}
 
-	createOpts := linodego.DomainRecordCreateOptions{
-		Type:   linodego.DomainRecordType(params.Type),
-		Target: params.Target,
+	if weight, weightOK := requestArguments["weight"].(float64); weightOK {
+		recordParams.Weight = int(weight)
 	}
 
-	if params.Name != "" {
-		createOpts.Name = params.Name
-	}
-	if params.Priority > 0 {
-		createOpts.Priority = intPtr(params.Priority)
-	}
-	if params.Weight > 0 {
-		createOpts.Weight = intPtr(params.Weight)
-	}
-	if params.Port > 0 {
-		createOpts.Port = intPtr(params.Port)
-	}
-	if params.Service != "" {
-		createOpts.Service = stringPtr(params.Service)
-	}
-	if params.Protocol != "" {
-		createOpts.Protocol = stringPtr(params.Protocol)
-	}
-	if params.TTLSec > 0 {
-		createOpts.TTLSec = params.TTLSec
-	}
-	if params.Tag != "" {
-		createOpts.Tag = stringPtr(params.Tag)
+	if port, portOK := requestArguments["port"].(float64); portOK {
+		recordParams.Port = int(port)
 	}
 
-	record, err := account.Client.CreateDomainRecord(ctx, params.DomainID, createOpts)
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to create domain record: %v", err)), nil
+	if service, serviceOK := requestArguments["service"].(string); serviceOK {
+		recordParams.Service = service
+	}
+
+	if protocol, protocolOK := requestArguments["protocol"].(string); protocolOK {
+		recordParams.Protocol = protocol
+	}
+
+	if ttlSec, ttlSecOK := requestArguments["ttl_sec"].(float64); ttlSecOK {
+		recordParams.TTLSec = int(ttlSec)
+	}
+
+	if tag, tagOK := requestArguments["tag"].(string); tagOK {
+		recordParams.Tag = tag
+	}
+
+	account, accountErr := s.accountManager.GetCurrentAccount()
+	if accountErr != nil {
+		return mcp.NewToolResultError(accountErr.Error()), nil
+	}
+
+	createOptions := linodego.DomainRecordCreateOptions{
+		Type:   linodego.DomainRecordType(recordParams.Type),
+		Target: recordParams.Target,
+	}
+
+	if recordParams.Name != "" {
+		createOptions.Name = recordParams.Name
+	}
+
+	if recordParams.Priority > 0 {
+		createOptions.Priority = intPtr(recordParams.Priority)
+	}
+
+	if recordParams.Weight > 0 {
+		createOptions.Weight = intPtr(recordParams.Weight)
+	}
+
+	if recordParams.Port > 0 {
+		createOptions.Port = intPtr(recordParams.Port)
+	}
+
+	if recordParams.Service != "" {
+		createOptions.Service = stringPtr(recordParams.Service)
+	}
+
+	if recordParams.Protocol != "" {
+		createOptions.Protocol = stringPtr(recordParams.Protocol)
+	}
+
+	if recordParams.TTLSec > 0 {
+		createOptions.TTLSec = recordParams.TTLSec
+	}
+
+	if recordParams.Tag != "" {
+		createOptions.Tag = stringPtr(recordParams.Tag)
+	}
+
+	createdRecord, createErr := account.Client.CreateDomainRecord(ctx, recordParams.DomainID, createOptions)
+	if createErr != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to create domain record: %v", createErr)), nil
 	}
 
 	return mcp.NewToolResultText(fmt.Sprintf("Domain record created successfully:\nID: %d\nType: %s\nName: %s\nTarget: %s",
-		record.ID, record.Type, record.Name, record.Target)), nil
+		createdRecord.ID, createdRecord.Type, createdRecord.Name, createdRecord.Target)), nil
 }
 
 // handleDomainRecordUpdate updates a domain record.
 func (s *Service) handleDomainRecordUpdate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	arguments, ok := request.Params.Arguments.(map[string]interface{})
-	if !ok {
-		return mcp.NewToolResultError("Invalid arguments format"), nil
+	requestArguments, argumentsOK := request.Params.Arguments.(map[string]interface{})
+	if !argumentsOK {
+		return mcp.NewToolResultError(ErrInvalidArgumentsFormat.Error()), nil
 	}
 
-	domainID, err := parseIDFromArguments(arguments, "domain_id")
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Invalid domain_id parameter: %v", err)), nil
+	domainID, domainParseErr := parseIDFromArguments(requestArguments, "domain_id")
+	if domainParseErr != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Invalid domain_id parameter: %v", domainParseErr)), nil
 	}
 
-	recordID, err := parseIDFromArguments(arguments, "record_id")
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Invalid record_id parameter: %v", err)), nil
+	recordID, recordParseErr := parseIDFromArguments(requestArguments, "record_id")
+	if recordParseErr != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Invalid record_id parameter: %v", recordParseErr)), nil
 	}
 
-	// Build record update options
-	params := DomainRecordUpdateParams{
+	// Build record update options.
+	recordParams := DomainRecordUpdateParams{
 		DomainID: domainID,
 		RecordID: recordID,
 	}
 
-	// Optional parameters
-	if recordType, ok := arguments["type"].(string); ok {
-		params.Type = recordType
-	}
-	if name, ok := arguments["name"].(string); ok {
-		params.Name = name
-	}
-	if target, ok := arguments["target"].(string); ok {
-		params.Target = target
-	}
-	if priority, ok := arguments["priority"].(float64); ok {
-		params.Priority = int(priority)
-	}
-	if weight, ok := arguments["weight"].(float64); ok {
-		params.Weight = int(weight)
-	}
-	if port, ok := arguments["port"].(float64); ok {
-		params.Port = int(port)
-	}
-	if service, ok := arguments["service"].(string); ok {
-		params.Service = service
-	}
-	if protocol, ok := arguments["protocol"].(string); ok {
-		params.Protocol = protocol
-	}
-	if ttlSec, ok := arguments["ttl_sec"].(float64); ok {
-		params.TTLSec = int(ttlSec)
-	}
-	if tag, ok := arguments["tag"].(string); ok {
-		params.Tag = tag
+	// Optional parameters.
+	if recordType, recordTypeOK := requestArguments["type"].(string); recordTypeOK {
+		recordParams.Type = recordType
 	}
 
-	account, err := s.accountManager.GetCurrentAccount()
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+	if recordName, recordNameOK := requestArguments["name"].(string); recordNameOK {
+		recordParams.Name = recordName
 	}
 
-	updateOpts := linodego.DomainRecordUpdateOptions{}
-
-	if params.Type != "" {
-		updateOpts.Type = linodego.DomainRecordType(params.Type)
-	}
-	if params.Name != "" {
-		updateOpts.Name = params.Name
-	}
-	if params.Target != "" {
-		updateOpts.Target = params.Target
-	}
-	if params.Priority > 0 {
-		updateOpts.Priority = intPtr(params.Priority)
-	}
-	if params.Weight > 0 {
-		updateOpts.Weight = intPtr(params.Weight)
-	}
-	if params.Port > 0 {
-		updateOpts.Port = intPtr(params.Port)
-	}
-	if params.Service != "" {
-		updateOpts.Service = stringPtr(params.Service)
-	}
-	if params.Protocol != "" {
-		updateOpts.Protocol = stringPtr(params.Protocol)
-	}
-	if params.TTLSec > 0 {
-		updateOpts.TTLSec = params.TTLSec
-	}
-	if params.Tag != "" {
-		updateOpts.Tag = stringPtr(params.Tag)
+	if target, targetOK := requestArguments["target"].(string); targetOK {
+		recordParams.Target = target
 	}
 
-	record, err := account.Client.UpdateDomainRecord(ctx, params.DomainID, params.RecordID, updateOpts)
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to update domain record: %v", err)), nil
+	if priority, priorityOK := requestArguments["priority"].(float64); priorityOK {
+		recordParams.Priority = int(priority)
+	}
+
+	if weight, weightOK := requestArguments["weight"].(float64); weightOK {
+		recordParams.Weight = int(weight)
+	}
+
+	if port, portOK := requestArguments["port"].(float64); portOK {
+		recordParams.Port = int(port)
+	}
+
+	if service, serviceOK := requestArguments["service"].(string); serviceOK {
+		recordParams.Service = service
+	}
+
+	if protocol, protocolOK := requestArguments["protocol"].(string); protocolOK {
+		recordParams.Protocol = protocol
+	}
+
+	if ttlSec, ttlSecOK := requestArguments["ttl_sec"].(float64); ttlSecOK {
+		recordParams.TTLSec = int(ttlSec)
+	}
+
+	if tag, tagOK := requestArguments["tag"].(string); tagOK {
+		recordParams.Tag = tag
+	}
+
+	account, accountErr := s.accountManager.GetCurrentAccount()
+	if accountErr != nil {
+		return mcp.NewToolResultError(accountErr.Error()), nil
+	}
+
+	updateOptions := linodego.DomainRecordUpdateOptions{}
+
+	if recordParams.Type != "" {
+		updateOptions.Type = linodego.DomainRecordType(recordParams.Type)
+	}
+
+	if recordParams.Name != "" {
+		updateOptions.Name = recordParams.Name
+	}
+
+	if recordParams.Target != "" {
+		updateOptions.Target = recordParams.Target
+	}
+
+	if recordParams.Priority > 0 {
+		updateOptions.Priority = intPtr(recordParams.Priority)
+	}
+
+	if recordParams.Weight > 0 {
+		updateOptions.Weight = intPtr(recordParams.Weight)
+	}
+
+	if recordParams.Port > 0 {
+		updateOptions.Port = intPtr(recordParams.Port)
+	}
+
+	if recordParams.Service != "" {
+		updateOptions.Service = stringPtr(recordParams.Service)
+	}
+
+	if recordParams.Protocol != "" {
+		updateOptions.Protocol = stringPtr(recordParams.Protocol)
+	}
+
+	if recordParams.TTLSec > 0 {
+		updateOptions.TTLSec = recordParams.TTLSec
+	}
+
+	if recordParams.Tag != "" {
+		updateOptions.Tag = stringPtr(recordParams.Tag)
+	}
+
+	updatedRecord, updateErr := account.Client.UpdateDomainRecord(ctx, recordParams.DomainID, recordParams.RecordID, updateOptions)
+	if updateErr != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to update domain record: %v", updateErr)), nil
 	}
 
 	return mcp.NewToolResultText(fmt.Sprintf("Domain record updated successfully:\nID: %d\nType: %s\nName: %s\nTarget: %s",
-		record.ID, record.Type, record.Name, record.Target)), nil
+		updatedRecord.ID, updatedRecord.Type, updatedRecord.Name, updatedRecord.Target)), nil
 }
 
 // handleDomainRecordDelete deletes a domain record.
 func (s *Service) handleDomainRecordDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	arguments, ok := request.Params.Arguments.(map[string]interface{})
-	if !ok {
-		return mcp.NewToolResultError("Invalid arguments format"), nil
+	requestArguments, argumentsOK := request.Params.Arguments.(map[string]interface{})
+	if !argumentsOK {
+		return mcp.NewToolResultError(ErrInvalidArgumentsFormat.Error()), nil
 	}
 
-	domainID, err := parseIDFromArguments(arguments, "domain_id")
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Invalid domain_id parameter: %v", err)), nil
+	domainID, domainParseErr := parseIDFromArguments(requestArguments, "domain_id")
+	if domainParseErr != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Invalid domain_id parameter: %v", domainParseErr)), nil
 	}
 
-	recordID, err := parseIDFromArguments(arguments, "record_id")
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Invalid record_id parameter: %v", err)), nil
+	recordID, recordParseErr := parseIDFromArguments(requestArguments, "record_id")
+	if recordParseErr != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Invalid record_id parameter: %v", recordParseErr)), nil
 	}
 
-	params := DomainRecordDeleteParams{
+	recordParams := DomainRecordDeleteParams{
 		DomainID: domainID,
 		RecordID: recordID,
 	}
 
-	account, err := s.accountManager.GetCurrentAccount()
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
+	account, accountErr := s.accountManager.GetCurrentAccount()
+	if accountErr != nil {
+		return mcp.NewToolResultError(accountErr.Error()), nil
 	}
 
-	err = account.Client.DeleteDomainRecord(ctx, params.DomainID, params.RecordID)
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to delete domain record: %v", err)), nil
+	deleteErr := account.Client.DeleteDomainRecord(ctx, recordParams.DomainID, recordParams.RecordID)
+	if deleteErr != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to delete domain record: %v", deleteErr)), nil
 	}
 
 	return mcp.NewToolResultText(fmt.Sprintf("Domain record %d deleted successfully from domain %d",
-		params.RecordID, params.DomainID)), nil
+		recordParams.RecordID, recordParams.DomainID)), nil
 }
 
 // parseArguments is a placeholder function for structured parameter parsing.
-// TODO: Convert remaining handler functions to use direct argument parsing like instances and domains.
+// Convert remaining handler functions to use direct argument parsing like instances and domains.
 func parseArguments(_ interface{}, _ interface{}) error {
 	// This is a temporary placeholder that returns no error.
 	// The remaining functions will need to be converted to use direct argument parsing.
@@ -827,15 +959,16 @@ func stringPtrValue(ptr *string) string {
 	if ptr == nil {
 		return ""
 	}
+
 	return *ptr
 }
 
 // intPtr returns a pointer to the given int value.
-func intPtr(i int) *int {
-	return &i
+func intPtr(intValue int) *int {
+	return &intValue
 }
 
 // stringPtr returns a pointer to the given string value.
-func stringPtr(s string) *string {
-	return &s
+func stringPtr(stringValue string) *string {
+	return &stringValue
 }

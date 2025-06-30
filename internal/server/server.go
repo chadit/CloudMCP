@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/mark3labs/mcp-go/server"
@@ -19,7 +20,21 @@ type Server struct {
 	services []interfaces.CloudService
 }
 
+// Static errors for err113 compliance.
+var (
+	ErrConfigNil = errors.New("config cannot be nil")
+	ErrLoggerNil = errors.New("logger cannot be nil")
+)
+
 func New(cfg *config.Config, log logger.Logger) (*Server, error) {
+	if cfg == nil {
+		return nil, ErrConfigNil
+	}
+
+	if log == nil {
+		return nil, ErrLoggerNil
+	}
+
 	mcpServer := server.NewMCPServer(
 		cfg.ServerName,
 		"0.1.0",
@@ -87,7 +102,7 @@ func (s *Server) Start(ctx context.Context) error {
 	case <-ctx.Done():
 		s.logger.Info("Context cancelled, shutting down")
 
-		return ctx.Err()
+		return fmt.Errorf("context cancelled: %w", ctx.Err())
 	case err := <-errCh:
 		if err != nil {
 			return fmt.Errorf("MCP server error: %w", err)

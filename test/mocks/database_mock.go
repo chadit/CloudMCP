@@ -1,3 +1,4 @@
+//nolint:wrapcheck // Mock file returns test errors without wrapping
 package mocks
 
 import (
@@ -17,107 +18,194 @@ type MockDatabaseService struct {
 // Generic database methods.
 func (m *MockDatabaseService) ListDatabases(ctx context.Context, opts *linodego.ListOptions) ([]linodego.Database, error) {
 	args := m.Called(ctx, opts)
+
 	if result := args.Get(0); result != nil {
-		return result.([]linodego.Database), args.Error(1)
+		databases, ok := result.([]linodego.Database)
+		if !ok {
+			return nil, args.Error(1)
+		}
+
+		return databases, args.Error(1)
 	}
 
 	if err := args.Error(1); err != nil {
 		return nil, fmt.Errorf("mock database error: %w", err)
 	}
+
 	return nil, nil
 }
 
 func (m *MockDatabaseService) ListDatabaseEngines(ctx context.Context, opts *linodego.ListOptions) ([]linodego.DatabaseEngine, error) {
 	args := m.Called(ctx, opts)
+
 	if result := args.Get(0); result != nil {
-		return result.([]linodego.DatabaseEngine), args.Error(1)
+		engines, ok := result.([]linodego.DatabaseEngine)
+		if !ok {
+			return nil, args.Error(1)
+		}
+
+		return engines, args.Error(1)
 	}
+
 	if err := args.Error(1); err != nil {
 		return nil, fmt.Errorf("mock database error: %w", err)
 	}
+
 	return nil, nil
 }
 
 func (m *MockDatabaseService) ListDatabaseTypes(ctx context.Context, opts *linodego.ListOptions) ([]linodego.DatabaseType, error) {
 	args := m.Called(ctx, opts)
+
 	if result := args.Get(0); result != nil {
-		return result.([]linodego.DatabaseType), args.Error(1)
+		types, ok := result.([]linodego.DatabaseType)
+		if !ok {
+			return nil, args.Error(1)
+		}
+
+		return types, args.Error(1)
 	}
+
 	if err := args.Error(1); err != nil {
 		return nil, fmt.Errorf("mock database error: %w", err)
 	}
+
 	return nil, nil
 }
 
 // MySQL-specific methods.
 func (m *MockDatabaseService) ListMySQLDatabases(ctx context.Context, opts *linodego.ListOptions) ([]linodego.MySQLDatabase, error) {
 	args := m.Called(ctx, opts)
-	return args.Get(0).([]linodego.MySQLDatabase), args.Error(1)
+
+	mysqlDatabases, ok := args.Get(0).([]linodego.MySQLDatabase)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return mysqlDatabases, args.Error(1)
 }
 
 func (m *MockDatabaseService) GetMySQLDatabase(ctx context.Context, databaseID int) (*linodego.MySQLDatabase, error) {
 	args := m.Called(ctx, databaseID)
-	return args.Get(0).(*linodego.MySQLDatabase), args.Error(1)
+
+	mysqlDB, ok := args.Get(0).(*linodego.MySQLDatabase)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return mysqlDB, args.Error(1)
 }
 
 func (m *MockDatabaseService) CreateMySQLDatabase(ctx context.Context, opts linodego.MySQLCreateOptions) (*linodego.MySQLDatabase, error) {
 	args := m.Called(ctx, opts)
-	return args.Get(0).(*linodego.MySQLDatabase), args.Error(1)
+
+	mysqlDB, ok := args.Get(0).(*linodego.MySQLDatabase)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return mysqlDB, args.Error(1)
 }
 
 func (m *MockDatabaseService) UpdateMySQLDatabase(ctx context.Context, databaseID int, opts linodego.MySQLUpdateOptions) (*linodego.MySQLDatabase, error) {
 	args := m.Called(ctx, databaseID, opts)
-	return args.Get(0).(*linodego.MySQLDatabase), args.Error(1)
+
+	mysqlDB, ok := args.Get(0).(*linodego.MySQLDatabase)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return mysqlDB, args.Error(1)
 }
 
 func (m *MockDatabaseService) DeleteMySQLDatabase(ctx context.Context, databaseID int) error {
 	args := m.Called(ctx, databaseID)
+
 	return args.Error(0)
 }
 
 func (m *MockDatabaseService) GetMySQLDatabaseCredentials(ctx context.Context, databaseID int) (*linodego.MySQLDatabaseCredential, error) {
 	args := m.Called(ctx, databaseID)
-	return args.Get(0).(*linodego.MySQLDatabaseCredential), args.Error(1)
+
+	creds, ok := args.Get(0).(*linodego.MySQLDatabaseCredential)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return creds, args.Error(1)
 }
 
 func (m *MockDatabaseService) ResetMySQLDatabaseCredentials(ctx context.Context, databaseID int) error {
 	args := m.Called(ctx, databaseID)
+
 	return args.Error(0)
 }
 
 // PostgreSQL-specific methods.
 func (m *MockDatabaseService) ListPostgresDatabases(ctx context.Context, opts *linodego.ListOptions) ([]linodego.PostgresDatabase, error) {
 	args := m.Called(ctx, opts)
-	return args.Get(0).([]linodego.PostgresDatabase), args.Error(1)
+
+	postgresDatabases, ok := args.Get(0).([]linodego.PostgresDatabase)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return postgresDatabases, args.Error(1)
 }
 
 func (m *MockDatabaseService) GetPostgresDatabase(ctx context.Context, databaseID int) (*linodego.PostgresDatabase, error) {
 	args := m.Called(ctx, databaseID)
-	return args.Get(0).(*linodego.PostgresDatabase), args.Error(1)
+
+	postgresDB, ok := args.Get(0).(*linodego.PostgresDatabase)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return postgresDB, args.Error(1)
 }
 
 func (m *MockDatabaseService) CreatePostgresDatabase(ctx context.Context, opts linodego.PostgresCreateOptions) (*linodego.PostgresDatabase, error) {
 	args := m.Called(ctx, opts)
-	return args.Get(0).(*linodego.PostgresDatabase), args.Error(1)
+
+	postgresDB, ok := args.Get(0).(*linodego.PostgresDatabase)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return postgresDB, args.Error(1)
 }
 
 func (m *MockDatabaseService) UpdatePostgresDatabase(ctx context.Context, databaseID int, opts linodego.PostgresUpdateOptions) (*linodego.PostgresDatabase, error) {
 	args := m.Called(ctx, databaseID, opts)
-	return args.Get(0).(*linodego.PostgresDatabase), args.Error(1)
+
+	postgresDB, ok := args.Get(0).(*linodego.PostgresDatabase)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return postgresDB, args.Error(1)
 }
 
 func (m *MockDatabaseService) DeletePostgresDatabase(ctx context.Context, databaseID int) error {
 	args := m.Called(ctx, databaseID)
+
 	return args.Error(0)
 }
 
 func (m *MockDatabaseService) GetPostgresDatabaseCredentials(ctx context.Context, databaseID int) (*linodego.PostgresDatabaseCredential, error) {
 	args := m.Called(ctx, databaseID)
-	return args.Get(0).(*linodego.PostgresDatabaseCredential), args.Error(1)
+
+	creds, ok := args.Get(0).(*linodego.PostgresDatabaseCredential)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return creds, args.Error(1)
 }
 
 func (m *MockDatabaseService) ResetPostgresDatabaseCredentials(ctx context.Context, databaseID int) error {
 	args := m.Called(ctx, databaseID)
+
 	return args.Error(0)
 }
 
@@ -148,7 +236,7 @@ func (m *MockDatabaseService) SetupCreateMySQLDatabaseError(opts linodego.MySQLC
 	m.On("CreateMySQLDatabase", mock.Anything, opts).Return((*linodego.MySQLDatabase)(nil), err)
 }
 
-// PostgreSQL helper methods
+// PostgreSQL helper methods.
 func (m *MockDatabaseService) SetupListPostgresDatabasesSuccess(databases []linodego.PostgresDatabase) {
 	m.On("ListPostgresDatabases", mock.Anything, mock.Anything).Return(databases, nil)
 }
