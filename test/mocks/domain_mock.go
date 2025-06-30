@@ -1,3 +1,4 @@
+//nolint:wrapcheck // Mock file returns test errors without wrapping
 package mocks
 
 import (
@@ -13,55 +14,105 @@ type MockDomainService struct {
 	mock.Mock
 }
 
-// Domain methods
+// Domain methods.
 func (m *MockDomainService) ListDomains(ctx context.Context, opts *linodego.ListOptions) ([]linodego.Domain, error) {
 	args := m.Called(ctx, opts)
-	return args.Get(0).([]linodego.Domain), args.Error(1)
+
+	domains, ok := args.Get(0).([]linodego.Domain)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return domains, args.Error(1)
 }
 
 func (m *MockDomainService) GetDomain(ctx context.Context, domainID int) (*linodego.Domain, error) {
 	args := m.Called(ctx, domainID)
-	return args.Get(0).(*linodego.Domain), args.Error(1)
+
+	domain, ok := args.Get(0).(*linodego.Domain)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return domain, args.Error(1)
 }
 
 func (m *MockDomainService) CreateDomain(ctx context.Context, opts linodego.DomainCreateOptions) (*linodego.Domain, error) {
 	args := m.Called(ctx, opts)
-	return args.Get(0).(*linodego.Domain), args.Error(1)
+
+	domain, ok := args.Get(0).(*linodego.Domain)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return domain, args.Error(1)
 }
 
 func (m *MockDomainService) UpdateDomain(ctx context.Context, domainID int, opts linodego.DomainUpdateOptions) (*linodego.Domain, error) {
 	args := m.Called(ctx, domainID, opts)
-	return args.Get(0).(*linodego.Domain), args.Error(1)
+
+	domain, ok := args.Get(0).(*linodego.Domain)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return domain, args.Error(1)
 }
 
 func (m *MockDomainService) DeleteDomain(ctx context.Context, domainID int) error {
 	args := m.Called(ctx, domainID)
+
 	return args.Error(0)
 }
 
-// Domain record methods
+// Domain record methods.
 func (m *MockDomainService) ListDomainRecords(ctx context.Context, domainID int, opts *linodego.ListOptions) ([]linodego.DomainRecord, error) {
 	args := m.Called(ctx, domainID, opts)
-	return args.Get(0).([]linodego.DomainRecord), args.Error(1)
+
+	records, ok := args.Get(0).([]linodego.DomainRecord)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return records, args.Error(1)
 }
 
 func (m *MockDomainService) GetDomainRecord(ctx context.Context, domainID int, recordID int) (*linodego.DomainRecord, error) {
 	args := m.Called(ctx, domainID, recordID)
-	return args.Get(0).(*linodego.DomainRecord), args.Error(1)
+
+	record, ok := args.Get(0).(*linodego.DomainRecord)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return record, args.Error(1)
 }
 
 func (m *MockDomainService) CreateDomainRecord(ctx context.Context, domainID int, opts linodego.DomainRecordCreateOptions) (*linodego.DomainRecord, error) {
 	args := m.Called(ctx, domainID, opts)
-	return args.Get(0).(*linodego.DomainRecord), args.Error(1)
+
+	record, ok := args.Get(0).(*linodego.DomainRecord)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return record, args.Error(1)
 }
 
 func (m *MockDomainService) UpdateDomainRecord(ctx context.Context, domainID int, recordID int, opts linodego.DomainRecordUpdateOptions) (*linodego.DomainRecord, error) {
 	args := m.Called(ctx, domainID, recordID, opts)
-	return args.Get(0).(*linodego.DomainRecord), args.Error(1)
+
+	record, ok := args.Get(0).(*linodego.DomainRecord)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return record, args.Error(1)
 }
 
 func (m *MockDomainService) DeleteDomainRecord(ctx context.Context, domainID int, recordID int) error {
 	args := m.Called(ctx, domainID, recordID)
+
 	return args.Error(0)
 }
 

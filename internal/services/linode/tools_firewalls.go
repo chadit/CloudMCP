@@ -10,7 +10,7 @@ import (
 )
 
 // handleFirewallsList lists all firewalls.
-func (s *Service) handleFirewallsList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (s *Service) handleFirewallsList(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	account, err := s.accountManager.GetCurrentAccount()
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
@@ -486,10 +486,11 @@ func (s *Service) handleFirewallDeviceDelete(ctx context.Context, request mcp.Ca
 	return mcp.NewToolResultText(fmt.Sprintf("Device %d removed from firewall %d successfully", deviceID, firewallID)), nil
 }
 
-// Helper functions for pointer handling
+// Helper functions for pointer handling.
 func stringSlicePtrValue(ptr *[]string) []string {
 	if ptr == nil {
 		return []string{}
 	}
+
 	return *ptr
 }

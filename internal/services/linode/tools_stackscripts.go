@@ -9,6 +9,12 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
+const (
+	// Maximum description length for display truncation.
+	maxDescriptionLength = 100
+	maxDescriptionDisplay = 97 // Length before adding "..."
+)
+
 // handleStackScriptsList lists all StackScripts.
 func (s *Service) handleStackScriptsList(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	account, err := s.accountManager.GetCurrentAccount()
@@ -42,6 +48,7 @@ func (s *Service) handleStackScriptsList(ctx context.Context, _ mcp.CallToolRequ
 	// Remove unused result variable
 
 	var sb strings.Builder
+
 	sb.WriteString(fmt.Sprintf("Found %d StackScripts:\n\n", len(summaries)))
 
 	for _, ss := range summaries {
@@ -52,13 +59,16 @@ func (s *Service) handleStackScriptsList(ctx context.Context, _ mcp.CallToolRequ
 
 		fmt.Fprintf(&sb, "ID: %d | %s (%s)\n", ss.ID, ss.Label, visibility)
 		fmt.Fprintf(&sb, "  Author: %s\n", ss.Username)
+
 		if ss.Description != "" {
 			description := ss.Description
-			if len(description) > 100 {
-				description = description[:97] + "..."
+			if len(description) > maxDescriptionLength {
+				description = description[:maxDescriptionDisplay] + "..."
 			}
+
 			fmt.Fprintf(&sb, "  Description: %s\n", description)
 		}
+
 		fmt.Fprintf(&sb, "  Compatible Images: %s\n", strings.Join(ss.Images, ", "))
 		fmt.Fprintf(&sb, "  Deployments: %d total, %d active\n", ss.DeploymentsTotal, ss.DeploymentsActive)
 		fmt.Fprintf(&sb, "  Updated: %s\n", ss.Updated)
@@ -86,6 +96,7 @@ func (s *Service) handleStackScriptGet(ctx context.Context, request mcp.CallTool
 	}
 
 	var udfs []StackScriptUserDefinedField
+
 	if ss.UserDefinedFields != nil {
 		for _, udf := range *ss.UserDefinedFields {
 			udfs = append(udfs, StackScriptUserDefinedField{
@@ -120,6 +131,7 @@ func (s *Service) handleStackScriptGet(ctx context.Context, request mcp.CallTool
 	}
 
 	var sb strings.Builder
+
 	fmt.Fprintf(&sb, "StackScript Details:\n")
 	fmt.Fprintf(&sb, "ID: %d\n", detail.ID)
 	fmt.Fprintf(&sb, "Label: %s\n", detail.Label)
@@ -129,15 +141,18 @@ func (s *Service) handleStackScriptGet(ctx context.Context, request mcp.CallTool
 	if detail.IsPublic {
 		visibility = "Public"
 	}
+
 	ownership := ""
 	if detail.Mine {
 		ownership = " (Mine)"
 	}
+
 	fmt.Fprintf(&sb, "Visibility: %s%s\n", visibility, ownership)
 
 	if detail.Description != "" {
 		fmt.Fprintf(&sb, "Description: %s\n", detail.Description)
 	}
+
 	if detail.RevNote != "" {
 		fmt.Fprintf(&sb, "Revision Note: %s\n", detail.RevNote)
 	}
@@ -149,21 +164,26 @@ func (s *Service) handleStackScriptGet(ctx context.Context, request mcp.CallTool
 
 	if len(detail.UserDefinedFields) > 0 {
 		fmt.Fprintf(&sb, "User-Defined Fields:\n")
+
 		for _, udf := range detail.UserDefinedFields {
 			fmt.Fprintf(&sb, "  - %s (%s)\n", udf.Name, udf.Label)
 			if udf.Default != "" {
 				fmt.Fprintf(&sb, "    Default: %s\n", udf.Default)
 			}
+
 			if udf.Example != "" {
 				fmt.Fprintf(&sb, "    Example: %s\n", udf.Example)
 			}
+
 			if udf.OneOf != "" {
 				fmt.Fprintf(&sb, "    Options: %s\n", udf.OneOf)
 			}
+
 			if udf.ManyOf != "" {
 				fmt.Fprintf(&sb, "    Multiple Options: %s\n", udf.ManyOf)
 			}
 		}
+
 		sb.WriteString("\n")
 	}
 
@@ -225,18 +245,23 @@ func (s *Service) handleStackScriptUpdate(ctx context.Context, request mcp.CallT
 	if params.Label != "" {
 		updateOpts.Label = params.Label
 	}
+
 	if params.Description != "" {
 		updateOpts.Description = params.Description
 	}
+
 	if len(params.Images) > 0 {
 		updateOpts.Images = params.Images
 	}
+
 	if params.Script != "" {
 		updateOpts.Script = params.Script
 	}
+
 	if params.IsPublic {
 		updateOpts.IsPublic = params.IsPublic
 	}
+
 	if params.RevNote != "" {
 		updateOpts.RevNote = params.RevNote
 	}

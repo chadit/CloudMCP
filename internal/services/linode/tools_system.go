@@ -10,7 +10,7 @@ import (
 	"github.com/chadit/CloudMCP/internal/version"
 )
 
-// handleSystemVersion returns version and build information
+// handleSystemVersion returns version and build information.
 func (s *Service) handleSystemVersion(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	versionInfo := version.Get()
 
@@ -51,8 +51,8 @@ Current Account: %s`,
 	return mcp.NewToolResultText(output), nil
 }
 
-// handleSystemVersionJSON returns version information as JSON
-func (s *Service) handleSystemVersionJSON(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// handleSystemVersionJSON returns version information as JSON.
+func (s *Service) handleSystemVersionJSON(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	versionInfo := version.Get()
 
 	// Add current account information
@@ -70,11 +70,12 @@ func (s *Service) handleSystemVersionJSON(ctx context.Context, _ mcp.CallToolReq
 	return mcp.NewToolResultText(string(jsonOutput)), nil
 }
 
-// getCurrentAccountName returns the current account name for version info
+// getCurrentAccountName returns the current account name for version info.
 func (s *Service) getCurrentAccountName() string {
 	account, err := s.accountManager.GetCurrentAccount()
 	if err != nil {
 		return "unknown"
 	}
+
 	return fmt.Sprintf("%s (%s)", account.Name, account.Label)
 }

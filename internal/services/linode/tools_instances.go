@@ -135,7 +135,7 @@ Watchdog: %s`,
 	)
 
 	if len(instance.Tags) > 0 {
-		resultText += fmt.Sprintf("\nTags: %s", strings.Join(instance.Tags, ", "))
+		resultText += "\nTags: " + strings.Join(instance.Tags, ", ")
 	}
 
 	return mcp.NewToolResultText(resultText), nil
@@ -408,14 +408,14 @@ func (s *Service) performInstanceOperation(ctx context.Context, instanceID, conf
 	// Perform the operation
 	err = operation(ctx, instanceID, configID)
 	if err != nil {
-		return nil, types.NewToolError("linode", fmt.Sprintf("instance_%s", operationName), //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "instance_"+operationName, //nolint:wrapcheck // types.NewToolError already wraps the error
 			fmt.Sprintf("failed to %s instance %d", operationName, instanceID), err)
 	}
 
 	// Get updated instance status
 	instance, err := account.Client.GetInstance(ctx, instanceID)
 	if err != nil {
-		return nil, types.NewToolError("linode", fmt.Sprintf("instance_%s", operationName), //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "instance_"+operationName, //nolint:wrapcheck // types.NewToolError already wraps the error
 			"failed to get updated instance status", err)
 	}
 

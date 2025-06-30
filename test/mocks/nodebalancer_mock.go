@@ -1,3 +1,4 @@
+//nolint:wrapcheck // Mock file returns test errors without wrapping
 package mocks
 
 import (
@@ -16,51 +17,95 @@ type MockNodeBalancerService struct {
 // ListNodeBalancers mocks listing all NodeBalancers.
 func (m *MockNodeBalancerService) ListNodeBalancers(ctx context.Context, opts *linodego.ListOptions) ([]linodego.NodeBalancer, error) {
 	args := m.Called(ctx, opts)
-	return args.Get(0).([]linodego.NodeBalancer), args.Error(1)
+
+	nodeBalancers, ok := args.Get(0).([]linodego.NodeBalancer)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return nodeBalancers, args.Error(1)
 }
 
 // GetNodeBalancer mocks getting details of a specific NodeBalancer.
 func (m *MockNodeBalancerService) GetNodeBalancer(ctx context.Context, nodebalancerID int) (*linodego.NodeBalancer, error) {
 	args := m.Called(ctx, nodebalancerID)
-	return args.Get(0).(*linodego.NodeBalancer), args.Error(1)
+
+	nodeBalancer, ok := args.Get(0).(*linodego.NodeBalancer)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return nodeBalancer, args.Error(1)
 }
 
 // CreateNodeBalancer mocks creating a new NodeBalancer.
 func (m *MockNodeBalancerService) CreateNodeBalancer(ctx context.Context, opts linodego.NodeBalancerCreateOptions) (*linodego.NodeBalancer, error) {
 	args := m.Called(ctx, opts)
-	return args.Get(0).(*linodego.NodeBalancer), args.Error(1)
+
+	nodeBalancer, ok := args.Get(0).(*linodego.NodeBalancer)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return nodeBalancer, args.Error(1)
 }
 
 // UpdateNodeBalancer mocks updating an existing NodeBalancer.
 func (m *MockNodeBalancerService) UpdateNodeBalancer(ctx context.Context, nodebalancerID int, opts linodego.NodeBalancerUpdateOptions) (*linodego.NodeBalancer, error) {
 	args := m.Called(ctx, nodebalancerID, opts)
-	return args.Get(0).(*linodego.NodeBalancer), args.Error(1)
+
+	nodeBalancer, ok := args.Get(0).(*linodego.NodeBalancer)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return nodeBalancer, args.Error(1)
 }
 
 // DeleteNodeBalancer mocks deleting a NodeBalancer.
 func (m *MockNodeBalancerService) DeleteNodeBalancer(ctx context.Context, nodebalancerID int) error {
 	args := m.Called(ctx, nodebalancerID)
+
 	return args.Error(0)
 }
 
-// NodeBalancer configuration methods
+// NodeBalancer configuration methods.
 func (m *MockNodeBalancerService) ListNodeBalancerConfigs(ctx context.Context, nodebalancerID int, opts *linodego.ListOptions) ([]linodego.NodeBalancerConfig, error) {
 	args := m.Called(ctx, nodebalancerID, opts)
-	return args.Get(0).([]linodego.NodeBalancerConfig), args.Error(1)
+
+	configs, ok := args.Get(0).([]linodego.NodeBalancerConfig)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return configs, args.Error(1)
 }
 
 func (m *MockNodeBalancerService) CreateNodeBalancerConfig(ctx context.Context, nodebalancerID int, opts linodego.NodeBalancerConfigCreateOptions) (*linodego.NodeBalancerConfig, error) {
 	args := m.Called(ctx, nodebalancerID, opts)
-	return args.Get(0).(*linodego.NodeBalancerConfig), args.Error(1)
+
+	config, ok := args.Get(0).(*linodego.NodeBalancerConfig)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return config, args.Error(1)
 }
 
 func (m *MockNodeBalancerService) UpdateNodeBalancerConfig(ctx context.Context, nodebalancerID int, configID int, opts linodego.NodeBalancerConfigUpdateOptions) (*linodego.NodeBalancerConfig, error) {
 	args := m.Called(ctx, nodebalancerID, configID, opts)
-	return args.Get(0).(*linodego.NodeBalancerConfig), args.Error(1)
+
+	config, ok := args.Get(0).(*linodego.NodeBalancerConfig)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return config, args.Error(1)
 }
 
 func (m *MockNodeBalancerService) DeleteNodeBalancerConfig(ctx context.Context, nodebalancerID int, configID int) error {
 	args := m.Called(ctx, nodebalancerID, configID)
+
 	return args.Error(0)
 }
 

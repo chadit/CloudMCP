@@ -1,3 +1,4 @@
+// Package version provides build-time version information for CloudMCP.
 package version
 
 import (
@@ -17,11 +18,11 @@ const (
 )
 
 var (
-	// GitCommit can be set at build time using ldflags. //nolint:gochecknoglobals // Build-time constants set via ldflags.
-	GitCommit = "dev"
+	// GitCommit can be set at build time using ldflags.
+	GitCommit = "dev" //nolint:gochecknoglobals // Build-time constants set via ldflags
 
-	// GitBranch can be set at build time using ldflags. //nolint:gochecknoglobals // Build-time constants set via ldflags.
-	GitBranch = "main"
+	// GitBranch can be set at build time using ldflags.
+	GitBranch = "main" //nolint:gochecknoglobals // Build-time constants set via ldflags
 )
 
 // Info contains version and build information.

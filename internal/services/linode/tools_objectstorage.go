@@ -12,6 +12,11 @@ import (
 const (
 	bucketAccessFull    = "Full Access"
 	bucketAccessLimited = "Limited Access"
+
+	// Byte conversion constants.
+	bytesPerKB = 1024
+	bytesPerMB = 1024 * 1024
+	bytesPerGB = 1024 * 1024 * 1024
 )
 
 // handleObjectStorageBucketsList lists all Object Storage buckets.
@@ -27,6 +32,7 @@ func (s *Service) handleObjectStorageBucketsList(ctx context.Context, _ mcp.Call
 	}
 
 	var summaries []ObjectStorageBucketSummary
+
 	for _, bucket := range buckets {
 		summary := ObjectStorageBucketSummary{
 			Label:    bucket.Label,
@@ -42,18 +48,19 @@ func (s *Service) handleObjectStorageBucketsList(ctx context.Context, _ mcp.Call
 	// Remove unused result variable
 
 	var sb strings.Builder
+
 	sb.WriteString(fmt.Sprintf("Found %d Object Storage buckets:\n\n", len(summaries)))
 
 	for _, bucket := range summaries {
 		sizeDisplay := "0 bytes"
 
 		if bucket.Size > 0 {
-			if bucket.Size >= 1024*1024*1024 {
-				sizeDisplay = fmt.Sprintf("%.2f GB", float64(bucket.Size)/(1024*1024*1024))
-			} else if bucket.Size >= 1024*1024 {
-				sizeDisplay = fmt.Sprintf("%.2f MB", float64(bucket.Size)/(1024*1024))
-			} else if bucket.Size >= 1024 {
-				sizeDisplay = fmt.Sprintf("%.2f KB", float64(bucket.Size)/1024)
+			if bucket.Size >= bytesPerGB {
+				sizeDisplay = fmt.Sprintf("%.2f GB", float64(bucket.Size)/bytesPerGB)
+			} else if bucket.Size >= bytesPerMB {
+				sizeDisplay = fmt.Sprintf("%.2f MB", float64(bucket.Size)/bytesPerMB)
+			} else if bucket.Size >= bytesPerKB {
+				sizeDisplay = fmt.Sprintf("%.2f KB", float64(bucket.Size)/bytesPerKB)
 			} else {
 				sizeDisplay = fmt.Sprintf("%d bytes", bucket.Size)
 			}
@@ -96,6 +103,7 @@ func (s *Service) handleObjectStorageBucketGet(ctx context.Context, request mcp.
 	}
 
 	var sb strings.Builder
+
 	fmt.Fprintf(&sb, "Object Storage Bucket Details:\n")
 	fmt.Fprintf(&sb, "Name: %s\n", detail.Label)
 	fmt.Fprintf(&sb, "Region: %s\n", detail.Region)
@@ -105,12 +113,12 @@ func (s *Service) handleObjectStorageBucketGet(ctx context.Context, request mcp.
 	sizeDisplay := "0 bytes"
 
 	if detail.Size > 0 {
-		if detail.Size >= 1024*1024*1024 {
-			sizeDisplay = fmt.Sprintf("%.2f GB", float64(detail.Size)/(1024*1024*1024))
-		} else if detail.Size >= 1024*1024 {
-			sizeDisplay = fmt.Sprintf("%.2f MB", float64(detail.Size)/(1024*1024))
-		} else if detail.Size >= 1024 {
-			sizeDisplay = fmt.Sprintf("%.2f KB", float64(detail.Size)/1024)
+		if detail.Size >= bytesPerGB {
+			sizeDisplay = fmt.Sprintf("%.2f GB", float64(detail.Size)/bytesPerGB)
+		} else if detail.Size >= bytesPerMB {
+			sizeDisplay = fmt.Sprintf("%.2f MB", float64(detail.Size)/bytesPerMB)
+		} else if detail.Size >= bytesPerKB {
+			sizeDisplay = fmt.Sprintf("%.2f KB", float64(detail.Size)/bytesPerKB)
 		} else {
 			sizeDisplay = fmt.Sprintf("%d bytes", detail.Size)
 		}
@@ -143,6 +151,7 @@ func (s *Service) handleObjectStorageBucketCreate(ctx context.Context, request m
 	if params.ACL != "" {
 		createOpts.ACL = linodego.ObjectStorageACL(params.ACL)
 	}
+
 	if params.CORS {
 		createOpts.CorsEnabled = &params.CORS
 	}
@@ -173,6 +182,7 @@ func (s *Service) handleObjectStorageBucketUpdate(ctx context.Context, request m
 	if params.ACL != "" {
 		updateOpts.ACL = linodego.ObjectStorageACL(params.ACL)
 	}
+
 	if params.CORS != nil {
 		updateOpts.CorsEnabled = params.CORS
 	}
@@ -220,8 +230,10 @@ func (s *Service) handleObjectStorageKeysList(ctx context.Context, _ mcp.CallToo
 	}
 
 	var summaries []ObjectStorageKeySummary
+
 	for _, key := range keys {
 		var bucketAccess []ObjectStorageBucketAccess
+
 		if key.BucketAccess != nil {
 			for _, access := range *key.BucketAccess {
 				bucketAccess = append(bucketAccess, ObjectStorageBucketAccess{
@@ -246,6 +258,7 @@ func (s *Service) handleObjectStorageKeysList(ctx context.Context, _ mcp.CallToo
 	// Remove unused result variable
 
 	var sb strings.Builder
+
 	sb.WriteString(fmt.Sprintf("Found %d Object Storage keys:\n\n", len(summaries)))
 
 	for _, key := range summaries {
@@ -259,10 +272,12 @@ func (s *Service) handleObjectStorageKeysList(ctx context.Context, _ mcp.CallToo
 
 		if key.Limited && len(key.BucketAccess) > 0 {
 			fmt.Fprintf(&sb, "  Bucket Access:\n")
+
 			for _, access := range key.BucketAccess {
 				fmt.Fprintf(&sb, "    - %s/%s: %s\n", access.Region, access.BucketName, access.Permissions)
 			}
 		}
+
 		sb.WriteString("\n")
 	}
 
@@ -308,6 +323,7 @@ func (s *Service) handleObjectStorageKeyGet(ctx context.Context, request mcp.Cal
 	}
 
 	var sb strings.Builder
+
 	fmt.Fprintf(&sb, "Object Storage Key Details:\n")
 	fmt.Fprintf(&sb, "ID: %d\n", detail.ID)
 	fmt.Fprintf(&sb, "Label: %s\n", detail.Label)
@@ -318,10 +334,12 @@ func (s *Service) handleObjectStorageKeyGet(ctx context.Context, request mcp.Cal
 	if detail.Limited {
 		accessType = "Limited Access"
 	}
+
 	fmt.Fprintf(&sb, "Access Type: %s\n", accessType)
 
 	if detail.Limited && len(detail.BucketAccess) > 0 {
 		fmt.Fprintf(&sb, "\nBucket Access Permissions:\n")
+
 		for _, access := range detail.BucketAccess {
 			fmt.Fprintf(&sb, "  - Region: %s\n", access.Region)
 			fmt.Fprintf(&sb, "    Bucket: %s\n", access.BucketName)
@@ -358,6 +376,7 @@ func (s *Service) handleObjectStorageKeyCreate(ctx context.Context, request mcp.
 				Permissions: string(access.Permissions),
 			})
 		}
+
 		createOpts.BucketAccess = &bucketAccess
 	}
 
@@ -455,6 +474,7 @@ func (s *Service) handleObjectStorageClustersList(ctx context.Context, _ mcp.Cal
 	}
 
 	var summaries []ObjectStorageClusterSummary
+
 	for _, cluster := range clusters {
 		summary := ObjectStorageClusterSummary{
 			ID:               cluster.ID,
@@ -469,15 +489,18 @@ func (s *Service) handleObjectStorageClustersList(ctx context.Context, _ mcp.Cal
 	// Remove unused result variable
 
 	var sb strings.Builder
+
 	sb.WriteString(fmt.Sprintf("Found %d Object Storage clusters:\n\n", len(summaries)))
 
 	for _, cluster := range summaries {
 		fmt.Fprintf(&sb, "ID: %s | Region: %s\n", cluster.ID, cluster.Region)
 		fmt.Fprintf(&sb, "  Domain: %s\n", cluster.Domain)
 		fmt.Fprintf(&sb, "  Status: %s\n", cluster.Status)
+
 		if cluster.StaticSiteDomain != "" {
 			fmt.Fprintf(&sb, "  Static Site Domain: %s\n", cluster.StaticSiteDomain)
 		}
+
 		sb.WriteString("\n")
 	}
 

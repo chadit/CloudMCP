@@ -71,3 +71,4 @@ __debug_bin
 
 # Metrics data
 metrics/
+lint_output.txt

@@ -93,7 +93,7 @@ func (s *Service) handleReservedIPGet(ctx context.Context, request mcp.CallToolR
 	ip, err := account.Client.GetIPAddress(ctx, address)
 	if err != nil {
 		return nil, types.NewToolError("linode", "reserved_ip_get", //nolint:wrapcheck // types.NewToolError already wraps the error
-			fmt.Sprintf("failed to get IP address %s", address), err)
+			"failed to get IP address "+address, err)
 	}
 
 	detail := ReservedIPDetail{
@@ -239,7 +239,7 @@ func (s *Service) handleReservedIPUpdate(ctx context.Context, request mcp.CallTo
 	ip, err := account.Client.UpdateIPAddress(ctx, address, updateOpts)
 	if err != nil {
 		return nil, types.NewToolError("linode", "reserved_ip_update", //nolint:wrapcheck // types.NewToolError already wraps the error
-			fmt.Sprintf("failed to update IP address %s", address), err)
+			"failed to update IP address "+address, err)
 	}
 
 	return mcp.NewToolResultText(fmt.Sprintf("IP address updated successfully:\nAddress: %s\nReverse DNS: %s", ip.Address, ip.RDNS)), nil

@@ -1,4 +1,6 @@
 // Package mocks provides mock implementations for testing CloudMCP services.
+//
+//nolint:wrapcheck // Mock file returns test errors without wrapping
 package mocks
 
 import (
@@ -17,52 +19,90 @@ type MockFirewallService struct {
 // ListFirewalls mocks the listing of all firewalls.
 func (m *MockFirewallService) ListFirewalls(ctx context.Context, opts *linodego.ListOptions) ([]linodego.Firewall, error) {
 	args := m.Called(ctx, opts)
-	return args.Get(0).([]linodego.Firewall), args.Error(1)
+
+	firewalls, ok := args.Get(0).([]linodego.Firewall)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return firewalls, args.Error(1)
 }
 
 // GetFirewall mocks getting details of a specific firewall.
 func (m *MockFirewallService) GetFirewall(ctx context.Context, firewallID int) (*linodego.Firewall, error) {
 	args := m.Called(ctx, firewallID)
-	return args.Get(0).(*linodego.Firewall), args.Error(1)
+
+	firewall, ok := args.Get(0).(*linodego.Firewall)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return firewall, args.Error(1)
 }
 
 // CreateFirewall mocks creating a new firewall.
 func (m *MockFirewallService) CreateFirewall(ctx context.Context, opts linodego.FirewallCreateOptions) (*linodego.Firewall, error) {
 	args := m.Called(ctx, opts)
-	return args.Get(0).(*linodego.Firewall), args.Error(1)
+
+	firewall, ok := args.Get(0).(*linodego.Firewall)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return firewall, args.Error(1)
 }
 
 // UpdateFirewall mocks updating an existing firewall.
 func (m *MockFirewallService) UpdateFirewall(ctx context.Context, firewallID int, opts linodego.FirewallUpdateOptions) (*linodego.Firewall, error) {
 	args := m.Called(ctx, firewallID, opts)
-	return args.Get(0).(*linodego.Firewall), args.Error(1)
+
+	firewall, ok := args.Get(0).(*linodego.Firewall)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return firewall, args.Error(1)
 }
 
 // DeleteFirewall mocks deleting a firewall.
 func (m *MockFirewallService) DeleteFirewall(ctx context.Context, firewallID int) error {
 	args := m.Called(ctx, firewallID)
+
 	return args.Error(0)
 }
 
 // UpdateFirewallRules mocks updating firewall rules.
 func (m *MockFirewallService) UpdateFirewallRules(ctx context.Context, firewallID int, ruleSet linodego.FirewallRuleSet) (*linodego.FirewallRuleSet, error) {
 	args := m.Called(ctx, firewallID, ruleSet)
-	return args.Get(0).(*linodego.FirewallRuleSet), args.Error(1)
+
+	ruleSetPtr, ok := args.Get(0).(*linodego.FirewallRuleSet)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return ruleSetPtr, args.Error(1)
 }
 
 // CreateFirewallDevice mocks assigning a device to a firewall.
 func (m *MockFirewallService) CreateFirewallDevice(ctx context.Context, firewallID int, opts linodego.FirewallDeviceCreateOptions) (*linodego.FirewallDevice, error) {
 	args := m.Called(ctx, firewallID, opts)
-	return args.Get(0).(*linodego.FirewallDevice), args.Error(1)
+
+	device, ok := args.Get(0).(*linodego.FirewallDevice)
+	if !ok {
+		return nil, args.Error(1)
+	}
+
+	return device, args.Error(1)
 }
 
 // DeleteFirewallDevice mocks removing a device from a firewall.
 func (m *MockFirewallService) DeleteFirewallDevice(ctx context.Context, firewallID int, deviceID int) error {
 	args := m.Called(ctx, firewallID, deviceID)
+
 	return args.Error(0)
 }
 
-// Example test helper function
+// Example test helper function.
 func (m *MockFirewallService) SetupListFirewallsSuccess(firewalls []linodego.Firewall) {
 	m.On("ListFirewalls", mock.Anything, mock.Anything).Return(firewalls, nil)
 }

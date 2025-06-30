@@ -1,3 +1,6 @@
+// Package linode provides Linode cloud infrastructure management through MCP tools.
+// It implements comprehensive Linode API coverage with multi-account support and
+// thread-safe operations for managing instances, volumes, networks, and other resources.
 package linode
 
 import (
@@ -2911,7 +2914,7 @@ func (s *Service) CallToolForTesting(ctx context.Context, request mcp.CallToolRe
 	case "cloudmcp_version_json":
 		return s.handleSystemVersionJSON(ctx, request)
 	default:
-		return nil, fmt.Errorf("unsupported tool for testing: %s", request.Params.Name)
+		return nil, fmt.Errorf("unsupported tool for testing: %s", request.Params.Name) //nolint:err113 // Dynamic error message needed for debugging
 	}
 }
 
@@ -2927,16 +2930,19 @@ func GetTextContentForTesting(t interface {
 
 	if result == nil {
 		t.Errorf("result should not be nil")
+
 		return ""
 	}
 
 	if len(result.Content) == 0 {
 		t.Errorf("result should have content")
+
 		return ""
 	}
 
 	if len(result.Content) != 1 {
 		t.Errorf("result should have exactly one content item, got %d", len(result.Content))
+
 		return ""
 	}
 

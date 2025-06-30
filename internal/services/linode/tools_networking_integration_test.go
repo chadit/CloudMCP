@@ -3,12 +3,13 @@
 package linode_test
 
 import (
-	"github.com/chadit/CloudMCP/internal/services/linode"
 	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/chadit/CloudMCP/internal/services/linode"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/stretchr/testify/require"

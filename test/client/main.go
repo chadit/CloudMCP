@@ -67,8 +67,9 @@ func main() {
 		},
 	})
 	if err != nil {
-		mcpClient.Close()
-		log.Fatalf("Failed to initialize: %v", err)
+		log.Printf("Failed to initialize: %v", err)
+
+		return
 	}
 
 	fmt.Println("Connected successfully!")
@@ -135,6 +136,7 @@ func main() {
 
 			if _, err := fmt.Sscanf(instanceIDStr, "%f", &instanceID); err != nil {
 				fmt.Printf("Invalid instance ID format: %v\n", err)
+
 				continue
 			}
 
@@ -153,6 +155,7 @@ func main() {
 
 			if _, err := fmt.Sscanf(volumeIDStr, "%f", &volumeID); err != nil {
 				fmt.Printf("Invalid volume ID format: %v\n", err)
+
 				continue
 			}
 
@@ -184,6 +187,7 @@ func main() {
 			if argsStr != "" {
 				if err := json.Unmarshal([]byte(argsStr), &args); err != nil {
 					fmt.Printf("Invalid JSON: %v\n", err)
+
 					continue
 				}
 			}
@@ -191,6 +195,7 @@ func main() {
 			callTool(ctx, mcpClient, toolName, args)
 		case "q", "quit", "exit":
 			fmt.Println("Goodbye!")
+
 			return
 		default:
 			fmt.Println("Invalid command")
@@ -209,33 +214,42 @@ func callTool(ctx context.Context, mcpClient *client.Client, toolName string, ar
 	})
 	if err != nil {
 		fmt.Printf("Error calling tool: %v\n", err)
+
 		return
 	}
 
 	fmt.Println("Result:")
 	// Since Content is an interface, we need to handle it as raw JSON
 	if len(result.Content) > 0 {
-		// Try to get the text representation
-		for index, content := range result.Content {
-			// Marshal to JSON to see the content
-			data, err := json.Marshal(content)
-			if err != nil {
-				fmt.Printf("Error marshaling content %d: %v\n", index, err)
-				continue
-			}
-
-			var contentMap map[string]interface{}
-			if err := json.Unmarshal(data, &contentMap); err == nil {
-				if text, ok := contentMap["text"].(string); ok {
-					fmt.Println(text)
-				} else {
-					fmt.Printf("Content %d: %s\n", index, string(data))
-				}
-			}
-		}
+		printResultContent(result.Content)
 	}
 
 	if result.IsError {
 		fmt.Println("(Tool returned an error)")
+	}
+}
+
+// printResultContent processes and prints tool result content.
+func printResultContent(content []mcp.Content) {
+	// Try to get the text representation
+	for index, item := range content {
+		// Marshal to JSON to see the content
+		data, err := json.Marshal(item)
+		if err != nil {
+			fmt.Printf("Error marshaling content %d: %v\n", index, err)
+
+			continue
+		}
+
+		var contentMap map[string]interface{}
+		if err := json.Unmarshal(data, &contentMap); err == nil {
+			if text, ok := contentMap["text"].(string); ok {
+				fmt.Println(text)
+			} else {
+				fmt.Printf("Content %d: %s\n", index, string(data))
+			}
+		} else {
+			fmt.Printf("Content %d: %s\n", index, string(data))
+		}
 	}
 }
