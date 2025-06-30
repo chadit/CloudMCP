@@ -24,7 +24,7 @@ func (s *Service) handleLongviewClientsList(ctx context.Context, _ mcp.CallToolR
 			"failed to list Longview clients", err)
 	}
 
-	var summaries []LongviewClientSummary
+	summaries := make([]LongviewClientSummary, 0, len(clients))
 	for _, client := range clients {
 		summary := LongviewClientSummary{
 			ID:      client.ID,
@@ -36,21 +36,21 @@ func (s *Service) handleLongviewClientsList(ctx context.Context, _ mcp.CallToolR
 		summaries = append(summaries, summary)
 	}
 
-	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Found %d Longview clients:\n\n", len(summaries)))
+	var stringBuilder strings.Builder
+	stringBuilder.WriteString(fmt.Sprintf("Found %d Longview clients:\n\n", len(summaries)))
 
 	for _, client := range summaries {
-		fmt.Fprintf(&sb, "ID: %d | %s\n", client.ID, client.Label)
-		fmt.Fprintf(&sb, "  Created: %s\n", client.Created)
-		fmt.Fprintf(&sb, "  Updated: %s\n", client.Updated)
-		sb.WriteString("\n")
+		fmt.Fprintf(&stringBuilder, "ID: %d | %s\n", client.ID, client.Label)
+		fmt.Fprintf(&stringBuilder, "  Created: %s\n", client.Created)
+		fmt.Fprintf(&stringBuilder, "  Updated: %s\n", client.Updated)
+		stringBuilder.WriteString("\n")
 	}
 
 	if len(summaries) == 0 {
 		return mcp.NewToolResultText("No Longview clients found."), nil
 	}
 
-	return mcp.NewToolResultText(sb.String()), nil
+	return mcp.NewToolResultText(stringBuilder.String()), nil
 }
 
 // handleLongviewClientGet gets details of a specific Longview client.
@@ -81,27 +81,27 @@ func (s *Service) handleLongviewClientGet(ctx context.Context, request mcp.CallT
 		Apps:    map[string]interface{}{}, // Apps field needs conversion
 	}
 
-	var sb strings.Builder
-	fmt.Fprintf(&sb, "Longview Client Details:\n")
-	fmt.Fprintf(&sb, "ID: %d\n", detail.ID)
-	fmt.Fprintf(&sb, "Label: %s\n", detail.Label)
-	fmt.Fprintf(&sb, "API Key: %s\n", detail.APIKey)
-	fmt.Fprintf(&sb, "Created: %s\n", detail.Created)
-	fmt.Fprintf(&sb, "Updated: %s\n", detail.Updated)
+	var stringBuilder strings.Builder
+	fmt.Fprintf(&stringBuilder, "Longview Client Details:\n")
+	fmt.Fprintf(&stringBuilder, "ID: %d\n", detail.ID)
+	fmt.Fprintf(&stringBuilder, "Label: %s\n", detail.Label)
+	fmt.Fprintf(&stringBuilder, "API Key: %s\n", detail.APIKey)
+	fmt.Fprintf(&stringBuilder, "Created: %s\n", detail.Created)
+	fmt.Fprintf(&stringBuilder, "Updated: %s\n", detail.Updated)
 
 	if len(detail.Apps) > 0 {
-		fmt.Fprintf(&sb, "\nMonitored Applications:\n")
+		fmt.Fprintf(&stringBuilder, "\nMonitored Applications:\n")
 		for app := range detail.Apps {
-			fmt.Fprintf(&sb, "  - %s\n", app)
+			fmt.Fprintf(&stringBuilder, "  - %s\n", app)
 		}
 	}
 
-	fmt.Fprintf(&sb, "\nInstallation Instructions:\n")
-	fmt.Fprintf(&sb, "1. Install the Longview client on your server\n")
-	fmt.Fprintf(&sb, "2. Configure the API key: %s\n", detail.APIKey)
-	fmt.Fprintf(&sb, "3. Monitor your system metrics in the Linode Cloud Manager\n")
+	fmt.Fprintf(&stringBuilder, "\nInstallation Instructions:\n")
+	fmt.Fprintf(&stringBuilder, "1. Install the Longview client on your server\n")
+	fmt.Fprintf(&stringBuilder, "2. Configure the API key: %s\n", detail.APIKey)
+	fmt.Fprintf(&stringBuilder, "3. Monitor your system metrics in the Linode Cloud Manager\n")
 
-	return mcp.NewToolResultText(sb.String()), nil
+	return mcp.NewToolResultText(stringBuilder.String()), nil
 }
 
 // handleLongviewClientCreate creates a new Longview client.
@@ -148,7 +148,7 @@ func (s *Service) handleLongviewClientUpdate(ctx context.Context, request mcp.Ca
 
 	updateOpts := linodego.LongviewClientUpdateOptions{}
 
-	if label, ok := arguments["label"].(string); ok && label != "" {
+	if label, labelExists := arguments["label"].(string); labelExists && label != "" {
 		updateOpts.Label = label
 	}
 

@@ -42,6 +42,7 @@ func (s *Service) handleCloudMCPAccountList(_ context.Context, _ mcp.CallToolReq
 	if err != nil {
 		// Fall back to current in-memory config
 		var result strings.Builder
+
 		result.WriteString(fmt.Sprintf("Current default account: %s\n\n", s.config.DefaultLinodeAccount))
 		result.WriteString("Configured accounts (from environment):\n")
 
@@ -68,6 +69,7 @@ func (s *Service) handleCloudMCPAccountList(_ context.Context, _ mcp.CallToolReq
 
 	// Format TOML configuration
 	var result strings.Builder
+
 	result.WriteString(fmt.Sprintf("Current default account: %s\n\n", tomlConfig.System.DefaultAccount))
 	result.WriteString("Configured accounts:\n")
 
@@ -102,9 +104,11 @@ func (s *Service) handleCloudMCPAccountAdd(ctx context.Context, request mcp.Call
 	if params.Name == "" {
 		return nil, types.NewToolError("cloudmcp", "account_add", "account name is required", nil) //nolint:wrapcheck // types.NewToolError already wraps the error
 	}
+
 	if params.Token == "" {
 		return nil, types.NewToolError("cloudmcp", "account_add", "account token is required", nil) //nolint:wrapcheck // types.NewToolError already wraps the error
 	}
+
 	if params.Label == "" {
 		return nil, types.NewToolError("cloudmcp", "account_add", "account label is required", nil) //nolint:wrapcheck // types.NewToolError already wraps the error
 	}
@@ -232,6 +236,7 @@ func (s *Service) handleCloudMCPAccountUpdate(ctx context.Context, request mcp.C
 	// Get current account configuration
 	currentConfig := configManager.GetConfig()
 	existingAccount, exists := currentConfig.Accounts[params.Name]
+
 	if !exists {
 		return nil, types.NewToolError("cloudmcp", "account_update", fmt.Sprintf("account '%s' does not exist", params.Name), nil) //nolint:wrapcheck // types.NewToolError already wraps the error
 	}
@@ -246,9 +251,11 @@ func (s *Service) handleCloudMCPAccountUpdate(ctx context.Context, request mcp.C
 	if params.Token != "" {
 		updatedAccount.Token = params.Token
 	}
+
 	if params.Label != "" {
 		updatedAccount.Label = params.Label
 	}
+
 	if params.APIURL != "" {
 		updatedAccount.APIURL = params.APIURL
 	}

@@ -102,15 +102,15 @@ func TestCapabilityValidation(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
 			// Basic validation - ensure required fields are present
-			require.NotEmpty(t, tt.capability.Name, "Capability name should not be empty")
-			require.NotEmpty(t, tt.capability.Description, "Capability description should not be empty")
-			require.NotEmpty(t, tt.capability.Version, "Capability version should not be empty")
-			require.NotEmpty(t, tt.capability.Category, "Capability category should not be empty")
+			require.NotEmpty(t, testCase.capability.Name, "Capability name should not be empty")
+			require.NotEmpty(t, testCase.capability.Description, "Capability description should not be empty")
+			require.NotEmpty(t, testCase.capability.Version, "Capability version should not be empty")
+			require.NotEmpty(t, testCase.capability.Category, "Capability category should not be empty")
 		})
 	}
 }
@@ -160,15 +160,15 @@ func TestProviderMetadataValidation(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
 			// Validate required fields
-			require.NotEmpty(t, tt.metadata.Name, "Provider name should not be empty")
-			require.NotEmpty(t, tt.metadata.DisplayName, "Provider display name should not be empty")
-			require.NotEmpty(t, tt.metadata.Version, "Provider version should not be empty")
-			require.NotEmpty(t, tt.metadata.Description, "Provider description should not be empty")
+			require.NotEmpty(t, testCase.metadata.Name, "Provider name should not be empty")
+			require.NotEmpty(t, testCase.metadata.DisplayName, "Provider display name should not be empty")
+			require.NotEmpty(t, testCase.metadata.Version, "Provider version should not be empty")
+			require.NotEmpty(t, testCase.metadata.Description, "Provider description should not be empty")
 		})
 	}
 }

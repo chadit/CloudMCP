@@ -31,7 +31,7 @@ func (s *Service) handleObjectStorageBucketsList(ctx context.Context, _ mcp.Call
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to list Object Storage buckets: %v", err)), nil
 	}
 
-	var summaries []ObjectStorageBucketSummary
+	summaries := make([]ObjectStorageBucketSummary, 0, len(buckets))
 
 	for _, bucket := range buckets {
 		summary := ObjectStorageBucketSummary{
@@ -47,9 +47,9 @@ func (s *Service) handleObjectStorageBucketsList(ctx context.Context, _ mcp.Call
 
 	// Remove unused result variable
 
-	var sb strings.Builder
+	var stringBuilder strings.Builder
 
-	sb.WriteString(fmt.Sprintf("Found %d Object Storage buckets:\n\n", len(summaries)))
+	stringBuilder.WriteString(fmt.Sprintf("Found %d Object Storage buckets:\n\n", len(summaries)))
 
 	for _, bucket := range summaries {
 		sizeDisplay := "0 bytes"
@@ -66,14 +66,14 @@ func (s *Service) handleObjectStorageBucketsList(ctx context.Context, _ mcp.Call
 			}
 		}
 
-		fmt.Fprintf(&sb, "Name: %s (%s)\n", bucket.Label, bucket.Region)
-		fmt.Fprintf(&sb, "  Hostname: %s\n", bucket.Hostname)
-		fmt.Fprintf(&sb, "  Size: %s | Objects: %d\n", sizeDisplay, bucket.Objects)
-		fmt.Fprintf(&sb, "  Created: %s\n", bucket.Created)
-		sb.WriteString("\n")
+		fmt.Fprintf(&stringBuilder, "Name: %s (%s)\n", bucket.Label, bucket.Region)
+		fmt.Fprintf(&stringBuilder, "  Hostname: %s\n", bucket.Hostname)
+		fmt.Fprintf(&stringBuilder, "  Size: %s | Objects: %d\n", sizeDisplay, bucket.Objects)
+		fmt.Fprintf(&stringBuilder, "  Created: %s\n", bucket.Created)
+		stringBuilder.WriteString("\n")
 	}
 
-	return mcp.NewToolResultText(sb.String()), nil
+	return mcp.NewToolResultText(stringBuilder.String()), nil
 }
 
 // handleObjectStorageBucketGet gets details of a specific Object Storage bucket.
@@ -102,13 +102,13 @@ func (s *Service) handleObjectStorageBucketGet(ctx context.Context, request mcp.
 		Objects:  bucket.Objects,
 	}
 
-	var sb strings.Builder
+	var stringBuilder strings.Builder
 
-	fmt.Fprintf(&sb, "Object Storage Bucket Details:\n")
-	fmt.Fprintf(&sb, "Name: %s\n", detail.Label)
-	fmt.Fprintf(&sb, "Region: %s\n", detail.Region)
-	fmt.Fprintf(&sb, "Hostname: %s\n", detail.Hostname)
-	fmt.Fprintf(&sb, "Created: %s\n", detail.Created)
+	fmt.Fprintf(&stringBuilder, "Object Storage Bucket Details:\n")
+	fmt.Fprintf(&stringBuilder, "Name: %s\n", detail.Label)
+	fmt.Fprintf(&stringBuilder, "Region: %s\n", detail.Region)
+	fmt.Fprintf(&stringBuilder, "Hostname: %s\n", detail.Hostname)
+	fmt.Fprintf(&stringBuilder, "Created: %s\n", detail.Created)
 
 	sizeDisplay := "0 bytes"
 
@@ -124,10 +124,10 @@ func (s *Service) handleObjectStorageBucketGet(ctx context.Context, request mcp.
 		}
 	}
 
-	fmt.Fprintf(&sb, "Size: %s\n", sizeDisplay)
-	fmt.Fprintf(&sb, "Objects: %d\n", detail.Objects)
+	fmt.Fprintf(&stringBuilder, "Size: %s\n", sizeDisplay)
+	fmt.Fprintf(&stringBuilder, "Objects: %d\n", detail.Objects)
 
-	return mcp.NewToolResultText(sb.String()), nil
+	return mcp.NewToolResultText(stringBuilder.String()), nil
 }
 
 // handleObjectStorageBucketCreate creates a new Object Storage bucket.
@@ -229,17 +229,18 @@ func (s *Service) handleObjectStorageKeysList(ctx context.Context, _ mcp.CallToo
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to list Object Storage keys: %v", err)), nil
 	}
 
-	var summaries []ObjectStorageKeySummary
+	summaries := make([]ObjectStorageKeySummary, 0, len(keys))
 
 	for _, key := range keys {
 		var bucketAccess []ObjectStorageBucketAccess
 
 		if key.BucketAccess != nil {
+			bucketAccess = make([]ObjectStorageBucketAccess, 0, len(*key.BucketAccess))
 			for _, access := range *key.BucketAccess {
 				bucketAccess = append(bucketAccess, ObjectStorageBucketAccess{
 					Region:      access.Region,
 					BucketName:  access.BucketName,
-					Permissions: string(access.Permissions),
+					Permissions: access.Permissions,
 				})
 			}
 		}
@@ -257,9 +258,9 @@ func (s *Service) handleObjectStorageKeysList(ctx context.Context, _ mcp.CallToo
 
 	// Remove unused result variable
 
-	var sb strings.Builder
+	var stringBuilder strings.Builder
 
-	sb.WriteString(fmt.Sprintf("Found %d Object Storage keys:\n\n", len(summaries)))
+	stringBuilder.WriteString(fmt.Sprintf("Found %d Object Storage keys:\n\n", len(summaries)))
 
 	for _, key := range summaries {
 		accessType := bucketAccessFull
@@ -267,21 +268,21 @@ func (s *Service) handleObjectStorageKeysList(ctx context.Context, _ mcp.CallToo
 			accessType = bucketAccessLimited
 		}
 
-		fmt.Fprintf(&sb, "ID: %d | %s (%s)\n", key.ID, key.Label, accessType)
-		fmt.Fprintf(&sb, "  Access Key: %s\n", key.AccessKey)
+		fmt.Fprintf(&stringBuilder, "ID: %d | %s (%s)\n", key.ID, key.Label, accessType)
+		fmt.Fprintf(&stringBuilder, "  Access Key: %s\n", key.AccessKey)
 
 		if key.Limited && len(key.BucketAccess) > 0 {
-			fmt.Fprintf(&sb, "  Bucket Access:\n")
+			fmt.Fprintf(&stringBuilder, "  Bucket Access:\n")
 
 			for _, access := range key.BucketAccess {
-				fmt.Fprintf(&sb, "    - %s/%s: %s\n", access.Region, access.BucketName, access.Permissions)
+				fmt.Fprintf(&stringBuilder, "    - %s/%s: %s\n", access.Region, access.BucketName, access.Permissions)
 			}
 		}
 
-		sb.WriteString("\n")
+		stringBuilder.WriteString("\n")
 	}
 
-	return mcp.NewToolResultText(sb.String()), nil
+	return mcp.NewToolResultText(stringBuilder.String()), nil
 }
 
 // handleObjectStorageKeyGet gets details of a specific Object Storage key.
@@ -304,11 +305,12 @@ func (s *Service) handleObjectStorageKeyGet(ctx context.Context, request mcp.Cal
 	var bucketAccess []ObjectStorageBucketAccess
 
 	if key.BucketAccess != nil {
+		bucketAccess = make([]ObjectStorageBucketAccess, 0, len(*key.BucketAccess))
 		for _, access := range *key.BucketAccess {
 			bucketAccess = append(bucketAccess, ObjectStorageBucketAccess{
 				Region:      access.Region,
 				BucketName:  access.BucketName,
-				Permissions: string(access.Permissions),
+				Permissions: access.Permissions,
 			})
 		}
 	}
@@ -322,33 +324,33 @@ func (s *Service) handleObjectStorageKeyGet(ctx context.Context, request mcp.Cal
 		BucketAccess: bucketAccess,
 	}
 
-	var sb strings.Builder
+	var stringBuilder strings.Builder
 
-	fmt.Fprintf(&sb, "Object Storage Key Details:\n")
-	fmt.Fprintf(&sb, "ID: %d\n", detail.ID)
-	fmt.Fprintf(&sb, "Label: %s\n", detail.Label)
-	fmt.Fprintf(&sb, "Access Key: %s\n", detail.AccessKey)
-	fmt.Fprintf(&sb, "Secret Key: %s\n", detail.SecretKey)
+	fmt.Fprintf(&stringBuilder, "Object Storage Key Details:\n")
+	fmt.Fprintf(&stringBuilder, "ID: %d\n", detail.ID)
+	fmt.Fprintf(&stringBuilder, "Label: %s\n", detail.Label)
+	fmt.Fprintf(&stringBuilder, "Access Key: %s\n", detail.AccessKey)
+	fmt.Fprintf(&stringBuilder, "Secret Key: %s\n", detail.SecretKey)
 
 	accessType := bucketAccessFull
 	if detail.Limited {
-		accessType = "Limited Access"
+		accessType = bucketAccessLimited
 	}
 
-	fmt.Fprintf(&sb, "Access Type: %s\n", accessType)
+	fmt.Fprintf(&stringBuilder, "Access Type: %s\n", accessType)
 
 	if detail.Limited && len(detail.BucketAccess) > 0 {
-		fmt.Fprintf(&sb, "\nBucket Access Permissions:\n")
+		fmt.Fprintf(&stringBuilder, "\nBucket Access Permissions:\n")
 
 		for _, access := range detail.BucketAccess {
-			fmt.Fprintf(&sb, "  - Region: %s\n", access.Region)
-			fmt.Fprintf(&sb, "    Bucket: %s\n", access.BucketName)
-			fmt.Fprintf(&sb, "    Permissions: %s\n", access.Permissions)
-			sb.WriteString("\n")
+			fmt.Fprintf(&stringBuilder, "  - Region: %s\n", access.Region)
+			fmt.Fprintf(&stringBuilder, "    Bucket: %s\n", access.BucketName)
+			fmt.Fprintf(&stringBuilder, "    Permissions: %s\n", access.Permissions)
+			stringBuilder.WriteString("\n")
 		}
 	}
 
-	return mcp.NewToolResultText(sb.String()), nil
+	return mcp.NewToolResultText(stringBuilder.String()), nil
 }
 
 // handleObjectStorageKeyCreate creates a new Object Storage key.
@@ -368,12 +370,12 @@ func (s *Service) handleObjectStorageKeyCreate(ctx context.Context, request mcp.
 	}
 
 	if len(params.BucketAccess) > 0 {
-		var bucketAccess []linodego.ObjectStorageKeyBucketAccess
+		bucketAccess := make([]linodego.ObjectStorageKeyBucketAccess, 0, len(params.BucketAccess))
 		for _, access := range params.BucketAccess {
 			bucketAccess = append(bucketAccess, linodego.ObjectStorageKeyBucketAccess{
 				Region:      access.Region,
 				BucketName:  access.BucketName,
-				Permissions: string(access.Permissions),
+				Permissions: access.Permissions,
 			})
 		}
 
@@ -387,7 +389,7 @@ func (s *Service) handleObjectStorageKeyCreate(ctx context.Context, request mcp.
 
 	accessType := bucketAccessFull
 	if key.Limited {
-		accessType = "Limited Access"
+		accessType = bucketAccessLimited
 	}
 
 	return mcp.NewToolResultText(fmt.Sprintf("Object Storage key created successfully:\nID: %d\nLabel: %s\nAccess Key: %s\nSecret Key: %s\nAccess Type: %s",
@@ -434,7 +436,7 @@ func (s *Service) handleObjectStorageKeyUpdate(ctx context.Context, request mcp.
 
 	accessType := bucketAccessFull
 	if key.Limited {
-		accessType = "Limited Access"
+		accessType = bucketAccessLimited
 	}
 
 	return mcp.NewToolResultText(fmt.Sprintf("Object Storage key updated successfully:\nID: %d\nLabel: %s\nAccess Type: %s",
@@ -473,13 +475,13 @@ func (s *Service) handleObjectStorageClustersList(ctx context.Context, _ mcp.Cal
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to list Object Storage clusters: %v", err)), nil
 	}
 
-	var summaries []ObjectStorageClusterSummary
+	summaries := make([]ObjectStorageClusterSummary, 0, len(clusters))
 
 	for _, cluster := range clusters {
 		summary := ObjectStorageClusterSummary{
 			ID:               cluster.ID,
 			Domain:           cluster.Domain,
-			Status:           string(cluster.Status),
+			Status:           cluster.Status,
 			Region:           cluster.Region,
 			StaticSiteDomain: cluster.StaticSiteDomain,
 		}
@@ -488,21 +490,21 @@ func (s *Service) handleObjectStorageClustersList(ctx context.Context, _ mcp.Cal
 
 	// Remove unused result variable
 
-	var sb strings.Builder
+	var stringBuilder strings.Builder
 
-	sb.WriteString(fmt.Sprintf("Found %d Object Storage clusters:\n\n", len(summaries)))
+	stringBuilder.WriteString(fmt.Sprintf("Found %d Object Storage clusters:\n\n", len(summaries)))
 
 	for _, cluster := range summaries {
-		fmt.Fprintf(&sb, "ID: %s | Region: %s\n", cluster.ID, cluster.Region)
-		fmt.Fprintf(&sb, "  Domain: %s\n", cluster.Domain)
-		fmt.Fprintf(&sb, "  Status: %s\n", cluster.Status)
+		fmt.Fprintf(&stringBuilder, "ID: %s | Region: %s\n", cluster.ID, cluster.Region)
+		fmt.Fprintf(&stringBuilder, "  Domain: %s\n", cluster.Domain)
+		fmt.Fprintf(&stringBuilder, "  Status: %s\n", cluster.Status)
 
 		if cluster.StaticSiteDomain != "" {
-			fmt.Fprintf(&sb, "  Static Site Domain: %s\n", cluster.StaticSiteDomain)
+			fmt.Fprintf(&stringBuilder, "  Static Site Domain: %s\n", cluster.StaticSiteDomain)
 		}
 
-		sb.WriteString("\n")
+		stringBuilder.WriteString("\n")
 	}
 
-	return mcp.NewToolResultText(sb.String()), nil
+	return mcp.NewToolResultText(stringBuilder.String()), nil
 }

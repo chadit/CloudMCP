@@ -3,7 +3,6 @@
 package linode_test
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -399,7 +398,7 @@ func createHTTPTestServiceForBenchmark(b *testing.B, mockAPIURL string) *linode.
 //	defer cleanup()
 //	// Run integration tests with service
 func SetupHTTPTestIntegration(t *testing.T) (*linode.Service, func()) {
-	ctx := context.Background()
+	ctx := t.Context()
 
 	server := MockLinodeAPIServer()
 
@@ -440,7 +439,7 @@ func TestHTTPServerInstancesListIntegration(t *testing.T) {
 	service, cleanup := SetupHTTPTestIntegration(t)
 	defer cleanup()
 
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_instances_list",
@@ -494,7 +493,7 @@ func TestHTTPServerInstanceGetIntegration(t *testing.T) {
 	service, cleanup := SetupHTTPTestIntegration(t)
 	defer cleanup()
 
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_instance_get",
@@ -556,7 +555,7 @@ func TestHTTPServerErrorHandlingIntegration(t *testing.T) {
 	service, cleanup := SetupHTTPTestIntegration(t)
 	defer cleanup()
 
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_instance_get",

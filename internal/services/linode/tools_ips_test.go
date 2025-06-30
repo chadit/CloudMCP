@@ -1,7 +1,6 @@
 package linode_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -31,6 +30,8 @@ import (
 // **Purpose**: This test ensures IPs list command fails appropriately when account configuration is invalid.
 // Note: Full integration testing with mock Linode client requires interface abstraction (future improvement).
 func TestHandleIPsList_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create minimal service with empty account manager
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -44,7 +45,7 @@ func TestHandleIPsList_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test IPs list request with empty account manager
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_ips_list",
@@ -74,6 +75,8 @@ func TestHandleIPsList_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleIPGet_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -87,7 +90,7 @@ func TestHandleIPGet_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test IP get request with no accounts and valid parameter
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_ip_get",
@@ -117,6 +120,8 @@ func TestHandleIPGet_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures IP get validates required parameters properly.
 func TestHandleIPGet_MissingParameter(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -134,7 +139,7 @@ func TestHandleIPGet_MissingParameter(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test IP get request with missing address parameter
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_ip_get",
@@ -170,6 +175,8 @@ func TestHandleIPGet_MissingParameter(t *testing.T) {
 //
 // **Purpose**: This test ensures IP get validates parameter content as well as presence.
 func TestHandleIPGet_EmptyParameter(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -187,7 +194,7 @@ func TestHandleIPGet_EmptyParameter(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test IP get request with empty address parameter
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_ip_get",
@@ -225,6 +232,8 @@ func TestHandleIPGet_EmptyParameter(t *testing.T) {
 //
 // **Purpose**: This test ensures IP get validates IP address format properly.
 func TestHandleIPGet_InvalidIPFormat(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -242,7 +251,7 @@ func TestHandleIPGet_InvalidIPFormat(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test IP get request with invalid IP address format
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_ip_get",
@@ -280,6 +289,8 @@ func TestHandleIPGet_InvalidIPFormat(t *testing.T) {
 //
 // **Purpose**: This test ensures IP get validates IP address format comprehensively.
 func TestHandleIPGet_InvalidIPFormat_Numbers(t *testing.T) {
+	t.Parallel()
+
 	// Create isolated test service
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -297,7 +308,7 @@ func TestHandleIPGet_InvalidIPFormat_Numbers(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test IP get request with invalid IP address format (numbers but invalid)
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_ip_get",
@@ -335,6 +346,8 @@ func TestHandleIPGet_InvalidIPFormat_Numbers(t *testing.T) {
 //
 // **Purpose**: This test ensures IP get IP format validation works correctly for IPv4 addresses.
 func TestHandleIPGet_ValidIPv4Format(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -349,7 +362,7 @@ func TestHandleIPGet_ValidIPv4Format(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test IP get request with valid IPv4 format but no account
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_ip_get",
@@ -381,6 +394,8 @@ func TestHandleIPGet_ValidIPv4Format(t *testing.T) {
 //
 // **Purpose**: This test ensures IP get IP format validation works correctly for IPv6 addresses.
 func TestHandleIPGet_ValidIPv6Format(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -395,7 +410,7 @@ func TestHandleIPGet_ValidIPv6Format(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test IP get request with valid IPv6 format but no account
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_ip_get",

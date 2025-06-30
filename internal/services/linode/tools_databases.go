@@ -49,6 +49,78 @@ var (
 	ErrFailedToListDatabaseTypes = errors.New("failed to list database types")
 )
 
+// createDatabaseResult creates a standardized database result.
+func createDatabaseResult(database interface{}) DatabaseResult {
+	switch databaseObj := database.(type) {
+	case *linodego.MySQLDatabase:
+		return DatabaseResult{
+			ID:     databaseObj.ID,
+			Label:  databaseObj.Label,
+			Status: string(databaseObj.Status),
+			Hosts: DatabaseHosts{
+				Primary:   databaseObj.Hosts.Primary,
+				Secondary: databaseObj.Hosts.Secondary,
+			},
+		}
+	case *linodego.PostgresDatabase:
+		return DatabaseResult{
+			ID:     databaseObj.ID,
+			Label:  databaseObj.Label,
+			Status: string(databaseObj.Status),
+			Hosts: DatabaseHosts{
+				Primary:   databaseObj.Hosts.Primary,
+				Secondary: databaseObj.Hosts.Secondary,
+			},
+		}
+	default:
+		return DatabaseResult{}
+	}
+}
+
+// formatMySQLDetail formats MySQL database details.
+func formatMySQLDetail(database *linodego.MySQLDatabase) MySQLDatabaseDetail {
+	return MySQLDatabaseDetail{
+		ID:          database.ID,
+		Label:       database.Label,
+		Engine:      database.Engine,
+		Version:     database.Version,
+		Region:      database.Region,
+		Type:        database.Type,
+		Status:      string(database.Status),
+		ClusterSize: database.ClusterSize,
+		Hosts: DatabaseHosts{
+			Primary:   database.Hosts.Primary,
+			Secondary: database.Hosts.Secondary,
+		},
+		Port:      database.Port,
+		AllowList: database.AllowList,
+		Created:   database.Created.Format(timeFormatLayout),
+		Updated:   database.Updated.Format(timeFormatLayout),
+	}
+}
+
+// formatPostgresDetail formats PostgreSQL database details.
+func formatPostgresDetail(database *linodego.PostgresDatabase) PostgresDatabaseDetail {
+	return PostgresDatabaseDetail{
+		ID:          database.ID,
+		Label:       database.Label,
+		Engine:      database.Engine,
+		Version:     database.Version,
+		Region:      database.Region,
+		Type:        database.Type,
+		Status:      string(database.Status),
+		ClusterSize: database.ClusterSize,
+		Hosts: DatabaseHosts{
+			Primary:   database.Hosts.Primary,
+			Secondary: database.Hosts.Secondary,
+		},
+		Port:      database.Port,
+		AllowList: database.AllowList,
+		Created:   database.Created.Format(timeFormatLayout),
+		Updated:   database.Updated.Format(timeFormatLayout),
+	}
+}
+
 // handleDatabasesList lists all databases (both MySQL and PostgreSQL).
 func (s *Service) handleDatabasesList(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	account, accountErr := s.accountManager.GetCurrentAccount()
@@ -131,24 +203,7 @@ func (s *Service) handleMySQLDatabasesList(ctx context.Context, _ mcp.CallToolRe
 		summaries = append(summaries, summary)
 	}
 
-	var stringBuilder strings.Builder
-
-	stringBuilder.WriteString(fmt.Sprintf("Found %d MySQL databases:\n\n", len(summaries)))
-
-	for _, database := range summaries {
-		fmt.Fprintf(&stringBuilder, "ID: %d | %s (MySQL %s)\n", database.ID, database.Label, database.Version)
-		fmt.Fprintf(&stringBuilder, "  Region: %s | Type: %s | Status: %s\n", database.Region, database.Type, database.Status)
-		fmt.Fprintf(&stringBuilder, "  Primary Host: %s | Port: %d\n", database.Hosts.Primary, database.Port)
-
-		if database.Hosts.Secondary != "" {
-			fmt.Fprintf(&stringBuilder, "  Secondary Host: %s\n", database.Hosts.Secondary)
-		}
-
-		fmt.Fprintf(&stringBuilder, "  Cluster Size: %d nodes | Updated: %s\n", database.ClusterSize, database.Updated)
-		stringBuilder.WriteString("\n")
-	}
-
-	return mcp.NewToolResultText(stringBuilder.String()), nil
+	return mcp.NewToolResultText(s.formatTypedDatabaseList("MySQL", summaries)), nil
 }
 
 // handlePostgresDatabasesList lists all PostgreSQL databases.
@@ -187,24 +242,122 @@ func (s *Service) handlePostgresDatabasesList(ctx context.Context, _ mcp.CallToo
 		summaries = append(summaries, summary)
 	}
 
+	return mcp.NewToolResultText(s.formatTypedDatabaseList("PostgreSQL", summaries)), nil
+}
+
+// TypedDatabaseSummary interface defines common methods for database summaries.
+type TypedDatabaseSummary interface {
+	GetID() int
+	GetLabel() string
+	GetEngine() string
+	GetVersion() string
+	GetRegion() string
+	GetType() string
+	GetStatus() string
+	GetClusterSize() int
+	GetHosts() DatabaseHosts
+	GetPort() int
+	GetUpdated() string
+}
+
+// GetID returns the database ID.
+func (d MySQLDatabaseSummary) GetID() int { return d.ID }
+
+// GetLabel returns the database label.
+func (d MySQLDatabaseSummary) GetLabel() string { return d.Label }
+
+// GetEngine returns the database engine.
+func (d MySQLDatabaseSummary) GetEngine() string { return d.Engine }
+
+// GetVersion returns the database version.
+func (d MySQLDatabaseSummary) GetVersion() string { return d.Version }
+
+// GetRegion returns the database region.
+func (d MySQLDatabaseSummary) GetRegion() string { return d.Region }
+
+// GetType returns the database type.
+func (d MySQLDatabaseSummary) GetType() string { return d.Type }
+
+// GetStatus returns the database status.
+func (d MySQLDatabaseSummary) GetStatus() string { return d.Status }
+
+// GetClusterSize returns the cluster size.
+func (d MySQLDatabaseSummary) GetClusterSize() int { return d.ClusterSize }
+
+// GetHosts returns the database hosts.
+func (d MySQLDatabaseSummary) GetHosts() DatabaseHosts { return d.Hosts }
+
+// GetPort returns the database port.
+func (d MySQLDatabaseSummary) GetPort() int { return d.Port }
+
+// GetUpdated returns the update time.
+func (d MySQLDatabaseSummary) GetUpdated() string { return d.Updated }
+
+// GetID returns the database ID.
+func (d PostgresDatabaseSummary) GetID() int { return d.ID }
+
+// GetLabel returns the database label.
+func (d PostgresDatabaseSummary) GetLabel() string { return d.Label }
+
+// GetEngine returns the database engine.
+func (d PostgresDatabaseSummary) GetEngine() string { return d.Engine }
+
+// GetVersion returns the database version.
+func (d PostgresDatabaseSummary) GetVersion() string { return d.Version }
+
+// GetRegion returns the database region.
+func (d PostgresDatabaseSummary) GetRegion() string { return d.Region }
+
+// GetType returns the database type.
+func (d PostgresDatabaseSummary) GetType() string { return d.Type }
+
+// GetStatus returns the database status.
+func (d PostgresDatabaseSummary) GetStatus() string { return d.Status }
+
+// GetClusterSize returns the cluster size.
+func (d PostgresDatabaseSummary) GetClusterSize() int { return d.ClusterSize }
+
+// GetHosts returns the database hosts.
+func (d PostgresDatabaseSummary) GetHosts() DatabaseHosts { return d.Hosts }
+
+// GetPort returns the database port.
+func (d PostgresDatabaseSummary) GetPort() int { return d.Port }
+
+// GetUpdated returns the update time.
+func (d PostgresDatabaseSummary) GetUpdated() string { return d.Updated }
+
+// formatMySQLDatabaseList formats MySQL database lists.
+func (s *Service) formatTypedDatabaseList(engineType string, summaries interface{}) string {
 	var stringBuilder strings.Builder
 
-	stringBuilder.WriteString(fmt.Sprintf("Found %d PostgreSQL databases:\n\n", len(summaries)))
-
-	for _, database := range summaries {
-		fmt.Fprintf(&stringBuilder, "ID: %d | %s (PostgreSQL %s)\n", database.ID, database.Label, database.Version)
-		fmt.Fprintf(&stringBuilder, "  Region: %s | Type: %s | Status: %s\n", database.Region, database.Type, database.Status)
-		fmt.Fprintf(&stringBuilder, "  Primary Host: %s | Port: %d\n", database.Hosts.Primary, database.Port)
-
-		if database.Hosts.Secondary != "" {
-			fmt.Fprintf(&stringBuilder, "  Secondary Host: %s\n", database.Hosts.Secondary)
+	switch dbSummaries := summaries.(type) {
+	case []MySQLDatabaseSummary:
+		stringBuilder.WriteString(fmt.Sprintf("Found %d %s databases:\n\n", len(dbSummaries), engineType))
+		for _, database := range dbSummaries {
+			s.formatSingleDatabaseSummary(&stringBuilder, database)
 		}
-
-		fmt.Fprintf(&stringBuilder, "  Cluster Size: %d nodes | Updated: %s\n", database.ClusterSize, database.Updated)
-		stringBuilder.WriteString("\n")
+	case []PostgresDatabaseSummary:
+		stringBuilder.WriteString(fmt.Sprintf("Found %d %s databases:\n\n", len(dbSummaries), engineType))
+		for _, database := range dbSummaries {
+			s.formatSingleDatabaseSummary(&stringBuilder, database)
+		}
 	}
 
-	return mcp.NewToolResultText(stringBuilder.String()), nil
+	return stringBuilder.String()
+}
+
+// formatSingleDatabaseSummary formats a single database summary entry.
+func (s *Service) formatSingleDatabaseSummary(stringBuilder *strings.Builder, database TypedDatabaseSummary) {
+	fmt.Fprintf(stringBuilder, "ID: %d | %s (%s %s)\n", database.GetID(), database.GetLabel(), database.GetEngine(), database.GetVersion())
+	fmt.Fprintf(stringBuilder, "  Region: %s | Type: %s | Status: %s\n", database.GetRegion(), database.GetType(), database.GetStatus())
+	fmt.Fprintf(stringBuilder, "  Primary Host: %s | Port: %d\n", database.GetHosts().Primary, database.GetPort())
+
+	if database.GetHosts().Secondary != "" {
+		fmt.Fprintf(stringBuilder, "  Secondary Host: %s\n", database.GetHosts().Secondary)
+	}
+
+	fmt.Fprintf(stringBuilder, "  Cluster Size: %d nodes | Updated: %s\n", database.GetClusterSize(), database.GetUpdated())
+	stringBuilder.WriteString("\n")
 }
 
 // formatDatabaseDetail formats database details in a standardized way.
@@ -353,24 +506,7 @@ func (s *Service) handleMySQLDatabaseGet(ctx context.Context, request mcp.CallTo
 			"failed to get MySQL database", databaseErr)
 	}
 
-	detail := MySQLDatabaseDetail{
-		ID:          database.ID,
-		Label:       database.Label,
-		Engine:      database.Engine,
-		Version:     database.Version,
-		Region:      database.Region,
-		Type:        database.Type,
-		Status:      string(database.Status),
-		ClusterSize: database.ClusterSize,
-		Hosts: DatabaseHosts{
-			Primary:   database.Hosts.Primary,
-			Secondary: database.Hosts.Secondary,
-		},
-		Port:      database.Port,
-		AllowList: database.AllowList,
-		Created:   database.Created.Format(timeFormatLayout),
-		Updated:   database.Updated.Format(timeFormatLayout),
-	}
+	detail := formatMySQLDetail(database)
 
 	return mcp.NewToolResultText(formatDatabaseDetail("MySQL", detail)), nil
 }
@@ -393,24 +529,7 @@ func (s *Service) handlePostgresDatabaseGet(ctx context.Context, request mcp.Cal
 			"failed to get PostgreSQL database", databaseErr)
 	}
 
-	detail := PostgresDatabaseDetail{
-		ID:          database.ID,
-		Label:       database.Label,
-		Engine:      database.Engine,
-		Version:     database.Version,
-		Region:      database.Region,
-		Type:        database.Type,
-		Status:      string(database.Status),
-		ClusterSize: database.ClusterSize,
-		Hosts: DatabaseHosts{
-			Primary:   database.Hosts.Primary,
-			Secondary: database.Hosts.Secondary,
-		},
-		Port:      database.Port,
-		AllowList: database.AllowList,
-		Created:   database.Created.Format(timeFormatLayout),
-		Updated:   database.Updated.Format(timeFormatLayout),
-	}
+	detail := formatPostgresDetail(database)
 
 	return mcp.NewToolResultText(formatDatabaseDetail("PostgreSQL", detail)), nil
 }
@@ -442,8 +561,7 @@ func (s *Service) handleMySQLDatabaseCreate(ctx context.Context, request mcp.Cal
 			"failed to create MySQL database", databaseErr)
 	}
 
-	return mcp.NewToolResultText(fmt.Sprintf("MySQL database created successfully:\nID: %d\nLabel: %s\nEngine: %s %s\nRegion: %s\nType: %s\nStatus: %s\nPrimary Host: %s\nPort: %d",
-		database.ID, database.Label, database.Engine, database.Version, database.Region, database.Type, database.Status, database.Hosts.Primary, database.Port)), nil
+	return mcp.NewToolResultText(s.formatDatabaseCreateResult("MySQL", database.ID, database.Label, database.Engine, database.Version, database.Region, database.Type, string(database.Status), database.Hosts.Primary, database.Port)), nil
 }
 
 // handlePostgresDatabaseCreate creates a new PostgreSQL database.
@@ -473,8 +591,30 @@ func (s *Service) handlePostgresDatabaseCreate(ctx context.Context, request mcp.
 			"failed to create PostgreSQL database", databaseErr)
 	}
 
-	return mcp.NewToolResultText(fmt.Sprintf("PostgreSQL database created successfully:\nID: %d\nLabel: %s\nEngine: %s %s\nRegion: %s\nType: %s\nStatus: %s\nPrimary Host: %s\nPort: %d",
-		database.ID, database.Label, database.Engine, database.Version, database.Region, database.Type, database.Status, database.Hosts.Primary, database.Port)), nil
+	return mcp.NewToolResultText(s.formatDatabaseCreateResult("PostgreSQL", database.ID, database.Label, database.Engine, database.Version, database.Region, database.Type, string(database.Status), database.Hosts.Primary, database.Port)), nil
+}
+
+// formatDatabaseCreateResult formats database creation result in a standardized way.
+func (s *Service) formatDatabaseCreateResult(engineType string, id int, label, engine, version, region, dbType, status, primaryHost string, port int) string {
+	return fmt.Sprintf("%s database created successfully:\nID: %d\nLabel: %s\nEngine: %s %s\nRegion: %s\nType: %s\nStatus: %s\nPrimary Host: %s\nPort: %d",
+		engineType, id, label, engine, version, region, dbType, status, primaryHost, port)
+}
+
+// formatResourceDeleteSuccess formats resource deletion success messages in a standardized way.
+func (s *Service) formatResourceDeleteSuccess(resourceType string, id int, label string, properties map[string]string, additionalMessage string) string {
+	var stringBuilder strings.Builder
+
+	fmt.Fprintf(&stringBuilder, "%s deleted successfully!\n\nDeleted %s:\n", resourceType, resourceType)
+	fmt.Fprintf(&stringBuilder, "- ID: %d\n", id)
+	fmt.Fprintf(&stringBuilder, "- Label: %s\n", label)
+
+	for key, value := range properties {
+		fmt.Fprintf(&stringBuilder, "- %s: %s\n", key, value)
+	}
+
+	fmt.Fprintf(&stringBuilder, "\n%s", additionalMessage)
+
+	return stringBuilder.String()
 }
 
 // formatDatabaseUpdateResult formats database update result in a standardized way.
@@ -522,11 +662,9 @@ func (s *Service) handleMySQLDatabaseUpdate(ctx context.Context, request mcp.Cal
 	}
 
 	updateOptions := linodego.MySQLUpdateOptions{}
-
 	if parameters.Label != "" {
 		updateOptions.Label = parameters.Label
 	}
-
 	if parameters.AllowList != nil {
 		updateOptions.AllowList = &parameters.AllowList
 	}
@@ -537,15 +675,7 @@ func (s *Service) handleMySQLDatabaseUpdate(ctx context.Context, request mcp.Cal
 			"failed to update MySQL database", databaseErr)
 	}
 
-	result := DatabaseResult{
-		ID:     database.ID,
-		Label:  database.Label,
-		Status: string(database.Status),
-		Hosts: DatabaseHosts{
-			Primary:   database.Hosts.Primary,
-			Secondary: database.Hosts.Secondary,
-		},
-	}
+	result := createDatabaseResult(database)
 
 	return mcp.NewToolResultText(formatDatabaseUpdateResult("MySQL", result)), nil
 }
@@ -563,11 +693,9 @@ func (s *Service) handlePostgresDatabaseUpdate(ctx context.Context, request mcp.
 	}
 
 	updateOptions := linodego.PostgresUpdateOptions{}
-
 	if parameters.Label != "" {
 		updateOptions.Label = parameters.Label
 	}
-
 	if parameters.AllowList != nil {
 		updateOptions.AllowList = &parameters.AllowList
 	}
@@ -578,15 +706,7 @@ func (s *Service) handlePostgresDatabaseUpdate(ctx context.Context, request mcp.
 			"failed to update PostgreSQL database", databaseErr)
 	}
 
-	result := DatabaseResult{
-		ID:     database.ID,
-		Label:  database.Label,
-		Status: string(database.Status),
-		Hosts: DatabaseHosts{
-			Primary:   database.Hosts.Primary,
-			Secondary: database.Hosts.Secondary,
-		},
-	}
+	result := createDatabaseResult(database)
 
 	return mcp.NewToolResultText(formatDatabaseUpdateResult("PostgreSQL", result)), nil
 }
@@ -633,6 +753,21 @@ func (s *Service) handlePostgresDatabaseDelete(ctx context.Context, request mcp.
 	return mcp.NewToolResultText(fmt.Sprintf("PostgreSQL database %d deleted successfully", parameters.DatabaseID)), nil
 }
 
+// formatDatabaseCredentials formats database credentials response with common text.
+func (s *Service) formatDatabaseCredentials(dbType string, databaseID int, username, password string) *mcp.CallToolResult {
+	var stringBuilder strings.Builder
+
+	fmt.Fprintf(&stringBuilder, "%s Database Credentials:\n", dbType)
+	fmt.Fprintf(&stringBuilder, "Username: %s\n", username)
+	fmt.Fprintf(&stringBuilder, "Password: %s\n", password)
+	fmt.Fprintf(&stringBuilder, "\nConnection Details:\n")
+	fmt.Fprintf(&stringBuilder, "These are the root credentials for database %d.\n", databaseID)
+	fmt.Fprintf(&stringBuilder, "Use these credentials to connect to your %s database.\n", dbType)
+	fmt.Fprintf(&stringBuilder, "\nSecurity Note: Store these credentials securely and limit access.")
+
+	return mcp.NewToolResultText(stringBuilder.String())
+}
+
 // handleMySQLDatabaseCredentials gets root credentials for a MySQL database.
 func (s *Service) handleMySQLDatabaseCredentials(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	var parameters MySQLDatabaseCredentialsParams
@@ -651,17 +786,7 @@ func (s *Service) handleMySQLDatabaseCredentials(ctx context.Context, request mc
 			"failed to get MySQL database credentials", credentialsErr)
 	}
 
-	var stringBuilder strings.Builder
-
-	fmt.Fprintf(&stringBuilder, "MySQL Database Credentials:\n")
-	fmt.Fprintf(&stringBuilder, "Username: %s\n", credentials.Username)
-	fmt.Fprintf(&stringBuilder, "Password: %s\n", credentials.Password)
-	fmt.Fprintf(&stringBuilder, "\nConnection Details:\n")
-	fmt.Fprintf(&stringBuilder, "These are the root credentials for database %d.\n", parameters.DatabaseID)
-	fmt.Fprintf(&stringBuilder, "Use these credentials to connect to your MySQL database.\n")
-	fmt.Fprintf(&stringBuilder, "\nSecurity Note: Store these credentials securely and limit access.")
-
-	return mcp.NewToolResultText(stringBuilder.String()), nil
+	return s.formatDatabaseCredentials("MySQL", parameters.DatabaseID, credentials.Username, credentials.Password), nil
 }
 
 // handlePostgresDatabaseCredentials gets root credentials for a PostgreSQL database.
@@ -682,17 +807,7 @@ func (s *Service) handlePostgresDatabaseCredentials(ctx context.Context, request
 			"failed to get PostgreSQL database credentials", credentialsErr)
 	}
 
-	var stringBuilder strings.Builder
-
-	fmt.Fprintf(&stringBuilder, "PostgreSQL Database Credentials:\n")
-	fmt.Fprintf(&stringBuilder, "Username: %s\n", credentials.Username)
-	fmt.Fprintf(&stringBuilder, "Password: %s\n", credentials.Password)
-	fmt.Fprintf(&stringBuilder, "\nConnection Details:\n")
-	fmt.Fprintf(&stringBuilder, "These are the root credentials for database %d.\n", parameters.DatabaseID)
-	fmt.Fprintf(&stringBuilder, "Use these credentials to connect to your PostgreSQL database.\n")
-	fmt.Fprintf(&stringBuilder, "\nSecurity Note: Store these credentials securely and limit access.")
-
-	return mcp.NewToolResultText(stringBuilder.String()), nil
+	return s.formatDatabaseCredentials("PostgreSQL", parameters.DatabaseID, credentials.Username, credentials.Password), nil
 }
 
 // handleMySQLDatabaseCredentialsReset resets root password for a MySQL database.

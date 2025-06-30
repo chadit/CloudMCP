@@ -1,7 +1,6 @@
 package linode_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -30,6 +29,8 @@ import (
 //
 // **Purpose**: This test ensures domains list command fails appropriately when account configuration is invalid.
 func TestHandleDomainsList_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create minimal service with empty account manager
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -43,7 +44,7 @@ func TestHandleDomainsList_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test domains list request with empty account manager
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name:      "linode_domains_list",
@@ -74,6 +75,8 @@ func TestHandleDomainsList_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleDomainGet_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -85,7 +88,7 @@ func TestHandleDomainGet_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test domain get request with no accounts and valid parameter
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_domain_get",
@@ -118,6 +121,8 @@ func TestHandleDomainGet_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures proper parameter validation before expensive API operations.
 func TestHandleDomainGet_ParameterValidation(t *testing.T) {
+	t.Parallel()
+
 	// Create service with valid account manager setup
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -137,7 +142,7 @@ func TestHandleDomainGet_ParameterValidation(t *testing.T) {
 
 	service := linode.NewForTesting(cfg, log, accountManager)
 
-	ctx := context.Background()
+	ctx := t.Context()
 
 	// Test missing domain_id parameter
 	request := mcp.CallToolRequest{
@@ -197,6 +202,8 @@ func TestHandleDomainGet_ParameterValidation(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleDomainCreate_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -208,7 +215,7 @@ func TestHandleDomainCreate_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test domain create request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_domain_create",
@@ -225,6 +232,7 @@ func TestHandleDomainCreate_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -247,6 +255,8 @@ func TestHandleDomainCreate_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleDomainUpdate_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -258,7 +268,7 @@ func TestHandleDomainUpdate_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test domain update request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_domain_update",
@@ -275,6 +285,7 @@ func TestHandleDomainUpdate_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -297,6 +308,8 @@ func TestHandleDomainUpdate_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleDomainDelete_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -308,7 +321,7 @@ func TestHandleDomainDelete_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test domain delete request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_domain_delete",
@@ -324,6 +337,7 @@ func TestHandleDomainDelete_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -346,6 +360,8 @@ func TestHandleDomainDelete_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleDomainRecordsList_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -357,7 +373,7 @@ func TestHandleDomainRecordsList_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test domain records list request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_domain_records_list",
@@ -373,6 +389,7 @@ func TestHandleDomainRecordsList_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -395,6 +412,8 @@ func TestHandleDomainRecordsList_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleDomainRecordGet_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -406,7 +425,7 @@ func TestHandleDomainRecordGet_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test domain record get request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_domain_record_get",
@@ -423,6 +442,7 @@ func TestHandleDomainRecordGet_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -445,6 +465,8 @@ func TestHandleDomainRecordGet_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleDomainRecordCreate_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -456,7 +478,7 @@ func TestHandleDomainRecordCreate_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test domain record create request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_domain_record_create",
@@ -475,6 +497,7 @@ func TestHandleDomainRecordCreate_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -497,6 +520,8 @@ func TestHandleDomainRecordCreate_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleDomainRecordUpdate_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -508,7 +533,7 @@ func TestHandleDomainRecordUpdate_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test domain record update request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_domain_record_update",
@@ -526,6 +551,7 @@ func TestHandleDomainRecordUpdate_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -548,6 +574,8 @@ func TestHandleDomainRecordUpdate_AccountError(t *testing.T) {
 //
 // **Purpose**: This test ensures robust error handling when account manager has no configured accounts.
 func TestHandleDomainRecordDelete_AccountError(t *testing.T) {
+	t.Parallel()
+
 	// Create service with completely empty account manager - no accounts at all
 	log := logger.New("debug")
 	cfg := &config.Config{
@@ -559,7 +587,7 @@ func TestHandleDomainRecordDelete_AccountError(t *testing.T) {
 	service := linode.NewForTesting(cfg, log, accountManager)
 
 	// Test domain record delete request with no accounts
-	ctx := context.Background()
+	ctx := t.Context()
 	request := mcp.CallToolRequest{
 		Params: mcp.CallToolParams{
 			Name: "linode_domain_record_delete",
@@ -576,6 +604,7 @@ func TestHandleDomainRecordDelete_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")

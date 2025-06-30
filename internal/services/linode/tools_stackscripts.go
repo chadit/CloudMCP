@@ -11,7 +11,7 @@ import (
 
 const (
 	// Maximum description length for display truncation.
-	maxDescriptionLength = 100
+	maxDescriptionLength  = 100
 	maxDescriptionDisplay = 97 // Length before adding "..."
 )
 
@@ -27,55 +27,55 @@ func (s *Service) handleStackScriptsList(ctx context.Context, _ mcp.CallToolRequ
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to list StackScripts: %v", err)), nil
 	}
 
-	var summaries []StackScriptSummary
-	for _, ss := range stackscripts {
+	summaries := make([]StackScriptSummary, 0, len(stackscripts))
+	for _, stackScript := range stackscripts {
 		summary := StackScriptSummary{
-			ID:                ss.ID,
-			Username:          ss.Username,
-			Label:             ss.Label,
-			Description:       ss.Description,
-			IsPublic:          ss.IsPublic,
-			Images:            ss.Images,
-			DeploymentsTotal:  ss.DeploymentsTotal,
-			DeploymentsActive: ss.DeploymentsActive,
-			UserGravatarID:    ss.UserGravatarID,
-			Created:           ss.Created.Format("2006-01-02T15:04:05"),
-			Updated:           ss.Updated.Format("2006-01-02T15:04:05"),
+			ID:                stackScript.ID,
+			Username:          stackScript.Username,
+			Label:             stackScript.Label,
+			Description:       stackScript.Description,
+			IsPublic:          stackScript.IsPublic,
+			Images:            stackScript.Images,
+			DeploymentsTotal:  stackScript.DeploymentsTotal,
+			DeploymentsActive: stackScript.DeploymentsActive,
+			UserGravatarID:    stackScript.UserGravatarID,
+			Created:           stackScript.Created.Format("2006-01-02T15:04:05"),
+			Updated:           stackScript.Updated.Format("2006-01-02T15:04:05"),
 		}
 		summaries = append(summaries, summary)
 	}
 
 	// Remove unused result variable
 
-	var sb strings.Builder
+	var stringBuilder strings.Builder
 
-	sb.WriteString(fmt.Sprintf("Found %d StackScripts:\n\n", len(summaries)))
+	stringBuilder.WriteString(fmt.Sprintf("Found %d StackScripts:\n\n", len(summaries)))
 
-	for _, ss := range summaries {
-		visibility := "Private"
-		if ss.IsPublic {
-			visibility = "Public"
+	for _, stackScript := range summaries {
+		visibility := visibilityPrivate
+		if stackScript.IsPublic {
+			visibility = visibilityPublic
 		}
 
-		fmt.Fprintf(&sb, "ID: %d | %s (%s)\n", ss.ID, ss.Label, visibility)
-		fmt.Fprintf(&sb, "  Author: %s\n", ss.Username)
+		fmt.Fprintf(&stringBuilder, "ID: %d | %s (%s)\n", stackScript.ID, stackScript.Label, visibility)
+		fmt.Fprintf(&stringBuilder, "  Author: %s\n", stackScript.Username)
 
-		if ss.Description != "" {
-			description := ss.Description
+		if stackScript.Description != "" {
+			description := stackScript.Description
 			if len(description) > maxDescriptionLength {
 				description = description[:maxDescriptionDisplay] + "..."
 			}
 
-			fmt.Fprintf(&sb, "  Description: %s\n", description)
+			fmt.Fprintf(&stringBuilder, "  Description: %s\n", description)
 		}
 
-		fmt.Fprintf(&sb, "  Compatible Images: %s\n", strings.Join(ss.Images, ", "))
-		fmt.Fprintf(&sb, "  Deployments: %d total, %d active\n", ss.DeploymentsTotal, ss.DeploymentsActive)
-		fmt.Fprintf(&sb, "  Updated: %s\n", ss.Updated)
-		sb.WriteString("\n")
+		fmt.Fprintf(&stringBuilder, "  Compatible Images: %s\n", strings.Join(stackScript.Images, ", "))
+		fmt.Fprintf(&stringBuilder, "  Deployments: %d total, %d active\n", stackScript.DeploymentsTotal, stackScript.DeploymentsActive)
+		fmt.Fprintf(&stringBuilder, "  Updated: %s\n", stackScript.Updated)
+		stringBuilder.WriteString("\n")
 	}
 
-	return mcp.NewToolResultText(sb.String()), nil
+	return mcp.NewToolResultText(stringBuilder.String()), nil
 }
 
 // handleStackScriptGet gets details of a specific StackScript.
@@ -90,15 +90,16 @@ func (s *Service) handleStackScriptGet(ctx context.Context, request mcp.CallTool
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	ss, err := account.Client.GetStackscript(ctx, params.StackScriptID)
+	stackScript, err := account.Client.GetStackscript(ctx, params.StackScriptID)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get StackScript: %v", err)), nil
 	}
 
 	var udfs []StackScriptUserDefinedField
 
-	if ss.UserDefinedFields != nil {
-		for _, udf := range *ss.UserDefinedFields {
+	if stackScript.UserDefinedFields != nil {
+		udfs = make([]StackScriptUserDefinedField, 0, len(*stackScript.UserDefinedFields))
+		for _, udf := range *stackScript.UserDefinedFields {
 			udfs = append(udfs, StackScriptUserDefinedField{
 				Name:    udf.Name,
 				Label:   udf.Label,
@@ -111,35 +112,35 @@ func (s *Service) handleStackScriptGet(ctx context.Context, request mcp.CallTool
 	}
 
 	detail := StackScriptDetail{
-		ID:                ss.ID,
-		Username:          ss.Username,
-		Label:             ss.Label,
-		Description:       ss.Description,
-		Ordinal:           ss.Ordinal,
-		LogoURL:           ss.LogoURL,
-		Images:            ss.Images,
-		DeploymentsTotal:  ss.DeploymentsTotal,
-		DeploymentsActive: ss.DeploymentsActive,
-		IsPublic:          ss.IsPublic,
-		Mine:              ss.Mine,
-		Created:           ss.Created.Format("2006-01-02T15:04:05"),
-		Updated:           ss.Updated.Format("2006-01-02T15:04:05"),
-		RevNote:           ss.RevNote,
-		Script:            ss.Script,
+		ID:                stackScript.ID,
+		Username:          stackScript.Username,
+		Label:             stackScript.Label,
+		Description:       stackScript.Description,
+		Ordinal:           stackScript.Ordinal,
+		LogoURL:           stackScript.LogoURL,
+		Images:            stackScript.Images,
+		DeploymentsTotal:  stackScript.DeploymentsTotal,
+		DeploymentsActive: stackScript.DeploymentsActive,
+		IsPublic:          stackScript.IsPublic,
+		Mine:              stackScript.Mine,
+		Created:           stackScript.Created.Format("2006-01-02T15:04:05"),
+		Updated:           stackScript.Updated.Format("2006-01-02T15:04:05"),
+		RevNote:           stackScript.RevNote,
+		Script:            stackScript.Script,
 		UserDefinedFields: udfs,
-		UserGravatarID:    ss.UserGravatarID,
+		UserGravatarID:    stackScript.UserGravatarID,
 	}
 
-	var sb strings.Builder
+	var stringBuilder strings.Builder
 
-	fmt.Fprintf(&sb, "StackScript Details:\n")
-	fmt.Fprintf(&sb, "ID: %d\n", detail.ID)
-	fmt.Fprintf(&sb, "Label: %s\n", detail.Label)
-	fmt.Fprintf(&sb, "Author: %s\n", detail.Username)
+	fmt.Fprintf(&stringBuilder, "StackScript Details:\n")
+	fmt.Fprintf(&stringBuilder, "ID: %d\n", detail.ID)
+	fmt.Fprintf(&stringBuilder, "Label: %s\n", detail.Label)
+	fmt.Fprintf(&stringBuilder, "Author: %s\n", detail.Username)
 
-	visibility := "Private"
+	visibility := visibilityPrivate
 	if detail.IsPublic {
-		visibility = "Public"
+		visibility = visibilityPublic
 	}
 
 	ownership := ""
@@ -147,50 +148,50 @@ func (s *Service) handleStackScriptGet(ctx context.Context, request mcp.CallTool
 		ownership = " (Mine)"
 	}
 
-	fmt.Fprintf(&sb, "Visibility: %s%s\n", visibility, ownership)
+	fmt.Fprintf(&stringBuilder, "Visibility: %s%s\n", visibility, ownership)
 
 	if detail.Description != "" {
-		fmt.Fprintf(&sb, "Description: %s\n", detail.Description)
+		fmt.Fprintf(&stringBuilder, "Description: %s\n", detail.Description)
 	}
 
 	if detail.RevNote != "" {
-		fmt.Fprintf(&sb, "Revision Note: %s\n", detail.RevNote)
+		fmt.Fprintf(&stringBuilder, "Revision Note: %s\n", detail.RevNote)
 	}
 
-	fmt.Fprintf(&sb, "Compatible Images: %s\n", strings.Join(detail.Images, ", "))
-	fmt.Fprintf(&sb, "Deployments: %d total, %d active\n", detail.DeploymentsTotal, detail.DeploymentsActive)
-	fmt.Fprintf(&sb, "Created: %s\n", detail.Created)
-	fmt.Fprintf(&sb, "Updated: %s\n\n", detail.Updated)
+	fmt.Fprintf(&stringBuilder, "Compatible Images: %s\n", strings.Join(detail.Images, ", "))
+	fmt.Fprintf(&stringBuilder, "Deployments: %d total, %d active\n", detail.DeploymentsTotal, detail.DeploymentsActive)
+	fmt.Fprintf(&stringBuilder, "Created: %s\n", detail.Created)
+	fmt.Fprintf(&stringBuilder, "Updated: %s\n\n", detail.Updated)
 
 	if len(detail.UserDefinedFields) > 0 {
-		fmt.Fprintf(&sb, "User-Defined Fields:\n")
+		fmt.Fprintf(&stringBuilder, "User-Defined Fields:\n")
 
 		for _, udf := range detail.UserDefinedFields {
-			fmt.Fprintf(&sb, "  - %s (%s)\n", udf.Name, udf.Label)
+			fmt.Fprintf(&stringBuilder, "  - %s (%s)\n", udf.Name, udf.Label)
 			if udf.Default != "" {
-				fmt.Fprintf(&sb, "    Default: %s\n", udf.Default)
+				fmt.Fprintf(&stringBuilder, "    Default: %s\n", udf.Default)
 			}
 
 			if udf.Example != "" {
-				fmt.Fprintf(&sb, "    Example: %s\n", udf.Example)
+				fmt.Fprintf(&stringBuilder, "    Example: %s\n", udf.Example)
 			}
 
 			if udf.OneOf != "" {
-				fmt.Fprintf(&sb, "    Options: %s\n", udf.OneOf)
+				fmt.Fprintf(&stringBuilder, "    Options: %s\n", udf.OneOf)
 			}
 
 			if udf.ManyOf != "" {
-				fmt.Fprintf(&sb, "    Multiple Options: %s\n", udf.ManyOf)
+				fmt.Fprintf(&stringBuilder, "    Multiple Options: %s\n", udf.ManyOf)
 			}
 		}
 
-		sb.WriteString("\n")
+		stringBuilder.WriteString("\n")
 	}
 
-	fmt.Fprintf(&sb, "Script Content:\n")
-	fmt.Fprintf(&sb, "```bash\n%s\n```\n", detail.Script)
+	fmt.Fprintf(&stringBuilder, "Script Content:\n")
+	fmt.Fprintf(&stringBuilder, "```bash\n%s\n```\n", detail.Script)
 
-	return mcp.NewToolResultText(sb.String()), nil
+	return mcp.NewToolResultText(stringBuilder.String()), nil
 }
 
 // handleStackScriptCreate creates a new StackScript.
@@ -214,18 +215,18 @@ func (s *Service) handleStackScriptCreate(ctx context.Context, request mcp.CallT
 		RevNote:     params.RevNote,
 	}
 
-	ss, err := account.Client.CreateStackscript(ctx, createOpts)
+	stackScript, err := account.Client.CreateStackscript(ctx, createOpts)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to create StackScript: %v", err)), nil
 	}
 
-	visibility := "Private"
-	if ss.IsPublic {
-		visibility = "Public"
+	visibility := visibilityPrivate
+	if stackScript.IsPublic {
+		visibility = visibilityPublic
 	}
 
 	return mcp.NewToolResultText(fmt.Sprintf("StackScript created successfully:\nID: %d\nLabel: %s\nVisibility: %s\nCompatible Images: %s",
-		ss.ID, ss.Label, visibility, strings.Join(ss.Images, ", "))), nil
+		stackScript.ID, stackScript.Label, visibility, strings.Join(stackScript.Images, ", "))), nil
 }
 
 // handleStackScriptUpdate updates an existing StackScript.
@@ -266,18 +267,18 @@ func (s *Service) handleStackScriptUpdate(ctx context.Context, request mcp.CallT
 		updateOpts.RevNote = params.RevNote
 	}
 
-	ss, err := account.Client.UpdateStackscript(ctx, params.StackScriptID, updateOpts)
+	stackScript, err := account.Client.UpdateStackscript(ctx, params.StackScriptID, updateOpts)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to update StackScript: %v", err)), nil
 	}
 
-	visibility := "Private"
-	if ss.IsPublic {
-		visibility = "Public"
+	visibility := visibilityPrivate
+	if stackScript.IsPublic {
+		visibility = visibilityPublic
 	}
 
 	return mcp.NewToolResultText(fmt.Sprintf("StackScript updated successfully:\nID: %d\nLabel: %s\nVisibility: %s\nCompatible Images: %s",
-		ss.ID, ss.Label, visibility, strings.Join(ss.Images, ", "))), nil
+		stackScript.ID, stackScript.Label, visibility, strings.Join(stackScript.Images, ", "))), nil
 }
 
 // handleStackScriptDelete deletes a StackScript.

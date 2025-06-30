@@ -13,6 +13,7 @@ import (
 
 func TestGet_DefaultValues(t *testing.T) {
 	t.Parallel()
+
 	info := version.Get()
 
 	// Test required fields are not empty
@@ -70,6 +71,7 @@ func TestGet_Features(t *testing.T) {
 
 func TestInfo_String(t *testing.T) {
 	t.Parallel()
+
 	info := version.Get()
 	str := info.String()
 
@@ -87,6 +89,7 @@ func TestInfo_String(t *testing.T) {
 
 func TestInfo_BuildInfo(t *testing.T) {
 	t.Parallel()
+
 	info := version.Get()
 	buildInfo := info.BuildInfo()
 
@@ -108,6 +111,7 @@ func TestInfo_BuildInfo(t *testing.T) {
 
 func TestInfo_JSONSerialization(t *testing.T) {
 	t.Parallel()
+
 	info := version.Get()
 
 	// Test that version.Info can be serialized to JSON
@@ -133,6 +137,7 @@ func TestInfo_JSONSerialization(t *testing.T) {
 
 func TestInfo_JSONStructure(t *testing.T) {
 	t.Parallel()
+
 	info := version.Get()
 
 	jsonData, err := json.Marshal(info)
@@ -173,6 +178,7 @@ func TestConstants(t *testing.T) {
 
 func TestInfo_StringFormat(t *testing.T) {
 	t.Parallel()
+
 	info := version.Get()
 	str := info.String()
 
@@ -183,6 +189,7 @@ func TestInfo_StringFormat(t *testing.T) {
 
 func TestInfo_BuildInfoFormat(t *testing.T) {
 	t.Parallel()
+
 	info := version.Get()
 	buildInfo := info.BuildInfo()
 

@@ -21,14 +21,15 @@ func (s *Service) handleFirewallsList(ctx context.Context, _ mcp.CallToolRequest
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to list firewalls: %v", err)), nil
 	}
 
-	var summaries []FirewallSummary
-	for _, fw := range firewalls {
+	summaries := make([]FirewallSummary, 0, len(firewalls))
 
+	for _, firewall := range firewalls {
 		// Convert rules
-		var inboundRules []FirewallRule
-		var outboundRules []FirewallRule
+		inboundRules := make([]FirewallRule, 0, len(firewall.Rules.Inbound))
 
-		for _, rule := range fw.Rules.Inbound {
+		outboundRules := make([]FirewallRule, 0, len(firewall.Rules.Outbound))
+
+		for _, rule := range firewall.Rules.Inbound {
 			inboundRules = append(inboundRules, FirewallRule{
 				Ports:       rule.Ports,
 				Protocol:    string(rule.Protocol),
@@ -42,7 +43,7 @@ func (s *Service) handleFirewallsList(ctx context.Context, _ mcp.CallToolRequest
 			})
 		}
 
-		for _, rule := range fw.Rules.Outbound {
+		for _, rule := range firewall.Rules.Outbound {
 			outboundRules = append(outboundRules, FirewallRule{
 				Ports:       rule.Ports,
 				Protocol:    string(rule.Protocol),
@@ -57,51 +58,55 @@ func (s *Service) handleFirewallsList(ctx context.Context, _ mcp.CallToolRequest
 		}
 
 		summary := FirewallSummary{
-			ID:     fw.ID,
-			Label:  fw.Label,
-			Status: string(fw.Status),
-			Tags:   fw.Tags,
+			ID:     firewall.ID,
+			Label:  firewall.Label,
+			Status: string(firewall.Status),
+			Tags:   firewall.Tags,
 			Rules: FirewallRuleSet{
 				Inbound:        inboundRules,
-				InboundPolicy:  string(fw.Rules.InboundPolicy),
+				InboundPolicy:  string(firewall.Rules.InboundPolicy),
 				Outbound:       outboundRules,
-				OutboundPolicy: fw.Rules.OutboundPolicy,
+				OutboundPolicy: firewall.Rules.OutboundPolicy,
 			},
 			Devices: []FirewallDevice{}, // Empty slice - devices need to be fetched separately
-			Created: fw.Created.Format("2006-01-02T15:04:05"),
-			Updated: fw.Updated.Format("2006-01-02T15:04:05"),
+			Created: firewall.Created.Format("2006-01-02T15:04:05"),
+			Updated: firewall.Updated.Format("2006-01-02T15:04:05"),
 		}
 		summaries = append(summaries, summary)
 	}
 
-	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Found %d firewalls:\n\n", len(summaries)))
+	var stringBuilder strings.Builder
 
-	for _, fw := range summaries {
+	stringBuilder.WriteString(fmt.Sprintf("Found %d firewalls:\n\n", len(summaries)))
+
+	for _, firewall := range summaries {
 		var devicesList strings.Builder
-		for i, device := range fw.Devices {
-			if i > 0 {
+
+		for deviceIndex, device := range firewall.Devices {
+			if deviceIndex > 0 {
 				devicesList.WriteString(", ")
 			}
+
 			fmt.Fprintf(&devicesList, "%s:%d", device.Type, device.ID)
 		}
 
-		fmt.Fprintf(&sb, "ID: %d | %s (%s)\n", fw.ID, fw.Label, fw.Status)
-		fmt.Fprintf(&sb, "  Rules: %d inbound, %d outbound\n", len(fw.Rules.Inbound), len(fw.Rules.Outbound))
-		fmt.Fprintf(&sb, "  Devices: %s\n", devicesList.String())
-		if len(fw.Tags) > 0 {
-			fmt.Fprintf(&sb, "  Tags: %s\n", strings.Join(fw.Tags, ", "))
+		fmt.Fprintf(&stringBuilder, "ID: %d | %s (%s)\n", firewall.ID, firewall.Label, firewall.Status)
+		fmt.Fprintf(&stringBuilder, "  Rules: %d inbound, %d outbound\n", len(firewall.Rules.Inbound), len(firewall.Rules.Outbound))
+		fmt.Fprintf(&stringBuilder, "  Devices: %s\n", devicesList.String())
+		if len(firewall.Tags) > 0 {
+			fmt.Fprintf(&stringBuilder, "  Tags: %s\n", strings.Join(firewall.Tags, ", "))
 		}
-		sb.WriteString("\n")
+
+		stringBuilder.WriteString("\n")
 	}
 
-	return mcp.NewToolResultText(sb.String()), nil
+	return mcp.NewToolResultText(stringBuilder.String()), nil
 }
 
 // handleFirewallGet gets details of a specific firewall.
 func (s *Service) handleFirewallGet(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	arguments, ok := request.Params.Arguments.(map[string]interface{})
-	if !ok {
+	arguments, argumentsValid := request.Params.Arguments.(map[string]interface{})
+	if !argumentsValid {
 		return mcp.NewToolResultError("Invalid arguments format"), nil
 	}
 
@@ -115,7 +120,7 @@ func (s *Service) handleFirewallGet(ctx context.Context, request mcp.CallToolReq
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	fw, err := account.Client.GetFirewall(ctx, firewallID)
+	firewall, err := account.Client.GetFirewall(ctx, firewallID)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to get firewall: %v", err)), nil
 	}
@@ -124,10 +129,11 @@ func (s *Service) handleFirewallGet(ctx context.Context, request mcp.CallToolReq
 	devices := []FirewallDevice{}
 
 	// Convert rules
-	var inboundRules []FirewallRule
-	var outboundRules []FirewallRule
+	inboundRules := make([]FirewallRule, 0, len(firewall.Rules.Inbound))
 
-	for _, rule := range fw.Rules.Inbound {
+	outboundRules := make([]FirewallRule, 0, len(firewall.Rules.Outbound))
+
+	for _, rule := range firewall.Rules.Inbound {
 		inboundRules = append(inboundRules, FirewallRule{
 			Ports:       rule.Ports,
 			Protocol:    string(rule.Protocol),
@@ -141,7 +147,7 @@ func (s *Service) handleFirewallGet(ctx context.Context, request mcp.CallToolReq
 		})
 	}
 
-	for _, rule := range fw.Rules.Outbound {
+	for _, rule := range firewall.Rules.Outbound {
 		outboundRules = append(outboundRules, FirewallRule{
 			Ports:       rule.Ports,
 			Protocol:    string(rule.Protocol),
@@ -156,63 +162,65 @@ func (s *Service) handleFirewallGet(ctx context.Context, request mcp.CallToolReq
 	}
 
 	detail := FirewallDetail{
-		ID:     fw.ID,
-		Label:  fw.Label,
-		Status: string(fw.Status),
-		Tags:   fw.Tags,
+		ID:     firewall.ID,
+		Label:  firewall.Label,
+		Status: string(firewall.Status),
+		Tags:   firewall.Tags,
 		Rules: FirewallRuleSet{
 			Inbound:        inboundRules,
-			InboundPolicy:  string(fw.Rules.InboundPolicy),
+			InboundPolicy:  string(firewall.Rules.InboundPolicy),
 			Outbound:       outboundRules,
-			OutboundPolicy: string(fw.Rules.OutboundPolicy),
+			OutboundPolicy: string(firewall.Rules.OutboundPolicy),
 		},
 		Devices: devices,
-		Created: fw.Created.Format("2006-01-02T15:04:05"),
-		Updated: fw.Updated.Format("2006-01-02T15:04:05"),
+		Created: firewall.Created.Format("2006-01-02T15:04:05"),
+		Updated: firewall.Updated.Format("2006-01-02T15:04:05"),
 	}
 
-	var sb strings.Builder
-	fmt.Fprintf(&sb, "Firewall Details:\n")
-	fmt.Fprintf(&sb, "ID: %d\n", detail.ID)
-	fmt.Fprintf(&sb, "Label: %s\n", detail.Label)
-	fmt.Fprintf(&sb, "Status: %s\n", detail.Status)
-	fmt.Fprintf(&sb, "Created: %s\n", detail.Created)
-	fmt.Fprintf(&sb, "Updated: %s\n\n", detail.Updated)
+	var stringBuilder strings.Builder
+
+	fmt.Fprintf(&stringBuilder, "Firewall Details:\n")
+	fmt.Fprintf(&stringBuilder, "ID: %d\n", detail.ID)
+	fmt.Fprintf(&stringBuilder, "Label: %s\n", detail.Label)
+	fmt.Fprintf(&stringBuilder, "Status: %s\n", detail.Status)
+	fmt.Fprintf(&stringBuilder, "Created: %s\n", detail.Created)
+	fmt.Fprintf(&stringBuilder, "Updated: %s\n\n", detail.Updated)
 
 	if len(detail.Tags) > 0 {
-		fmt.Fprintf(&sb, "Tags: %s\n\n", strings.Join(detail.Tags, ", "))
+		fmt.Fprintf(&stringBuilder, "Tags: %s\n\n", strings.Join(detail.Tags, ", "))
 	}
 
-	fmt.Fprintf(&sb, "Inbound Rules (Policy: %s):\n", detail.Rules.InboundPolicy)
-	for i, rule := range detail.Rules.Inbound {
-		fmt.Fprintf(&sb, "  %d. %s %s:%s -> %s\n", i+1, rule.Action, rule.Protocol, rule.Ports, strings.Join(rule.Addresses.IPv4, ", "))
+	fmt.Fprintf(&stringBuilder, "Inbound Rules (Policy: %s):\n", detail.Rules.InboundPolicy)
+	for ruleIndex, rule := range detail.Rules.Inbound {
+		fmt.Fprintf(&stringBuilder, "  %d. %s %s:%s -> %s\n", ruleIndex+1, rule.Action, rule.Protocol, rule.Ports, strings.Join(rule.Addresses.IPv4, ", "))
 		if rule.Label != "" {
-			fmt.Fprintf(&sb, "     Label: %s\n", rule.Label)
+			fmt.Fprintf(&stringBuilder, "     Label: %s\n", rule.Label)
 		}
 		if rule.Description != "" {
-			fmt.Fprintf(&sb, "     Description: %s\n", rule.Description)
+			fmt.Fprintf(&stringBuilder, "     Description: %s\n", rule.Description)
 		}
 	}
 
-	fmt.Fprintf(&sb, "\nOutbound Rules (Policy: %s):\n", detail.Rules.OutboundPolicy)
-	for i, rule := range detail.Rules.Outbound {
-		fmt.Fprintf(&sb, "  %d. %s %s:%s -> %s\n", i+1, rule.Action, rule.Protocol, rule.Ports, strings.Join(rule.Addresses.IPv4, ", "))
+	fmt.Fprintf(&stringBuilder, "\nOutbound Rules (Policy: %s):\n", detail.Rules.OutboundPolicy)
+	for ruleIndex, rule := range detail.Rules.Outbound {
+		fmt.Fprintf(&stringBuilder, "  %d. %s %s:%s -> %s\n", ruleIndex+1, rule.Action, rule.Protocol, rule.Ports, strings.Join(rule.Addresses.IPv4, ", "))
 		if rule.Label != "" {
-			fmt.Fprintf(&sb, "     Label: %s\n", rule.Label)
+			fmt.Fprintf(&stringBuilder, "     Label: %s\n", rule.Label)
 		}
 		if rule.Description != "" {
-			fmt.Fprintf(&sb, "     Description: %s\n", rule.Description)
+			fmt.Fprintf(&stringBuilder, "     Description: %s\n", rule.Description)
 		}
 	}
 
 	if len(detail.Devices) > 0 {
-		fmt.Fprintf(&sb, "\nAssigned Devices:\n")
+		fmt.Fprintf(&stringBuilder, "\nAssigned Devices:\n")
+
 		for _, device := range detail.Devices {
-			fmt.Fprintf(&sb, "  - %s: %s (ID: %d)\n", device.Type, device.Label, device.ID)
+			fmt.Fprintf(&stringBuilder, "  - %s: %s (ID: %d)\n", device.Type, device.Label, device.ID)
 		}
 	}
 
-	return mcp.NewToolResultText(sb.String()), nil
+	return mcp.NewToolResultText(stringBuilder.String()), nil
 }
 
 // handleFirewallCreate creates a new firewall.
@@ -228,8 +236,8 @@ func (s *Service) handleFirewallCreate(ctx context.Context, request mcp.CallTool
 	}
 
 	// Convert rules to linodego format
-	var inboundRules []linodego.FirewallRule
-	var outboundRules []linodego.FirewallRule
+	inboundRules := make([]linodego.FirewallRule, 0, len(params.Rules.Inbound))
+	outboundRules := make([]linodego.FirewallRule, 0, len(params.Rules.Outbound))
 
 	for _, rule := range params.Rules.Inbound {
 		inboundRules = append(inboundRules, linodego.FirewallRule{
@@ -270,18 +278,18 @@ func (s *Service) handleFirewallCreate(ctx context.Context, request mcp.CallTool
 		Tags: params.Tags,
 	}
 
-	fw, err := account.Client.CreateFirewall(ctx, createOpts)
+	firewall, err := account.Client.CreateFirewall(ctx, createOpts)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to create firewall: %v", err)), nil
 	}
 
-	return mcp.NewToolResultText(fmt.Sprintf("Firewall created successfully:\nID: %d\nLabel: %s\nStatus: %s", fw.ID, fw.Label, fw.Status)), nil
+	return mcp.NewToolResultText(fmt.Sprintf("Firewall created successfully:\nID: %d\nLabel: %s\nStatus: %s", firewall.ID, firewall.Label, firewall.Status)), nil
 }
 
 // handleFirewallUpdate updates an existing firewall.
 func (s *Service) handleFirewallUpdate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	arguments, ok := request.Params.Arguments.(map[string]interface{})
-	if !ok {
+	arguments, argumentsValid := request.Params.Arguments.(map[string]interface{})
+	if !argumentsValid {
 		return mcp.NewToolResultError("Invalid arguments format"), nil
 	}
 
@@ -297,33 +305,34 @@ func (s *Service) handleFirewallUpdate(ctx context.Context, request mcp.CallTool
 
 	// Parse additional update parameters
 	updateOpts := linodego.FirewallUpdateOptions{}
-	if label, ok := arguments["label"].(string); ok && label != "" {
+	if label, labelExists := arguments["label"].(string); labelExists && label != "" {
 		updateOpts.Label = label
 	}
-	if tagsRaw, ok := arguments["tags"]; ok {
-		if tagsSlice, ok := tagsRaw.([]interface{}); ok {
+	if tagsRaw, tagsExists := arguments["tags"]; tagsExists {
+		if tagsSlice, tagsSliceValid := tagsRaw.([]interface{}); tagsSliceValid {
 			tags := make([]string, len(tagsSlice))
-			for i, tag := range tagsSlice {
-				if tagStr, ok := tag.(string); ok {
-					tags[i] = tagStr
+
+			for tagIndex, tag := range tagsSlice {
+				if tagStr, tagValid := tag.(string); tagValid {
+					tags[tagIndex] = tagStr
 				}
 			}
 			updateOpts.Tags = &tags
 		}
 	}
 
-	fw, err := account.Client.UpdateFirewall(ctx, firewallID, updateOpts)
+	firewall, err := account.Client.UpdateFirewall(ctx, firewallID, updateOpts)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to update firewall: %v", err)), nil
 	}
 
-	return mcp.NewToolResultText(fmt.Sprintf("Firewall updated successfully:\nID: %d\nLabel: %s\nStatus: %s", fw.ID, fw.Label, fw.Status)), nil
+	return mcp.NewToolResultText(fmt.Sprintf("Firewall updated successfully:\nID: %d\nLabel: %s\nStatus: %s", firewall.ID, firewall.Label, firewall.Status)), nil
 }
 
 // handleFirewallDelete deletes a firewall.
 func (s *Service) handleFirewallDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	arguments, ok := request.Params.Arguments.(map[string]interface{})
-	if !ok {
+	arguments, argumentsValid := request.Params.Arguments.(map[string]interface{})
+	if !argumentsValid {
 		return mcp.NewToolResultError("Invalid arguments format"), nil
 	}
 
@@ -347,8 +356,8 @@ func (s *Service) handleFirewallDelete(ctx context.Context, request mcp.CallTool
 
 // handleFirewallRulesUpdate updates firewall rules.
 func (s *Service) handleFirewallRulesUpdate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	arguments, ok := request.Params.Arguments.(map[string]interface{})
-	if !ok {
+	arguments, argumentsValid := request.Params.Arguments.(map[string]interface{})
+	if !argumentsValid {
 		return mcp.NewToolResultError("Invalid arguments format"), nil
 	}
 
@@ -369,8 +378,9 @@ func (s *Service) handleFirewallRulesUpdate(ctx context.Context, request mcp.Cal
 	}
 
 	// Convert rules to linodego format
-	var inboundRules []linodego.FirewallRule
-	var outboundRules []linodego.FirewallRule
+	inboundRules := make([]linodego.FirewallRule, 0, len(params.Rules.Inbound))
+
+	outboundRules := make([]linodego.FirewallRule, 0, len(params.Rules.Outbound))
 
 	for _, rule := range params.Rules.Inbound {
 		inboundRules = append(inboundRules, linodego.FirewallRule{

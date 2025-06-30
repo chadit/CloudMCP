@@ -1,7 +1,6 @@
 package linode_test
 
 import (
-	"context"
 	"sync"
 	"testing"
 	"time"
@@ -15,6 +14,7 @@ import (
 
 func TestNewCache_DefaultTTL(t *testing.T) {
 	t.Parallel()
+
 	cache := linode.NewCache(linode.CacheConfig{})
 	require.NotNil(t, cache, "Cache should not be nil")
 }
@@ -28,11 +28,12 @@ func TestNewCache_CustomTTL(t *testing.T) {
 
 func TestCache_GetRegions_FreshFetch(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
+
+	ctx := t.Context()
 	cache := linode.NewCache(linode.CacheConfig{TTL: 5 * time.Minute})
 
 	// Create mock client
-	mockClient := &mocks.MockLinodeClient{}
+	mockClient := &mocks.MockClient{}
 	expectedRegions := []linodego.Region{
 		{ID: "us-east", Label: "Newark, NJ", Country: "us"},
 		{ID: "us-west", Label: "Fremont, CA", Country: "us"},
@@ -56,10 +57,10 @@ func TestCache_GetRegions_FreshFetch(t *testing.T) {
 
 func TestCache_GetRegions_CacheHit(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
+	ctx := t.Context()
 	cache := linode.NewCache(linode.CacheConfig{TTL: 5 * time.Minute})
 
-	mockClient := &mocks.MockLinodeClient{}
+	mockClient := &mocks.MockClient{}
 	expectedRegions := []linodego.Region{
 		{ID: "us-east", Label: "Newark, NJ", Country: "us"},
 	}
@@ -82,10 +83,10 @@ func TestCache_GetRegions_CacheHit(t *testing.T) {
 
 func TestCache_GetRegions_CacheExpiry(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
+	ctx := t.Context()
 	cache := linode.NewCache(linode.CacheConfig{TTL: 100 * time.Millisecond}) // Very short TTL
 
-	mockClient := &mocks.MockLinodeClient{}
+	mockClient := &mocks.MockClient{}
 	expectedRegions := []linodego.Region{
 		{ID: "us-east", Label: "Newark, NJ", Country: "us"},
 	}
@@ -110,10 +111,11 @@ func TestCache_GetRegions_CacheExpiry(t *testing.T) {
 
 func TestCache_GetTypes_FreshFetch(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
+
+	ctx := t.Context()
 	cache := linode.NewCache(linode.CacheConfig{TTL: 5 * time.Minute})
 
-	mockClient := &mocks.MockLinodeClient{}
+	mockClient := &mocks.MockClient{}
 	expectedTypes := []linodego.LinodeType{
 		{ID: "g6-nanode-1", Label: "Nanode 1GB", Memory: 1024},
 		{ID: "g6-standard-1", Label: "Linode 2GB", Memory: 2048},
@@ -134,10 +136,11 @@ func TestCache_GetTypes_FreshFetch(t *testing.T) {
 
 func TestCache_GetKernels_FreshFetch(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
+
+	ctx := t.Context()
 	cache := linode.NewCache(linode.CacheConfig{TTL: 5 * time.Minute})
 
-	mockClient := &mocks.MockLinodeClient{}
+	mockClient := &mocks.MockClient{}
 	expectedKernels := []linodego.LinodeKernel{
 		{ID: "linode/latest-64bit", Label: "Latest 64 bit"},
 		{ID: "linode/grub2", Label: "GRUB 2"},
@@ -158,10 +161,10 @@ func TestCache_GetKernels_FreshFetch(t *testing.T) {
 
 func TestCache_InvalidateRegions(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
+	ctx := t.Context()
 	cache := linode.NewCache(linode.CacheConfig{TTL: 5 * time.Minute})
 
-	mockClient := &mocks.MockLinodeClient{}
+	mockClient := &mocks.MockClient{}
 	expectedRegions := []linodego.Region{
 		{ID: "us-east", Label: "Newark, NJ", Country: "us"},
 	}
@@ -190,10 +193,10 @@ func TestCache_InvalidateRegions(t *testing.T) {
 
 func TestCache_InvalidateAll(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
+	ctx := t.Context()
 	cache := linode.NewCache(linode.CacheConfig{TTL: 5 * time.Minute})
 
-	mockClient := &mocks.MockLinodeClient{}
+	mockClient := &mocks.MockClient{}
 	expectedRegions := []linodego.Region{{ID: "us-east"}}
 	expectedTypes := []linodego.LinodeType{{ID: "g6-nanode-1"}}
 	expectedKernels := []linodego.LinodeKernel{{ID: "linode/latest-64bit"}}
@@ -231,10 +234,10 @@ func TestCache_InvalidateAll(t *testing.T) {
 
 func TestCache_ConcurrentAccess(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
+	ctx := t.Context()
 	cache := linode.NewCache(linode.CacheConfig{TTL: 5 * time.Minute})
 
-	mockClient := &mocks.MockLinodeClient{}
+	mockClient := &mocks.MockClient{}
 	expectedRegions := []linodego.Region{
 		{ID: "us-east", Label: "Newark, NJ", Country: "us"},
 	}
@@ -244,26 +247,28 @@ func TestCache_ConcurrentAccess(t *testing.T) {
 
 	// Launch multiple concurrent requests
 	const numGoroutines = 10
-	var wg sync.WaitGroup
+
+	var waitGroup sync.WaitGroup
 	results := make([][]linodego.Region, numGoroutines)
 	errors := make([]error, numGoroutines)
 
-	wg.Add(numGoroutines)
-	for i := 0; i < numGoroutines; i++ {
+	waitGroup.Add(numGoroutines)
+
+	for goroutineIndex := range numGoroutines {
 		go func(index int) {
-			defer wg.Done()
+			defer waitGroup.Done()
 			regions, err := cache.GetRegions(ctx, mockClient)
 			results[index] = regions
 			errors[index] = err
-		}(i)
+		}(goroutineIndex)
 	}
 
-	wg.Wait()
+	waitGroup.Wait()
 
 	// Verify all calls succeeded and returned same data
-	for i := 0; i < numGoroutines; i++ {
-		require.NoError(t, errors[i], "Concurrent call %d should not error", i)
-		require.Equal(t, expectedRegions, results[i], "Concurrent call %d should return expected regions", i)
+	for goroutineIndex := range numGoroutines {
+		require.NoError(t, errors[goroutineIndex], "Concurrent call %d should not error", goroutineIndex)
+		require.Equal(t, expectedRegions, results[goroutineIndex], "Concurrent call %d should return expected regions", goroutineIndex)
 	}
 
 	mockClient.AssertExpectations(t)
@@ -271,7 +276,7 @@ func TestCache_ConcurrentAccess(t *testing.T) {
 
 func TestCache_GetStats(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
+	ctx := t.Context()
 	cache := linode.NewCache(linode.CacheConfig{TTL: 5 * time.Minute})
 
 	// Initial stats should show empty cache
@@ -285,7 +290,7 @@ func TestCache_GetStats(t *testing.T) {
 	require.Equal(t, "5m0s", stats.TTL, "TTL should match configured value")
 
 	// Populate cache
-	mockClient := &mocks.MockLinodeClient{}
+	mockClient := &mocks.MockClient{}
 	expectedRegions := []linodego.Region{{ID: "us-east"}, {ID: "us-west"}}
 
 	mockClient.On("ListRegions", ctx, (*linodego.ListOptions)(nil)).Return(expectedRegions, nil)
@@ -305,10 +310,11 @@ func TestCache_GetStats(t *testing.T) {
 
 func TestCache_DataImmutability(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
+
+	ctx := t.Context()
 	cache := linode.NewCache(linode.CacheConfig{TTL: 5 * time.Minute})
 
-	mockClient := &mocks.MockLinodeClient{}
+	mockClient := &mocks.MockClient{}
 	originalRegions := []linodego.Region{
 		{ID: "us-east", Label: "Newark, NJ", Country: "us"},
 	}

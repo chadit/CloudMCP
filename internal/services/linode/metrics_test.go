@@ -156,6 +156,7 @@ func TestMetricsMiddleware_Success(t *testing.T) {
 	nextFunc := func(_ context.Context, tool string, account string) error {
 		executedTool = tool
 		executedAccount = account
+
 		time.Sleep(10 * time.Millisecond) // Simulate work
 
 		return nil
@@ -165,7 +166,7 @@ func TestMetricsMiddleware_Success(t *testing.T) {
 	require.NotNil(t, middleware, "Middleware should not be nil")
 
 	// Execute through middleware
-	ctx := context.Background()
+	ctx := t.Context()
 	err := middleware.Execute(ctx, "test_tool", "test_account")
 
 	// Verify execution completed successfully
@@ -191,7 +192,7 @@ func TestMetricsMiddleware_Error(t *testing.T) {
 	middleware := linode.NewMetricsMiddleware(collector, nextFunc)
 
 	// Execute through middleware
-	ctx := context.Background()
+	ctx := t.Context()
 	err := middleware.Execute(ctx, "test_tool", "test_account")
 
 	// Verify error was returned
@@ -233,6 +234,6 @@ func TestMetricsCollector_DisabledOperations(t *testing.T) {
 		return nil
 	}
 	middleware := linode.NewMetricsMiddleware(collector, nextFunc)
-	err := middleware.Execute(context.Background(), "tool", "account")
+	err := middleware.Execute(t.Context(), "tool", "account")
 	require.NoError(t, err, "Middleware should work when metrics are disabled")
 }
