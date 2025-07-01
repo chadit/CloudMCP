@@ -56,13 +56,13 @@ func NewRecoveryMiddleware(config *Config, logger pkglogger.Logger) *RecoveryMid
 }
 
 // Execute implements the Middleware interface for panic recovery.
-func (rm *RecoveryMiddleware) Execute(ctx context.Context, tool interfaces.Tool, params map[string]interface{}, next ToolHandler) (interface{}, error) {
+func (rm *RecoveryMiddleware) Execute(ctx context.Context, tool interfaces.Tool, params map[string]any, next ToolHandler) (any, error) {
 	if !rm.IsEnabled() {
 		return next(ctx, tool, params)
 	}
 
 	// Execute the next handler with panic recovery
-	var result interface{}
+	var result any
 
 	var err error
 
@@ -118,7 +118,7 @@ func NewErrorEnrichmentMiddleware(config *Config, logger pkglogger.Logger) *Erro
 }
 
 // Execute implements the Middleware interface for error enrichment.
-func (eem *ErrorEnrichmentMiddleware) Execute(ctx context.Context, tool interfaces.Tool, params map[string]interface{}, next ToolHandler) (interface{}, error) {
+func (eem *ErrorEnrichmentMiddleware) Execute(ctx context.Context, tool interfaces.Tool, params map[string]any, next ToolHandler) (any, error) {
 	if !eem.IsEnabled() {
 		return next(ctx, tool, params)
 	}
@@ -176,7 +176,7 @@ func NewRetryMiddleware(config *Config, logger pkglogger.Logger) *RetryMiddlewar
 }
 
 // Execute implements the Middleware interface for retry logic.
-func (rm *RetryMiddleware) Execute(ctx context.Context, tool interfaces.Tool, params map[string]interface{}, next ToolHandler) (interface{}, error) {
+func (rm *RetryMiddleware) Execute(ctx context.Context, tool interfaces.Tool, params map[string]any, next ToolHandler) (any, error) {
 	if !rm.IsEnabled() {
 		return next(ctx, tool, params)
 	}
@@ -392,7 +392,7 @@ func NewCircuitBreakerMiddleware(config *Config, logger pkglogger.Logger) *Circu
 }
 
 // Execute implements the Middleware interface for circuit breaker functionality.
-func (cbm *CircuitBreakerMiddleware) Execute(ctx context.Context, tool interfaces.Tool, params map[string]interface{}, next ToolHandler) (interface{}, error) {
+func (cbm *CircuitBreakerMiddleware) Execute(ctx context.Context, tool interfaces.Tool, params map[string]any, next ToolHandler) (any, error) {
 	if !cbm.IsEnabled() {
 		return next(ctx, tool, params)
 	}

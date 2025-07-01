@@ -92,11 +92,11 @@ type Tool interface {
 
 	// Execute handles the actual tool execution with the provided parameters.
 	// The context allows for cancellation and timeout handling.
-	Execute(ctx context.Context, params map[string]interface{}) (interface{}, error)
+	Execute(ctx context.Context, params map[string]any) (any, error)
 
 	// Validate validates the tool parameters before execution.
 	// This allows for early parameter validation and better error messages.
-	Validate(params map[string]interface{}) error
+	Validate(params map[string]any) error
 }
 
 // Capability represents a feature or capability provided by a cloud provider.

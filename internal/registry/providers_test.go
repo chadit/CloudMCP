@@ -59,7 +59,7 @@ type MockProviderFactory struct {
 	metadata interfaces.ProviderMetadata
 }
 
-func (mpf *MockProviderFactory) CreateProvider() interfaces.CloudProvider { //nolint:ireturn // Mock factory method should return interface
+func (mpf *MockProviderFactory) CreateProvider() interfaces.CloudProvider { // Mock factory method should return interface
 	return &MockProvider{
 		name: mpf.metadata.Name,
 		capabilities: []interfaces.Capability{

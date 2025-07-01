@@ -246,7 +246,7 @@ func NewRateLimitMiddleware(config *Config, logger pkglogger.Logger, limiter Rat
 }
 
 // Execute implements the Middleware interface for rate limiting.
-func (rlm *RateLimitMiddleware) Execute(ctx context.Context, tool interfaces.Tool, params map[string]interface{}, next ToolHandler) (interface{}, error) {
+func (rlm *RateLimitMiddleware) Execute(ctx context.Context, tool interfaces.Tool, params map[string]any, next ToolHandler) (any, error) {
 	if !rlm.IsEnabled() {
 		return next(ctx, tool, params)
 	}
@@ -333,7 +333,7 @@ func NewAdaptiveRateLimitMiddleware(config *Config, logger pkglogger.Logger, bas
 }
 
 // Execute implements the Middleware interface for adaptive rate limiting.
-func (arlm *AdaptiveRateLimitMiddleware) Execute(ctx context.Context, tool interfaces.Tool, params map[string]interface{}, next ToolHandler) (interface{}, error) {
+func (arlm *AdaptiveRateLimitMiddleware) Execute(ctx context.Context, tool interfaces.Tool, params map[string]any, next ToolHandler) (any, error) {
 	if !arlm.IsEnabled() {
 		return next(ctx, tool, params)
 	}

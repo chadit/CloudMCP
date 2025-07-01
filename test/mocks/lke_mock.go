@@ -1,4 +1,4 @@
-//nolint:wrapcheck // Mock file returns test errors without wrapping
+// Mock file returns test errors without wrapping
 package mocks
 
 import (
@@ -20,9 +20,11 @@ func (m *MockLKEService) ListLKEClusters(ctx context.Context, opts *linodego.Lis
 
 	clusters, ok := args.Get(0).([]linodego.LKECluster)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return clusters, args.Error(1)
 }
 
@@ -31,9 +33,11 @@ func (m *MockLKEService) GetLKECluster(ctx context.Context, clusterID int) (*lin
 
 	cluster, ok := args.Get(0).(*linodego.LKECluster)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return cluster, args.Error(1)
 }
 
@@ -42,9 +46,11 @@ func (m *MockLKEService) CreateLKECluster(ctx context.Context, opts linodego.LKE
 
 	cluster, ok := args.Get(0).(*linodego.LKECluster)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return cluster, args.Error(1)
 }
 
@@ -53,15 +59,18 @@ func (m *MockLKEService) UpdateLKECluster(ctx context.Context, clusterID int, op
 
 	cluster, ok := args.Get(0).(*linodego.LKECluster)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return cluster, args.Error(1)
 }
 
 func (m *MockLKEService) DeleteLKECluster(ctx context.Context, clusterID int) error {
 	args := m.Called(ctx, clusterID)
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return args.Error(0)
 }
 
@@ -71,9 +80,11 @@ func (m *MockLKEService) ListLKENodePools(ctx context.Context, clusterID int, op
 
 	nodePools, ok := args.Get(0).([]linodego.LKENodePool)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return nodePools, args.Error(1)
 }
 
@@ -82,9 +93,11 @@ func (m *MockLKEService) CreateLKENodePool(ctx context.Context, clusterID int, o
 
 	nodePool, ok := args.Get(0).(*linodego.LKENodePool)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return nodePool, args.Error(1)
 }
 
@@ -93,15 +106,18 @@ func (m *MockLKEService) UpdateLKENodePool(ctx context.Context, clusterID int, p
 
 	nodePool, ok := args.Get(0).(*linodego.LKENodePool)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return nodePool, args.Error(1)
 }
 
 func (m *MockLKEService) DeleteLKENodePool(ctx context.Context, clusterID int, poolID int) error {
 	args := m.Called(ctx, clusterID, poolID)
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return args.Error(0)
 }
 
@@ -111,9 +127,11 @@ func (m *MockLKEService) GetLKEClusterKubeconfig(ctx context.Context, clusterID 
 
 	kubeconfig, ok := args.Get(0).(*linodego.LKEClusterKubeconfig)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return kubeconfig, args.Error(1)
 }
 

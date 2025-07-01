@@ -187,7 +187,7 @@ func (c *Cache) InvalidateAll() {
 	c.expiry = time.Time{} // Reset expiry to force refresh
 }
 
-// Stats returns cache statistics for monitoring and debugging.
+// CacheStats returns cache statistics for monitoring and debugging.
 type CacheStats struct {
 	RegionsCached bool      `json:"regionsCached"`
 	TypesCached   bool      `json:"typesCached"`

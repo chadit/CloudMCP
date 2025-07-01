@@ -209,7 +209,7 @@ func (mm *Manager) ConfigureDevelopment() *Manager {
 }
 
 // ExecuteTool executes a tool through the complete middleware chain.
-func (mm *Manager) ExecuteTool(ctx context.Context, tool interfaces.Tool, params map[string]interface{}) (interface{}, error) {
+func (mm *Manager) ExecuteTool(ctx context.Context, tool interfaces.Tool, params map[string]any) (any, error) {
 	// Create execution context if not present
 	_, hasCtx := GetExecutionContext(ctx)
 	if !hasCtx {
@@ -229,7 +229,7 @@ func (mm *Manager) ExecuteTool(ctx context.Context, tool interfaces.Tool, params
 	}
 
 	// Define the base handler that actually executes the tool
-	baseHandler := func(ctx context.Context, tool interfaces.Tool, params map[string]interface{}) (interface{}, error) {
+	baseHandler := func(ctx context.Context, tool interfaces.Tool, params map[string]any) (any, error) {
 		// Validate parameters
 		if err := tool.Validate(params); err != nil {
 			return nil, fmt.Errorf("tool validation failed: %w", err)
@@ -295,7 +295,7 @@ type WrappedMCPServer struct {
 }
 
 // ExecuteToolWithMiddleware executes a tool by name through the middleware chain.
-func (wms *WrappedMCPServer) ExecuteToolWithMiddleware(ctx context.Context, toolName string, params map[string]interface{}) (interface{}, error) {
+func (wms *WrappedMCPServer) ExecuteToolWithMiddleware(ctx context.Context, toolName string, params map[string]any) (any, error) {
 	// Get the tool from the server
 	tool, err := wms.server.GetTool(toolName)
 	if err != nil {
@@ -328,7 +328,7 @@ func NewProviderMiddlewareIntegration(registry *registry.Registry, manager *Mana
 }
 
 // ExecuteProviderTool executes a tool from a specific provider through middleware.
-func (pmi *ProviderMiddlewareIntegration) ExecuteProviderTool(ctx context.Context, providerName, toolName string, params map[string]interface{}) (interface{}, error) {
+func (pmi *ProviderMiddlewareIntegration) ExecuteProviderTool(ctx context.Context, providerName, toolName string, params map[string]any) (any, error) {
 	// Get the provider
 	provider, err := pmi.registry.GetProvider(providerName)
 	if err != nil {

@@ -11,6 +11,7 @@ import (
 	"github.com/chadit/CloudMCP/internal/services/linode"
 	"github.com/chadit/CloudMCP/pkg/interfaces"
 	"github.com/chadit/CloudMCP/pkg/logger"
+	"github.com/chadit/CloudMCP/pkg/metrics"
 )
 
 type Server struct {
@@ -62,6 +63,37 @@ func New(cfg *config.Config, log logger.Logger) (*Server, error) {
 	}
 
 	return server, nil
+}
+
+// NewForTesting creates a new server instance for testing with isolated metrics registries.
+func NewForTesting(cfg *config.Config, log logger.Logger) (*Server, error) {
+	mcpServer := server.NewMCPServer(cfg.ServerName, "test-version")
+
+	serverInstance := &Server{
+		config:   cfg,
+		logger:   log,
+		mcp:      mcpServer,
+		services: make([]interfaces.CloudService, 0),
+	}
+
+	// Use test metrics config to avoid registry conflicts
+	testMetricsConfig := metrics.TestConfig()
+	testMetricsConfig.Enabled = cfg.EnableMetrics
+
+	linodeSvc, err := linode.NewWithMetricsConfig(cfg, log, testMetricsConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Linode service: %w", err)
+	}
+
+	serverInstance.services = append(serverInstance.services, linodeSvc)
+
+	for _, svc := range serverInstance.services {
+		if err := svc.RegisterTools(mcpServer); err != nil {
+			return nil, fmt.Errorf("failed to register tools for %s: %w", svc.Name(), err)
+		}
+	}
+
+	return serverInstance, nil
 }
 
 func (s *Server) Start(ctx context.Context) error {

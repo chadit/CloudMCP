@@ -14,7 +14,7 @@ import (
 
 // ToolHandler represents a function that executes an MCP tool.
 // This is the core handler signature that middleware wraps around.
-type ToolHandler func(ctx context.Context, tool interfaces.Tool, params map[string]interface{}) (interface{}, error)
+type ToolHandler func(ctx context.Context, tool interfaces.Tool, params map[string]any) (any, error)
 
 // Middleware represents a middleware component in the execution chain.
 // Each middleware can modify the request, response, or handle cross-cutting concerns.
@@ -23,7 +23,7 @@ type Middleware interface {
 	Name() string
 
 	// Execute processes the request and delegates to the next handler in the chain.
-	Execute(ctx context.Context, tool interfaces.Tool, params map[string]interface{}, next ToolHandler) (interface{}, error)
+	Execute(ctx context.Context, tool interfaces.Tool, params map[string]any, next ToolHandler) (any, error)
 
 	// Priority returns the execution priority (lower numbers execute first).
 	Priority() int
@@ -58,7 +58,7 @@ func (c *Chain) Add(middleware Middleware) *Chain {
 
 // Execute runs the middleware chain around the given tool handler.
 // Middlewares are executed in priority order (lowest priority first).
-func (c *Chain) Execute(ctx context.Context, tool interfaces.Tool, params map[string]interface{}, handler ToolHandler) (interface{}, error) {
+func (c *Chain) Execute(ctx context.Context, tool interfaces.Tool, params map[string]any, handler ToolHandler) (any, error) {
 	if len(c.middlewares) == 0 {
 		return handler(ctx, tool, params)
 	}
@@ -73,7 +73,7 @@ func (c *Chain) Execute(ctx context.Context, tool interfaces.Tool, params map[st
 		middleware := sortedMiddlewares[i]
 		currentHandler := finalHandler
 
-		finalHandler = func(ctx context.Context, tool interfaces.Tool, params map[string]interface{}) (interface{}, error) {
+		finalHandler = func(ctx context.Context, tool interfaces.Tool, params map[string]any) (any, error) {
 			return middleware.Execute(ctx, tool, params, currentHandler)
 		}
 	}
@@ -156,7 +156,7 @@ type ExecutionContext struct {
 	UserID string
 
 	// Additional metadata
-	Metadata map[string]interface{}
+	Metadata map[string]any
 }
 
 // NewExecutionContext creates a new execution context with default values.
@@ -166,7 +166,7 @@ func NewExecutionContext(toolName, provider string) *ExecutionContext {
 		ToolName:  toolName,
 		Provider:  provider,
 		RequestID: generateRequestID(),
-		Metadata:  make(map[string]interface{}),
+		Metadata:  make(map[string]any),
 	}
 }
 
@@ -176,14 +176,14 @@ func (ec *ExecutionContext) Duration() time.Duration {
 }
 
 // WithMetadata adds metadata to the execution context.
-func (ec *ExecutionContext) WithMetadata(key string, value interface{}) *ExecutionContext {
+func (ec *ExecutionContext) WithMetadata(key string, value any) *ExecutionContext {
 	ec.Metadata[key] = value
 
 	return ec
 }
 
 // GetMetadata retrieves metadata from the execution context.
-func (ec *ExecutionContext) GetMetadata(key string) (interface{}, bool) {
+func (ec *ExecutionContext) GetMetadata(key string) (any, bool) {
 	value, exists := ec.Metadata[key]
 
 	return value, exists
@@ -224,7 +224,7 @@ type Config struct {
 	Priority int
 
 	// Config holds middleware-specific configuration
-	Config map[string]interface{}
+	Config map[string]any
 }
 
 // NewConfig creates a default middleware configuration.
@@ -234,7 +234,7 @@ func NewConfig() *Config {
 	return &Config{
 		Enabled:  true,
 		Priority: defaultMiddlewarePriority, // Default priority
-		Config:   make(map[string]interface{}),
+		Config:   make(map[string]any),
 	}
 }
 
@@ -246,14 +246,14 @@ func (mc *Config) WithPriority(priority int) *Config {
 }
 
 // WithConfig sets a configuration value.
-func (mc *Config) WithConfig(key string, value interface{}) *Config {
+func (mc *Config) WithConfig(key string, value any) *Config {
 	mc.Config[key] = value
 
 	return mc
 }
 
 // GetConfig retrieves a configuration value.
-func (mc *Config) GetConfig(key string) (interface{}, bool) {
+func (mc *Config) GetConfig(key string) (any, bool) {
 	value, exists := mc.Config[key]
 
 	return value, exists
@@ -333,7 +333,7 @@ func (bm *BaseMiddleware) Config() *Config {
 }
 
 // Logger returns the middleware logger.
-func (bm *BaseMiddleware) Logger() pkglogger.Logger { //nolint:ireturn // Getter method should return interface
+func (bm *BaseMiddleware) Logger() pkglogger.Logger { // Getter method should return interface
 	return bm.logger
 }
 

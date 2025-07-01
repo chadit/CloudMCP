@@ -20,7 +20,7 @@ func (s *Service) handleLongviewClientsList(ctx context.Context, _ mcp.CallToolR
 
 	clients, err := account.Client.ListLongviewClients(ctx, nil)
 	if err != nil {
-		return nil, types.NewToolError("linode", "longview_clients_list", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "longview_clients_list",
 			"failed to list Longview clients", err)
 	}
 
@@ -71,7 +71,7 @@ func (s *Service) handleLongviewClientGet(ctx context.Context, request mcp.CallT
 
 	client, err := account.Client.GetLongviewClient(ctx, clientID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "longview_client_get", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "longview_client_get",
 			fmt.Sprintf("failed to get Longview client %d", clientID), err)
 	}
 
@@ -129,7 +129,7 @@ func (s *Service) handleLongviewClientCreate(ctx context.Context, request mcp.Ca
 
 	client, err := account.Client.CreateLongviewClient(ctx, createOpts)
 	if err != nil {
-		return nil, types.NewToolError("linode", "longview_client_create", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "longview_client_create",
 			"failed to create Longview client", err)
 	}
 
@@ -159,7 +159,7 @@ func (s *Service) handleLongviewClientUpdate(ctx context.Context, request mcp.Ca
 
 	client, err := account.Client.UpdateLongviewClient(ctx, clientID, updateOpts)
 	if err != nil {
-		return nil, types.NewToolError("linode", "longview_client_update", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "longview_client_update",
 			fmt.Sprintf("failed to update Longview client %d", clientID), err)
 	}
 
@@ -182,7 +182,7 @@ func (s *Service) handleLongviewClientDelete(ctx context.Context, request mcp.Ca
 
 	err = account.Client.DeleteLongviewClient(ctx, clientID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "longview_client_delete", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "longview_client_delete",
 			fmt.Sprintf("failed to delete Longview client %d", clientID), err)
 	}
 

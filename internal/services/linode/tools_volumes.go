@@ -19,8 +19,7 @@ func (s *Service) handleVolumesList(ctx context.Context, _ mcp.CallToolRequest) 
 
 	volumes, err := account.Client.ListVolumes(ctx, nil)
 	if err != nil {
-		return nil, types.NewToolError("linode", "volumes_list", //nolint:wrapcheck // types.NewToolError already wraps the error
-			"failed to list volumes", err)
+		return nil, types.NewToolError("linode", "volumes_list", "failed to list volumes", err)
 	}
 
 	if len(volumes) == 0 {
@@ -74,7 +73,7 @@ func (s *Service) handleVolumeGet(ctx context.Context, request mcp.CallToolReque
 
 	volume, err := account.Client.GetVolume(ctx, volumeID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "volume_get", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "volume_get",
 			fmt.Sprintf("failed to get volume %d", volumeID), err)
 	}
 
@@ -167,7 +166,7 @@ func (s *Service) handleVolumeCreate(ctx context.Context, request mcp.CallToolRe
 	// Create the volume
 	volume, err := account.Client.CreateVolume(ctx, createOpts)
 	if err != nil {
-		return nil, types.NewToolError("linode", "volume_create", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "volume_create",
 			"failed to create volume", err)
 	}
 
@@ -210,13 +209,13 @@ func (s *Service) handleVolumeDelete(ctx context.Context, request mcp.CallToolRe
 
 	volume, err := account.Client.GetVolume(ctx, volumeID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "volume_delete", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "volume_delete",
 			fmt.Sprintf("failed to get volume %d", volumeID), err)
 	}
 
 	err = account.Client.DeleteVolume(ctx, volumeID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "volume_delete", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "volume_delete",
 			fmt.Sprintf("failed to delete volume %d", volumeID), err)
 	}
 
@@ -268,7 +267,7 @@ func (s *Service) handleVolumeAttach(ctx context.Context, request mcp.CallToolRe
 
 	volume, err := account.Client.AttachVolume(ctx, volumeID, &attachOpts)
 	if err != nil {
-		return nil, types.NewToolError("linode", "volume_attach", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "volume_attach",
 			fmt.Sprintf("failed to attach volume %d to instance %d", volumeID, linodeID), err)
 	}
 
@@ -311,7 +310,7 @@ func (s *Service) handleVolumeDetach(ctx context.Context, request mcp.CallToolRe
 	// Get volume details first
 	volume, err := account.Client.GetVolume(ctx, volumeID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "volume_detach", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "volume_detach",
 			fmt.Sprintf("failed to get volume %d", volumeID), err)
 	}
 
@@ -323,7 +322,7 @@ func (s *Service) handleVolumeDetach(ctx context.Context, request mcp.CallToolRe
 	// Detach the volume
 	err = account.Client.DetachVolume(ctx, volumeID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "volume_detach", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "volume_detach",
 			fmt.Sprintf("failed to detach volume %d", volumeID), err)
 	}
 

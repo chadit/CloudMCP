@@ -35,15 +35,19 @@ type slogWrapper struct {
 	logger *slog.Logger
 }
 
-// New creates a logger that outputs to stderr (for backwards compatibility).
-func New(level string) Logger { //nolint:ireturn // Factory function should return interface
+// New creates a logger that outputs to stderr
+//
+//nolint:ireturn // logger should return an interface.
+func New(level string) Logger {
 	return NewWithConfig(LogConfig{
 		Level: level,
 	})
 }
 
 // NewWithConfig creates a logger with the specified configuration.
-func NewWithConfig(config LogConfig) Logger { //nolint:ireturn // Factory function should return interface
+//
+//nolint:ireturn // logger should return an interface.
+func NewWithConfig(config LogConfig) Logger {
 	var logLevel slog.Level
 
 	switch config.Level {
@@ -115,6 +119,7 @@ func (l *slogWrapper) ErrorContext(ctx context.Context, msg string, args ...any)
 	l.logger.ErrorContext(ctx, msg, args...)
 }
 
-func (l *slogWrapper) With(args ...any) Logger { //nolint:ireturn // Method should return interface for fluent API
+//nolint:ireturn // logger should return an interface.
+func (l *slogWrapper) With(args ...any) Logger {
 	return &slogWrapper{logger: l.logger.With(args...)}
 }
