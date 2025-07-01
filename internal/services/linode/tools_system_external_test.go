@@ -15,9 +15,10 @@ import (
 
 // Helper function to extract text content from CallToolResult.
 func getTextContent(t *testing.T, result *mcp.CallToolResult) string {
+	t.Helper()
 	require.NotNil(t, result, "result should not be nil")
 	require.NotEmpty(t, result.Content, "result should have content")
-	require.Equal(t, 1, len(result.Content), "result should have exactly one content item")
+	require.Len(t, result.Content, 1, "result should have exactly one content item")
 
 	textContent, ok := result.Content[0].(mcp.TextContent)
 	require.True(t, ok, "result content should be text content")
@@ -247,8 +248,6 @@ func TestSystemVersionTool_AccountError(t *testing.T) {
 		"should still contain version header")
 	require.Contains(t, versionText, "Version: 1.0.0",
 		"should still contain CloudMCP version")
-
-	// Note: Account will show as "unknown" when no accounts are configured
 }
 
 // TestVersionInfoConsistencyThroughAPI tests that version information is consistent between text and JSON formats through exported API.

@@ -17,6 +17,7 @@ func extractStringParam(args map[string]interface{}, key string) string {
 	if value, ok := args[key].(string); ok {
 		return value
 	}
+
 	return ""
 }
 
@@ -25,6 +26,7 @@ func extractIntParam(args map[string]interface{}, key string) int {
 	if value, ok := args[key].(float64); ok {
 		return int(value)
 	}
+
 	return 0
 }
 
@@ -47,6 +49,7 @@ func extractStringSliceParam(args map[string]interface{}, key string) []string {
 			result = append(result, str)
 		}
 	}
+
 	return result
 }
 
@@ -57,33 +60,43 @@ func buildDomainUpdateOptions(params DomainUpdateParams) linodego.DomainUpdateOp
 	if params.Domain != "" {
 		options.Domain = params.Domain
 	}
+
 	if params.Type != "" {
 		options.Type = linodego.DomainType(params.Type)
 	}
+
 	if params.SOAEmail != "" {
 		options.SOAEmail = params.SOAEmail
 	}
+
 	if params.Description != "" {
 		options.Description = params.Description
 	}
+
 	if params.RetrySec > 0 {
 		options.RetrySec = params.RetrySec
 	}
+
 	if params.ExpireSec > 0 {
 		options.ExpireSec = params.ExpireSec
 	}
+
 	if params.RefreshSec > 0 {
 		options.RefreshSec = params.RefreshSec
 	}
+
 	if params.TTLSec > 0 {
 		options.TTLSec = params.TTLSec
 	}
+
 	if len(params.Tags) > 0 {
 		options.Tags = params.Tags
 	}
+
 	if len(params.MasterIPs) > 0 {
 		options.MasterIPs = params.MasterIPs
 	}
+
 	if len(params.AXfrIPs) > 0 {
 		options.AXfrIPs = params.AXfrIPs
 	}

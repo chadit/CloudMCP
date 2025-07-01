@@ -29,6 +29,7 @@ func (s *Service) handleLKEClustersList(ctx context.Context, _ mcp.CallToolReque
 	}
 
 	summaries := make([]LKEClusterSummary, 0, len(clusters))
+
 	for _, cluster := range clusters {
 		summary := LKEClusterSummary{
 			ID:         cluster.ID,
@@ -60,6 +61,7 @@ func (s *Service) handleLKEClustersList(ctx context.Context, _ mcp.CallToolReque
 		fmt.Fprintf(&stringBuilder, "  Status: %s\n", cluster.Status)
 		fmt.Fprintf(&stringBuilder, "  Kubernetes Version: %s\n", cluster.K8sVersion)
 		fmt.Fprintf(&stringBuilder, "  Control Plane: %s\n", haStatus)
+
 		if len(cluster.Tags) > 0 {
 			fmt.Fprintf(&stringBuilder, "  Tags: %s\n", strings.Join(cluster.Tags, ", "))
 		}
@@ -97,6 +99,7 @@ func (s *Service) handleLKEClusterGet(ctx context.Context, request mcp.CallToolR
 	}
 
 	nodePools := make([]LKENodePool, 0, len(pools))
+
 	for _, pool := range pools {
 		disks := make([]LKENodePoolDisk, 0, len(pool.Disks))
 		for _, disk := range pool.Disks {
@@ -147,6 +150,7 @@ func (s *Service) handleLKEClusterGet(ctx context.Context, request mcp.CallToolR
 	}
 
 	var stringBuilder strings.Builder
+
 	fmt.Fprintf(&stringBuilder, "LKE Cluster Details:\n")
 	fmt.Fprintf(&stringBuilder, "ID: %d\n", detail.ID)
 	fmt.Fprintf(&stringBuilder, "Label: %s\n", detail.Label)
@@ -169,6 +173,7 @@ func (s *Service) handleLKEClusterGet(ctx context.Context, request mcp.CallToolR
 
 	if len(detail.NodePools) > 0 {
 		fmt.Fprintf(&stringBuilder, "Node Pools:\n")
+
 		for i, pool := range detail.NodePools {
 			fmt.Fprintf(&stringBuilder, "  %d. Pool ID: %d\n", i+1, pool.ID)
 			fmt.Fprintf(&stringBuilder, "     Type: %s\n", pool.Type)
@@ -182,6 +187,7 @@ func (s *Service) handleLKEClusterGet(ctx context.Context, request mcp.CallToolR
 
 			if len(pool.Disks) > 0 {
 				fmt.Fprintf(&stringBuilder, "     Disks:\n")
+
 				for _, disk := range pool.Disks {
 					fmt.Fprintf(&stringBuilder, "       - %s: %d GB\n", disk.Type, disk.Size)
 				}
@@ -189,6 +195,7 @@ func (s *Service) handleLKEClusterGet(ctx context.Context, request mcp.CallToolR
 
 			if len(pool.Nodes) > 0 {
 				fmt.Fprintf(&stringBuilder, "     Nodes:\n")
+
 				for _, node := range pool.Nodes {
 					fmt.Fprintf(&stringBuilder, "       - %s (Instance: %d, Status: %s)\n", node.ID, node.InstanceID, node.Status)
 				}
@@ -220,6 +227,7 @@ func (s *Service) handleLKEClusterCreate(ctx context.Context, request mcp.CallTo
 	}
 
 	nodePools := make([]linodego.LKENodePoolCreateOptions, 0, len(params.NodePools))
+
 	for _, pool := range params.NodePools {
 		disks := make([]linodego.LKENodePoolDisk, 0, len(pool.Disks))
 		for _, disk := range pool.Disks {
@@ -288,12 +296,15 @@ func (s *Service) handleLKEClusterUpdate(ctx context.Context, request mcp.CallTo
 	if params.Label != "" {
 		updateOpts.Label = params.Label
 	}
+
 	if params.K8sVersion != "" {
 		updateOpts.K8sVersion = params.K8sVersion
 	}
+
 	if params.Tags != nil {
 		updateOpts.Tags = &params.Tags
 	}
+
 	if params.ControlPlane.HighAvailability {
 		updateOpts.ControlPlane = &linodego.LKEClusterControlPlaneOptions{
 			HighAvailability: &params.ControlPlane.HighAvailability,
@@ -399,9 +410,11 @@ func (s *Service) handleLKENodePoolUpdate(ctx context.Context, request mcp.CallT
 	if params.Count > 0 {
 		updateOpts.Count = params.Count
 	}
+
 	if params.Tags != nil {
 		updateOpts.Tags = &params.Tags
 	}
+
 	if params.Autoscaler != nil {
 		updateOpts.Autoscaler = &linodego.LKENodePoolAutoscaler{
 			Enabled: params.Autoscaler.Enabled,
@@ -469,6 +482,7 @@ func (s *Service) handleLKEKubeconfig(ctx context.Context, request mcp.CallToolR
 	}
 
 	var stringBuilder strings.Builder
+
 	fmt.Fprintf(&stringBuilder, "Kubeconfig for LKE cluster %d:\n\n", params.ClusterID)
 	fmt.Fprintf(&stringBuilder, "```yaml\n%s\n```\n\n", string(kubeconfigBytes))
 	fmt.Fprintf(&stringBuilder, "To use this kubeconfig:\n")

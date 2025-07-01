@@ -25,6 +25,7 @@ func (s *Service) handleLongviewClientsList(ctx context.Context, _ mcp.CallToolR
 	}
 
 	summaries := make([]LongviewClientSummary, 0, len(clients))
+
 	for _, client := range clients {
 		summary := LongviewClientSummary{
 			ID:      client.ID,
@@ -37,6 +38,7 @@ func (s *Service) handleLongviewClientsList(ctx context.Context, _ mcp.CallToolR
 	}
 
 	var stringBuilder strings.Builder
+
 	stringBuilder.WriteString(fmt.Sprintf("Found %d Longview clients:\n\n", len(summaries)))
 
 	for _, client := range summaries {
@@ -56,6 +58,7 @@ func (s *Service) handleLongviewClientsList(ctx context.Context, _ mcp.CallToolR
 // handleLongviewClientGet gets details of a specific Longview client.
 func (s *Service) handleLongviewClientGet(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	arguments := request.GetArguments()
+
 	clientID, err := parseIDFromArguments(arguments, "client_id")
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
@@ -82,6 +85,7 @@ func (s *Service) handleLongviewClientGet(ctx context.Context, request mcp.CallT
 	}
 
 	var stringBuilder strings.Builder
+
 	fmt.Fprintf(&stringBuilder, "Longview Client Details:\n")
 	fmt.Fprintf(&stringBuilder, "ID: %d\n", detail.ID)
 	fmt.Fprintf(&stringBuilder, "Label: %s\n", detail.Label)
@@ -91,6 +95,7 @@ func (s *Service) handleLongviewClientGet(ctx context.Context, request mcp.CallT
 
 	if len(detail.Apps) > 0 {
 		fmt.Fprintf(&stringBuilder, "\nMonitored Applications:\n")
+
 		for app := range detail.Apps {
 			fmt.Fprintf(&stringBuilder, "  - %s\n", app)
 		}
@@ -164,6 +169,7 @@ func (s *Service) handleLongviewClientUpdate(ctx context.Context, request mcp.Ca
 // handleLongviewClientDelete deletes a Longview client.
 func (s *Service) handleLongviewClientDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	arguments := request.GetArguments()
+
 	clientID, err := parseIDFromArguments(arguments, "client_id")
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil

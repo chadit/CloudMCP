@@ -21,6 +21,7 @@ func (s *Service) handleSupportTicketsList(ctx context.Context, _ mcp.CallToolRe
 	}
 
 	summaries := make([]SupportTicketSummary, 0, len(tickets))
+
 	for _, ticket := range tickets {
 		var entity SupportTicketEntity
 		if ticket.Entity != nil {
@@ -46,6 +47,7 @@ func (s *Service) handleSupportTicketsList(ctx context.Context, _ mcp.CallToolRe
 		if ticket.Opened != nil {
 			summary.Opened = ticket.Opened.Format("2006-01-02T15:04:05")
 		}
+
 		if ticket.Updated != nil {
 			summary.Updated = ticket.Updated.Format("2006-01-02T15:04:05")
 		}
@@ -60,9 +62,11 @@ func (s *Service) handleSupportTicketsList(ctx context.Context, _ mcp.CallToolRe
 	for _, ticket := range summaries {
 		fmt.Fprintf(&stringBuilder, "ID: %d | %s\n", ticket.ID, ticket.Summary)
 		fmt.Fprintf(&stringBuilder, "  Status: %s", ticket.Status)
+
 		if ticket.Closeable {
 			fmt.Fprintf(&stringBuilder, " (Closeable)")
 		}
+
 		fmt.Fprintf(&stringBuilder, "\n")
 
 		if ticket.Entity.Type != "" {
@@ -75,6 +79,7 @@ func (s *Service) handleSupportTicketsList(ctx context.Context, _ mcp.CallToolRe
 			if ticket.Opened != "" {
 				fmt.Fprintf(&stringBuilder, " on %s", ticket.Opened)
 			}
+
 			fmt.Fprintf(&stringBuilder, "\n")
 		}
 
@@ -135,18 +140,22 @@ func (s *Service) handleSupportTicketGet(ctx context.Context, request mcp.CallTo
 	if ticket.Updated != nil {
 		detail.Updated = ticket.Updated.Format("2006-01-02T15:04:05")
 	}
+
 	if ticket.Closed != nil {
 		detail.ClosedBy = ticket.Closed.Format("2006-01-02T15:04:05")
 	}
 
 	var stringBuilder strings.Builder
+
 	fmt.Fprintf(&stringBuilder, "Support Ticket Details:\n")
 	fmt.Fprintf(&stringBuilder, "ID: %d\n", detail.ID)
 	fmt.Fprintf(&stringBuilder, "Summary: %s\n", detail.Summary)
 	fmt.Fprintf(&stringBuilder, "Status: %s", detail.Status)
+
 	if detail.Closeable {
 		fmt.Fprintf(&stringBuilder, " (Closeable)")
 	}
+
 	fmt.Fprintf(&stringBuilder, "\n\n")
 
 	fmt.Fprintf(&stringBuilder, "Description:\n%s\n\n", detail.Description)
@@ -156,9 +165,11 @@ func (s *Service) handleSupportTicketGet(ctx context.Context, request mcp.CallTo
 		fmt.Fprintf(&stringBuilder, "  Type: %s\n", detail.Entity.Type)
 		fmt.Fprintf(&stringBuilder, "  Label: %s\n", detail.Entity.Label)
 		fmt.Fprintf(&stringBuilder, "  ID: %d\n", detail.Entity.ID)
+
 		if detail.Entity.URL != "" {
 			fmt.Fprintf(&stringBuilder, "  URL: %s\n", detail.Entity.URL)
 		}
+
 		stringBuilder.WriteString("\n")
 	}
 

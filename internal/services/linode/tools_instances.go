@@ -29,6 +29,7 @@ func (s *Service) handleInstancesList(ctx context.Context, _ mcp.CallToolRequest
 	}
 
 	summaries := make([]InstanceSummary, 0, len(instances))
+
 	for _, instance := range instances {
 		ipv4Addresses := make([]string, 0)
 		for _, ip := range instance.IPv4 {
@@ -63,6 +64,7 @@ func (s *Service) handleInstancesList(ctx context.Context, _ mcp.CallToolRequest
 		if len(inst.IPv4) > 0 {
 			resultText += fmt.Sprintf("  IPv4: %v\n", inst.IPv4)
 		}
+
 		resultText += "\n"
 	}
 
@@ -71,6 +73,7 @@ func (s *Service) handleInstancesList(ctx context.Context, _ mcp.CallToolRequest
 
 func (s *Service) handleInstanceGet(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	arguments := request.GetArguments()
+
 	instanceID, err := parseIDFromArguments(arguments, "instance_id")
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
@@ -192,11 +195,13 @@ func (s *Service) handleInstanceCreate(ctx context.Context, request mcp.CallTool
 
 	if authorizedKeys, ok := arguments["authorized_keys"].([]interface{}); ok {
 		keys := make([]string, 0, len(authorizedKeys))
+
 		for _, key := range authorizedKeys {
 			if k, ok := key.(string); ok {
 				keys = append(keys, k)
 			}
 		}
+
 		createOpts.AuthorizedKeys = keys
 	}
 
@@ -214,11 +219,13 @@ func (s *Service) handleInstanceCreate(ctx context.Context, request mcp.CallTool
 
 	if tags, ok := arguments["tags"].([]interface{}); ok {
 		tagList := make([]string, 0, len(tags))
+
 		for _, tag := range tags {
 			if t, ok := tag.(string); ok {
 				tagList = append(tagList, t)
 			}
 		}
+
 		createOpts.Tags = tagList
 	}
 
@@ -303,6 +310,7 @@ func (s *Service) handleInstanceDelete(ctx context.Context, request mcp.CallTool
 
 func (s *Service) handleInstanceBoot(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	arguments := request.GetArguments()
+
 	instanceID, err := parseIDFromArguments(arguments, "instance_id")
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
@@ -323,6 +331,7 @@ func (s *Service) handleInstanceBoot(ctx context.Context, request mcp.CallToolRe
 
 func (s *Service) handleInstanceShutdown(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	arguments := request.GetArguments()
+
 	instanceID, err := parseIDFromArguments(arguments, "instance_id")
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil

@@ -164,6 +164,7 @@ func TestMetricsMiddleware_Success(t *testing.T) {
 
 	// Create mock next function that succeeds
 	var executedTool, executedAccount string
+
 	nextFunc := func(_ context.Context, tool string, account string) error {
 		executedTool = tool
 		executedAccount = account

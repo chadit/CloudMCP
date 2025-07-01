@@ -56,29 +56,30 @@ func (c *Cache) isExpired() bool {
 // getCachedData provides generic caching logic for any slice type.
 func getCachedData[T any](
 	ctx context.Context,
-	c *Cache,
+	cache *Cache,
 	getData func() []T,
 	setData func([]T),
 	fetchData func(context.Context, *linodego.ListOptions) ([]T, error),
 ) ([]T, error) {
-	c.mu.RLock()
+	cache.mu.RLock()
 	currentData := getData()
-	if !c.isExpired() && len(currentData) > 0 {
+
+	if !cache.isExpired() && len(currentData) > 0 {
 		result := make([]T, len(currentData))
 		copy(result, currentData)
-		c.mu.RUnlock()
+		cache.mu.RUnlock()
 
 		return result, nil
 	}
-	c.mu.RUnlock()
+	cache.mu.RUnlock()
 
 	// Cache is expired or empty, fetch fresh data
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	cache.mu.Lock()
+	defer cache.mu.Unlock()
 
 	// Double-check pattern: another goroutine might have updated the cache
 	currentData = getData()
-	if !c.isExpired() && len(currentData) > 0 {
+	if !cache.isExpired() && len(currentData) > 0 {
 		result := make([]T, len(currentData))
 		copy(result, currentData)
 
@@ -91,7 +92,8 @@ func getCachedData[T any](
 	}
 
 	setData(data)
-	c.expiry = time.Now().Add(c.ttl)
+
+	cache.expiry = time.Now().Add(cache.ttl)
 
 	// Return a copy to prevent external modifications
 	result := make([]T, len(data))

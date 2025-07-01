@@ -170,7 +170,7 @@ func (s *Service) handleDatabasesList(ctx context.Context, _ mcp.CallToolRequest
 // handleDatabasesListGeneric is a generic helper for listing databases.
 func handleDatabasesListGeneric[T any](
 	ctx context.Context,
-	s *Service,
+	service *Service,
 	listFunc func(context.Context, *linodego.ListOptions) ([]T, error),
 	convertFunc func(T) TypedDatabaseSummary,
 	dbType, toolName, errorMsg string,
@@ -186,7 +186,7 @@ func handleDatabasesListGeneric[T any](
 		summaries = append(summaries, convertFunc(database))
 	}
 
-	return mcp.NewToolResultText(s.formatTypedDatabaseList(dbType, summaries)), nil
+	return mcp.NewToolResultText(service.formatTypedDatabaseList(dbType, summaries)), nil
 }
 
 // convertMySQLDatabaseToSummary converts a MySQL database to a summary.
@@ -361,11 +361,13 @@ func (s *Service) formatTypedDatabaseList(engineType string, summaries interface
 	switch dbSummaries := summaries.(type) {
 	case []MySQLDatabaseSummary:
 		stringBuilder.WriteString(fmt.Sprintf("Found %d %s databases:\n\n", len(dbSummaries), engineType))
+
 		for _, database := range dbSummaries {
 			s.formatSingleDatabaseSummary(&stringBuilder, database)
 		}
 	case []PostgresDatabaseSummary:
 		stringBuilder.WriteString(fmt.Sprintf("Found %d %s databases:\n\n", len(dbSummaries), engineType))
+
 		for _, database := range dbSummaries {
 			s.formatSingleDatabaseSummary(&stringBuilder, database)
 		}
@@ -692,9 +694,11 @@ func (s *Service) handleMySQLDatabaseUpdate(ctx context.Context, request mcp.Cal
 	}
 
 	updateOptions := linodego.MySQLUpdateOptions{}
+
 	if parameters.Label != "" {
 		updateOptions.Label = parameters.Label
 	}
+
 	if parameters.AllowList != nil {
 		updateOptions.AllowList = &parameters.AllowList
 	}
@@ -723,9 +727,11 @@ func (s *Service) handlePostgresDatabaseUpdate(ctx context.Context, request mcp.
 	}
 
 	updateOptions := linodego.PostgresUpdateOptions{}
+
 	if parameters.Label != "" {
 		updateOptions.Label = parameters.Label
 	}
+
 	if parameters.AllowList != nil {
 		updateOptions.AllowList = &parameters.AllowList
 	}

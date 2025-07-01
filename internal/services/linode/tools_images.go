@@ -122,6 +122,7 @@ func (s *Service) handleGetImage(ctx context.Context, params ImageGetParams) (*I
 	if image.Updated != nil {
 		detail.Updated = image.Updated.Format("2006-01-02T15:04:05")
 	}
+
 	if image.Expiry != nil {
 		expiry := image.Expiry.Format("2006-01-02T15:04:05")
 		detail.Expiry = &expiry
@@ -191,6 +192,7 @@ func (s *Service) handleCreateImage(ctx context.Context, params ImageCreateParam
 	if image.Updated != nil {
 		detail.Updated = image.Updated.Format("2006-01-02T15:04:05")
 	}
+
 	if image.Expiry != nil {
 		expiry := image.Expiry.Format("2006-01-02T15:04:05")
 		detail.Expiry = &expiry
@@ -236,9 +238,11 @@ func (s *Service) handleUpdateImage(ctx context.Context, params ImageUpdateParam
 	if params.Label != "" {
 		updateOpts.Label = params.Label
 	}
+
 	if params.Description != "" {
 		updateOpts.Description = &params.Description
 	}
+
 	if len(params.Tags) > 0 {
 		updateOpts.Tags = &params.Tags
 	}
@@ -270,6 +274,7 @@ func (s *Service) handleUpdateImage(ctx context.Context, params ImageUpdateParam
 	if image.Updated != nil {
 		detail.Updated = image.Updated.Format("2006-01-02T15:04:05")
 	}
+
 	if image.Expiry != nil {
 		expiry := image.Expiry.Format("2006-01-02T15:04:05")
 		detail.Expiry = &expiry
@@ -349,6 +354,7 @@ func (s *Service) handleReplicateImage(ctx context.Context, params ImageReplicat
 
 	// Filter out regions that already have the image
 	newRegions := make([]string, 0)
+
 	for _, region := range params.Regions {
 		if !existingRegions[region] {
 			newRegions = append(newRegions, region)
@@ -395,6 +401,7 @@ func (s *Service) handleReplicateImage(ctx context.Context, params ImageReplicat
 	if image.Updated != nil {
 		detail.Updated = image.Updated.Format("2006-01-02T15:04:05")
 	}
+
 	if image.Expiry != nil {
 		expiry := image.Expiry.Format("2006-01-02T15:04:05")
 		detail.Expiry = &expiry
@@ -499,6 +506,7 @@ func (s *Service) handleImageCreate(ctx context.Context, request mcp.CallToolReq
 	if !diskIDPresent {
 		return mcp.NewToolResultError("disk_id is required"), nil
 	}
+
 	diskID := int(diskIDFloat)
 
 	label, labelPresent := arguments["label"].(string)
@@ -521,11 +529,13 @@ func (s *Service) handleImageCreate(ctx context.Context, request mcp.CallToolReq
 
 	if tagsInterface, ok := arguments["tags"].([]interface{}); ok {
 		tags := make([]string, len(tagsInterface))
+
 		for i, tag := range tagsInterface {
 			if tagStr, ok := tag.(string); ok {
 				tags[i] = tagStr
 			}
 		}
+
 		params.Tags = tags
 	}
 
@@ -559,11 +569,13 @@ func (s *Service) handleImageUpdate(ctx context.Context, request mcp.CallToolReq
 
 	if tagsInterface, ok := arguments["tags"].([]interface{}); ok {
 		tags := make([]string, len(tagsInterface))
+
 		for i, tag := range tagsInterface {
 			if tagStr, ok := tag.(string); ok {
 				tags[i] = tagStr
 			}
 		}
+
 		params.Tags = tags
 	}
 
@@ -609,6 +621,7 @@ func (s *Service) handleImageReplicate(ctx context.Context, request mcp.CallTool
 	}
 
 	regions := make([]string, len(regionsInterface))
+
 	for i, region := range regionsInterface {
 		if regionStr, ok := region.(string); ok {
 			regions[i] = regionStr
@@ -656,11 +669,13 @@ func (s *Service) handleImageUploadCreate(ctx context.Context, request mcp.CallT
 
 	if tagsInterface, ok := arguments["tags"].([]interface{}); ok {
 		tags := make([]string, len(tagsInterface))
+
 		for i, tag := range tagsInterface {
 			if tagStr, ok := tag.(string); ok {
 				tags[i] = tagStr
 			}
 		}
+
 		params.Tags = tags
 	}
 
@@ -690,6 +705,7 @@ func formatImagesListResult(result *ImagesListResult) string {
 
 		if len(img.Regions) > 0 {
 			output.WriteString("Regions:\n")
+
 			for _, region := range img.Regions {
 				output.WriteString(fmt.Sprintf("  %s: %s\n", region.Region, region.Status))
 			}
@@ -729,6 +745,7 @@ func formatImageDetail(detail *ImageDetail) string {
 
 	if len(detail.Regions) > 0 {
 		output.WriteString("Regions:\n")
+
 		for _, region := range detail.Regions {
 			output.WriteString(fmt.Sprintf("  %s: %s\n", region.Region, region.Status))
 		}
