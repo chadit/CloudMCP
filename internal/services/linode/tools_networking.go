@@ -29,6 +29,7 @@ func (s *Service) handleReservedIPsList(ctx context.Context, _ mcp.CallToolReque
 	}
 
 	reservedIPs := make([]ReservedIPSummary, 0, len(ips))
+
 	for _, ipAddress := range ips {
 		// Only include reserved IPs (not assigned to instances)
 		if ipAddress.LinodeID == 0 {
@@ -48,6 +49,7 @@ func (s *Service) handleReservedIPsList(ctx context.Context, _ mcp.CallToolReque
 	}
 
 	var stringBuilder strings.Builder
+
 	stringBuilder.WriteString(fmt.Sprintf("Found %d reserved IP addresses:\n\n", len(reservedIPs)))
 
 	for _, ipAddress := range reservedIPs {
@@ -64,6 +66,7 @@ func (s *Service) handleReservedIPsList(ctx context.Context, _ mcp.CallToolReque
 		fmt.Fprintf(&stringBuilder, "Address: %s (%s %s)\n", ipAddress.Address, ipAddress.Type, visibility)
 		fmt.Fprintf(&stringBuilder, "  Gateway: %s | Prefix: %d\n", ipAddress.Gateway, ipAddress.Prefix)
 		fmt.Fprintf(&stringBuilder, "  Region: %s | %s\n", ipAddress.Region, assignment)
+
 		if ipAddress.RDNS != "" {
 			fmt.Fprintf(&stringBuilder, "  RDNS: %s\n", ipAddress.RDNS)
 		}
@@ -81,6 +84,7 @@ func (s *Service) handleReservedIPsList(ctx context.Context, _ mcp.CallToolReque
 // handleReservedIPGet gets details of a specific reserved IP address.
 func (s *Service) handleReservedIPGet(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	arguments := request.GetArguments()
+
 	address, addressExists := arguments["address"].(string)
 	if !addressExists || address == "" {
 		return mcp.NewToolResultError("address parameter is required"), nil
@@ -110,6 +114,7 @@ func (s *Service) handleReservedIPGet(ctx context.Context, request mcp.CallToolR
 	}
 
 	var stringBuilder strings.Builder
+
 	fmt.Fprintf(&stringBuilder, "IP Address Details:\n")
 	fmt.Fprintf(&stringBuilder, "Address: %s\n", detail.Address)
 	fmt.Fprintf(&stringBuilder, "Type: %s\n", detail.Type)
@@ -159,6 +164,7 @@ func (s *Service) handleReservedIPAllocate(ctx context.Context, request mcp.Call
 	if params.Region != "" {
 		allocateOpts.Region = params.Region
 	}
+
 	if params.LinodeID != 0 {
 		allocateOpts.LinodeID = params.LinodeID
 	}
@@ -261,6 +267,7 @@ func (s *Service) handleVLANsList(ctx context.Context, _ mcp.CallToolRequest) (*
 	}
 
 	summaries := make([]VLANSummary, 0, len(vlans))
+
 	for _, vlan := range vlans {
 		summary := VLANSummary{
 			Label:   vlan.Label,
@@ -274,10 +281,12 @@ func (s *Service) handleVLANsList(ctx context.Context, _ mcp.CallToolRequest) (*
 	// Remove unused result variable
 
 	var stringBuilder strings.Builder
+
 	stringBuilder.WriteString(fmt.Sprintf("Found %d VLANs:\n\n", len(summaries)))
 
 	for _, vlan := range summaries {
 		fmt.Fprintf(&stringBuilder, "Label: %s (%s)\n", vlan.Label, vlan.Region)
+
 		if len(vlan.Linodes) > 0 {
 			fmt.Fprintf(&stringBuilder, "  Attached Linodes: %v\n", vlan.Linodes)
 		} else {
@@ -309,6 +318,7 @@ func (s *Service) handleIPv6PoolsList(ctx context.Context, _ mcp.CallToolRequest
 	}
 
 	summaries := make([]IPv6PoolSummary, 0, len(pools))
+
 	for _, pool := range pools {
 		summary := IPv6PoolSummary{
 			Range:  pool.Range,
@@ -320,6 +330,7 @@ func (s *Service) handleIPv6PoolsList(ctx context.Context, _ mcp.CallToolRequest
 	// Remove unused result variable
 
 	var stringBuilder strings.Builder
+
 	stringBuilder.WriteString(fmt.Sprintf("Found %d IPv6 pools:\n\n", len(summaries)))
 
 	for _, pool := range summaries {
@@ -349,6 +360,7 @@ func (s *Service) handleIPv6RangesList(ctx context.Context, _ mcp.CallToolReques
 	}
 
 	summaries := make([]IPv6RangeSummary, 0, len(ranges))
+
 	for _, ipRange := range ranges {
 		summary := IPv6RangeSummary{
 			Range:       ipRange.Range,
@@ -362,6 +374,7 @@ func (s *Service) handleIPv6RangesList(ctx context.Context, _ mcp.CallToolReques
 	// Remove unused result variable
 
 	var stringBuilder strings.Builder
+
 	stringBuilder.WriteString(fmt.Sprintf("Found %d IPv6 ranges:\n\n", len(summaries)))
 
 	for _, ipRange := range summaries {

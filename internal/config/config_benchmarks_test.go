@@ -13,8 +13,8 @@ import (
 	"github.com/chadit/CloudMCP/pkg/logger"
 )
 
-// BenchmarkConfigReload benchmarks the performance of configuration reload operations
-// to establish baseline performance metrics for dynamic configuration management. //nolint:godot
+// BenchmarkConfigReload benchmarks the performance of configuration reload operations.
+// to establish baseline performance metrics for dynamic configuration management.
 //
 // **Benchmark Coverage:**
 // • Configuration file loading and parsing
@@ -104,8 +104,8 @@ func BenchmarkConfigReload(b *testing.B) {
 	})
 }
 
-// BenchmarkConfigMemoryAllocation benchmarks memory allocation patterns
-// during configuration operations to identify optimization opportunities. //nolint:godot
+// BenchmarkConfigMemoryAllocation benchmarks memory allocation patterns.
+// during configuration operations to identify optimization opportunities.
 //
 // **Memory Optimization Targets:**
 // • Minimize allocations per reload operation
@@ -187,8 +187,8 @@ func BenchmarkConfigMemoryAllocation(b *testing.B) {
 	})
 }
 
-// BenchmarkServiceReconfiguration benchmarks service reconfiguration performance
-// when configuration changes occur, simulating real-world dynamic updates. //nolint:godot
+// BenchmarkServiceReconfiguration benchmarks service reconfiguration performance.
+// when configuration changes occur, simulating real-world dynamic updates.
 //
 // **Service Reconfiguration Performance:**
 // • Service creation with new configuration
@@ -306,8 +306,8 @@ func BenchmarkServiceReconfiguration(b *testing.B) { //nolint:gocognit // Benchm
 	})
 }
 
-// BenchmarkConfigurationPersistence benchmarks configuration file I/O operations
-// to establish baseline performance for configuration persistence scenarios. //nolint:godot
+// BenchmarkConfigurationPersistence benchmarks configuration file I/O operations.
+// to establish baseline performance for configuration persistence scenarios.
 //
 // **File I/O Performance Targets:**
 // • Configuration loading: <5ms for small files
@@ -424,8 +424,8 @@ func BenchmarkConfigurationPersistence(b *testing.B) { //nolint:gocognit // Benc
 	})
 }
 
-// BenchmarkConcurrentConfigAccess benchmarks concurrent configuration access patterns
-// to ensure thread safety and performance under concurrent load. //nolint:godot
+// BenchmarkConcurrentConfigAccess benchmarks concurrent configuration access patterns.
+// to ensure thread safety and performance under concurrent load.
 //
 // **Concurrency Performance:**
 // • Multiple goroutines reading configuration simultaneously

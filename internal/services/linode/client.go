@@ -305,7 +305,6 @@ func (v *ClientValidator) RecommendConfig(usage string) HTTPClientConfig {
 		config.Timeout = batchTimeoutSeconds * time.Second
 		config.IdleConnTimeout = batchIdleTimeoutSeconds * time.Second
 	default:
-		// Return default config for unknown usage patterns
 	}
 
 	return config

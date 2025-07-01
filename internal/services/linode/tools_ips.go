@@ -29,6 +29,7 @@ func (s *Service) handleIPsList(ctx context.Context, _ mcp.CallToolRequest) (*mc
 	}
 
 	var allIPs []IPInfo
+
 	instanceMap := make(map[int]string) // Map instance ID to label
 
 	// Collect IPs from all instances
@@ -70,6 +71,7 @@ func (s *Service) handleIPsList(ctx context.Context, _ mcp.CallToolRequest) (*mc
 	// Group by instance for better readability
 	for instanceID, instanceLabel := range instanceMap {
 		var instanceIPs []IPInfo
+
 		for _, ip := range allIPs {
 			if ip.LinodeID == instanceID {
 				instanceIPs = append(instanceIPs, ip)
@@ -78,14 +80,17 @@ func (s *Service) handleIPsList(ctx context.Context, _ mcp.CallToolRequest) (*mc
 
 		if len(instanceIPs) > 0 {
 			resultText += fmt.Sprintf("Instance: %s (ID: %d)\n", instanceLabel, instanceID)
+
 			for _, ipInfo := range instanceIPs {
 				visibility := visibilityPublic
 				if !ipInfo.Public {
 					visibility = visibilityPrivate
 				}
+
 				resultText += fmt.Sprintf("  - %s (%s, %s) - Region: %s\n",
 					ipInfo.Address, ipInfo.Type, visibility, ipInfo.Region)
 			}
+
 			resultText += "\n"
 		}
 	}
@@ -95,6 +100,7 @@ func (s *Service) handleIPsList(ctx context.Context, _ mcp.CallToolRequest) (*mc
 
 func (s *Service) handleIPGet(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	arguments := request.GetArguments()
+
 	address, ok := arguments["address"].(string)
 	if !ok || address == "" {
 		return mcp.NewToolResultError("address is required"), nil
@@ -125,6 +131,7 @@ func (s *Service) handleIPGet(ctx context.Context, request mcp.CallToolRequest) 
 		for _, instIP := range instance.IPv4 {
 			if instIP.String() == address {
 				ipType := "IPv4"
+
 				visibility := visibilityPublic
 				if instIP.IsPrivate() {
 					visibility = visibilityPrivate

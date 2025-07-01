@@ -38,6 +38,7 @@ type CloudMCPAccountUpdateParams struct {
 func (s *Service) handleCloudMCPAccountList(_ context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	// Load current TOML configuration
 	configPath := config.GetConfigPath()
+
 	tomlConfig, err := config.LoadTOMLConfig(configPath)
 	if err != nil {
 		// Fall back to current in-memory config

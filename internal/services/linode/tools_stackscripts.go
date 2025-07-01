@@ -28,6 +28,7 @@ func (s *Service) handleStackScriptsList(ctx context.Context, _ mcp.CallToolRequ
 	}
 
 	summaries := make([]StackScriptSummary, 0, len(stackscripts))
+
 	for _, stackScript := range stackscripts {
 		summary := StackScriptSummary{
 			ID:                stackScript.ID,
@@ -168,6 +169,7 @@ func (s *Service) handleStackScriptGet(ctx context.Context, request mcp.CallTool
 
 		for _, udf := range detail.UserDefinedFields {
 			fmt.Fprintf(&stringBuilder, "  - %s (%s)\n", udf.Name, udf.Label)
+
 			if udf.Default != "" {
 				fmt.Fprintf(&stringBuilder, "    Default: %s\n", udf.Default)
 			}
