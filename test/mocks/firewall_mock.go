@@ -1,6 +1,6 @@
 // Package mocks provides mock implementations for testing CloudMCP services.
 //
-//nolint:wrapcheck // Mock file returns test errors without wrapping
+// Mock file returns test errors without wrapping
 package mocks
 
 import (
@@ -22,9 +22,11 @@ func (m *MockFirewallService) ListFirewalls(ctx context.Context, opts *linodego.
 
 	firewalls, ok := args.Get(0).([]linodego.Firewall)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return firewalls, args.Error(1)
 }
 
@@ -34,9 +36,11 @@ func (m *MockFirewallService) GetFirewall(ctx context.Context, firewallID int) (
 
 	firewall, ok := args.Get(0).(*linodego.Firewall)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return firewall, args.Error(1)
 }
 
@@ -46,9 +50,11 @@ func (m *MockFirewallService) CreateFirewall(ctx context.Context, opts linodego.
 
 	firewall, ok := args.Get(0).(*linodego.Firewall)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return firewall, args.Error(1)
 }
 
@@ -58,9 +64,11 @@ func (m *MockFirewallService) UpdateFirewall(ctx context.Context, firewallID int
 
 	firewall, ok := args.Get(0).(*linodego.Firewall)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return firewall, args.Error(1)
 }
 
@@ -68,6 +76,7 @@ func (m *MockFirewallService) UpdateFirewall(ctx context.Context, firewallID int
 func (m *MockFirewallService) DeleteFirewall(ctx context.Context, firewallID int) error {
 	args := m.Called(ctx, firewallID)
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return args.Error(0)
 }
 
@@ -77,9 +86,11 @@ func (m *MockFirewallService) UpdateFirewallRules(ctx context.Context, firewallI
 
 	ruleSetPtr, ok := args.Get(0).(*linodego.FirewallRuleSet)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return ruleSetPtr, args.Error(1)
 }
 
@@ -89,9 +100,11 @@ func (m *MockFirewallService) CreateFirewallDevice(ctx context.Context, firewall
 
 	device, ok := args.Get(0).(*linodego.FirewallDevice)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return device, args.Error(1)
 }
 
@@ -99,6 +112,7 @@ func (m *MockFirewallService) CreateFirewallDevice(ctx context.Context, firewall
 func (m *MockFirewallService) DeleteFirewallDevice(ctx context.Context, firewallID int, deviceID int) error {
 	args := m.Called(ctx, firewallID, deviceID)
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return args.Error(0)
 }
 

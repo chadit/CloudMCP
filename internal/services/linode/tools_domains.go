@@ -151,7 +151,7 @@ func (s *Service) handleDomainsList(ctx context.Context, _ mcp.CallToolRequest) 
 
 	domains, domainsErr := account.Client.ListDomains(ctx, nil)
 	if domainsErr != nil {
-		return nil, types.NewToolError("linode", "domains_list", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "domains_list",
 			"failed to list domains", domainsErr)
 	}
 
@@ -223,7 +223,7 @@ func (s *Service) handleDomainGet(ctx context.Context, request mcp.CallToolReque
 
 	domain, domainErr := account.Client.GetDomain(ctx, domainID)
 	if domainErr != nil {
-		return nil, types.NewToolError("linode", "domain_get", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "domain_get",
 			fmt.Sprintf("failed to get domain %d", domainID), domainErr)
 	}
 
@@ -282,7 +282,7 @@ func (s *Service) handleDomainGet(ctx context.Context, request mcp.CallToolReque
 
 // handleDomainCreate creates a new domain.
 //
-//nolint:gocognit,gocyclo // Complex validation and creation logic for domain records is required here
+// Complex validation and creation logic for domain records is required here
 func (s *Service) handleDomainCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	requestArguments, argumentsOK := request.Params.Arguments.(map[string]interface{})
 	if !argumentsOK {

@@ -1,4 +1,4 @@
-//nolint:wrapcheck // Mock file returns test errors without wrapping
+// Mock file returns test errors without wrapping
 package mocks
 
 import (
@@ -20,9 +20,11 @@ func (m *MockDomainService) ListDomains(ctx context.Context, opts *linodego.List
 
 	domains, ok := args.Get(0).([]linodego.Domain)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return domains, args.Error(1)
 }
 
@@ -31,9 +33,11 @@ func (m *MockDomainService) GetDomain(ctx context.Context, domainID int) (*linod
 
 	domain, ok := args.Get(0).(*linodego.Domain)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return domain, args.Error(1)
 }
 
@@ -42,9 +46,11 @@ func (m *MockDomainService) CreateDomain(ctx context.Context, opts linodego.Doma
 
 	domain, ok := args.Get(0).(*linodego.Domain)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return domain, args.Error(1)
 }
 
@@ -53,15 +59,18 @@ func (m *MockDomainService) UpdateDomain(ctx context.Context, domainID int, opts
 
 	domain, ok := args.Get(0).(*linodego.Domain)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return domain, args.Error(1)
 }
 
 func (m *MockDomainService) DeleteDomain(ctx context.Context, domainID int) error {
 	args := m.Called(ctx, domainID)
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return args.Error(0)
 }
 
@@ -71,9 +80,11 @@ func (m *MockDomainService) ListDomainRecords(ctx context.Context, domainID int,
 
 	records, ok := args.Get(0).([]linodego.DomainRecord)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return records, args.Error(1)
 }
 
@@ -82,9 +93,11 @@ func (m *MockDomainService) GetDomainRecord(ctx context.Context, domainID int, r
 
 	record, ok := args.Get(0).(*linodego.DomainRecord)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return record, args.Error(1)
 }
 
@@ -93,9 +106,11 @@ func (m *MockDomainService) CreateDomainRecord(ctx context.Context, domainID int
 
 	record, ok := args.Get(0).(*linodego.DomainRecord)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return record, args.Error(1)
 }
 
@@ -104,15 +119,18 @@ func (m *MockDomainService) UpdateDomainRecord(ctx context.Context, domainID int
 
 	record, ok := args.Get(0).(*linodego.DomainRecord)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return record, args.Error(1)
 }
 
 func (m *MockDomainService) DeleteDomainRecord(ctx context.Context, domainID int, recordID int) error {
 	args := m.Called(ctx, domainID, recordID)
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return args.Error(0)
 }
 

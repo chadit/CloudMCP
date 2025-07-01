@@ -15,12 +15,12 @@ import (
 func (s *Service) handleListImages(ctx context.Context, params ImagesListParams) (*ImagesListResult, error) {
 	account, err := s.accountManager.GetCurrentAccount()
 	if err != nil {
-		return nil, types.NewToolError("linode", "list_images", "failed to get current account", err) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "list_images", "failed to get current account", err)
 	}
 
 	images, err := account.Client.ListImages(ctx, nil)
 	if err != nil {
-		return nil, types.NewToolError("linode", "list_images", "failed to list images", err) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "list_images", "failed to list images", err)
 	}
 
 	result := &ImagesListResult{
@@ -79,22 +79,22 @@ func (s *Service) handleListImages(ctx context.Context, params ImagesListParams)
 func (s *Service) handleGetImage(ctx context.Context, params ImageGetParams) (*ImageDetail, error) {
 	// Validate input
 	if params.ImageID == "" {
-		return nil, types.NewToolError("linode", "get_image", "image ID cannot be empty", nil) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "get_image", "image ID cannot be empty", nil)
 	}
 
 	account, err := s.accountManager.GetCurrentAccount()
 	if err != nil {
-		return nil, types.NewToolError("linode", "get_image", "failed to get current account", err) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "get_image", "failed to get current account", err)
 	}
 
 	image, err := account.Client.GetImage(ctx, params.ImageID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "get_image", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "get_image",
 			"failed to get image "+params.ImageID, err)
 	}
 
 	if image == nil {
-		return nil, types.NewToolError("linode", "get_image", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "get_image",
 			"image "+params.ImageID+" not found", nil)
 	}
 
@@ -151,7 +151,7 @@ func (s *Service) handleGetImage(ctx context.Context, params ImageGetParams) (*I
 func (s *Service) handleCreateImage(ctx context.Context, params ImageCreateParams) (*ImageDetail, error) {
 	account, err := s.accountManager.GetCurrentAccount()
 	if err != nil {
-		return nil, types.NewToolError("linode", "create_image", "failed to get current account", err) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "create_image", "failed to get current account", err)
 	}
 
 	createOpts := linodego.ImageCreateOptions{
@@ -164,7 +164,7 @@ func (s *Service) handleCreateImage(ctx context.Context, params ImageCreateParam
 
 	image, err := account.Client.CreateImage(ctx, createOpts)
 	if err != nil {
-		return nil, types.NewToolError("linode", "create_image", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "create_image",
 			fmt.Sprintf("failed to create image from disk %d", params.DiskID), err)
 	}
 
@@ -230,7 +230,7 @@ func (s *Service) handleCreateImage(ctx context.Context, params ImageCreateParam
 func (s *Service) handleUpdateImage(ctx context.Context, params ImageUpdateParams) (*ImageDetail, error) {
 	account, err := s.accountManager.GetCurrentAccount()
 	if err != nil {
-		return nil, types.NewToolError("linode", "update_image", "failed to get current account", err) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "update_image", "failed to get current account", err)
 	}
 
 	updateOpts := linodego.ImageUpdateOptions{}
@@ -249,7 +249,7 @@ func (s *Service) handleUpdateImage(ctx context.Context, params ImageUpdateParam
 
 	image, err := account.Client.UpdateImage(ctx, params.ImageID, updateOpts)
 	if err != nil {
-		return nil, types.NewToolError("linode", "update_image", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "update_image",
 			"failed to update image "+params.ImageID, err)
 	}
 
@@ -303,24 +303,24 @@ func (s *Service) handleUpdateImage(ctx context.Context, params ImageUpdateParam
 func (s *Service) handleDeleteImage(ctx context.Context, params ImageDeleteParams) (string, error) {
 	account, err := s.accountManager.GetCurrentAccount()
 	if err != nil {
-		return "", types.NewToolError("linode", "delete_image", "failed to get current account", err) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return "", types.NewToolError("linode", "delete_image", "failed to get current account", err)
 	}
 
 	// Check if image exists and is private
 	image, err := account.Client.GetImage(ctx, params.ImageID)
 	if err != nil {
-		return "", types.NewToolError("linode", "delete_image", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return "", types.NewToolError("linode", "delete_image",
 			"failed to get image "+params.ImageID, err)
 	}
 
 	if image.IsPublic {
-		return "", types.NewToolError("linode", "delete_image", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return "", types.NewToolError("linode", "delete_image",
 			"cannot delete public images", nil)
 	}
 
 	err = account.Client.DeleteImage(ctx, params.ImageID)
 	if err != nil {
-		return "", types.NewToolError("linode", "delete_image", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return "", types.NewToolError("linode", "delete_image",
 			"failed to delete image "+params.ImageID, err)
 	}
 
@@ -331,18 +331,18 @@ func (s *Service) handleDeleteImage(ctx context.Context, params ImageDeleteParam
 func (s *Service) handleReplicateImage(ctx context.Context, params ImageReplicateParams) (*ImageDetail, error) {
 	account, err := s.accountManager.GetCurrentAccount()
 	if err != nil {
-		return nil, types.NewToolError("linode", "replicate_image", "failed to get current account", err) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "replicate_image", "failed to get current account", err)
 	}
 
 	// Validate the image exists and is private
 	existingImage, err := account.Client.GetImage(ctx, params.ImageID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "replicate_image", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "replicate_image",
 			"failed to get image "+params.ImageID, err)
 	}
 
 	if existingImage.IsPublic {
-		return nil, types.NewToolError("linode", "replicate_image", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "replicate_image",
 			"cannot replicate public images", nil)
 	}
 
@@ -362,7 +362,7 @@ func (s *Service) handleReplicateImage(ctx context.Context, params ImageReplicat
 	}
 
 	if len(newRegions) == 0 {
-		return nil, types.NewToolError("linode", "replicate_image", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "replicate_image",
 			"image already exists in all specified regions", nil)
 	}
 
@@ -371,7 +371,7 @@ func (s *Service) handleReplicateImage(ctx context.Context, params ImageReplicat
 		Regions: newRegions,
 	})
 	if err != nil {
-		return nil, types.NewToolError("linode", "replicate_image", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "replicate_image",
 			fmt.Sprintf("failed to replicate image %s to regions %s",
 				params.ImageID, strings.Join(newRegions, ", ")), err)
 	}
@@ -430,7 +430,7 @@ func (s *Service) handleReplicateImage(ctx context.Context, params ImageReplicat
 func (s *Service) handleCreateImageUpload(ctx context.Context, params ImageUploadParams) (*ImageUploadResult, error) {
 	account, err := s.accountManager.GetCurrentAccount()
 	if err != nil {
-		return nil, types.NewToolError("linode", "create_image_upload", "failed to get current account", err) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "create_image_upload", "failed to get current account", err)
 	}
 
 	uploadOpts := linodego.ImageCreateUploadOptions{
@@ -447,7 +447,7 @@ func (s *Service) handleCreateImageUpload(ctx context.Context, params ImageUploa
 
 	image, uploadURL, err := account.Client.CreateImageUpload(ctx, uploadOpts)
 	if err != nil {
-		return nil, types.NewToolError("linode", "create_image_upload", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "create_image_upload",
 			"failed to create image upload", err)
 	}
 

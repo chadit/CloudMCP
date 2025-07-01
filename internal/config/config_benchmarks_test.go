@@ -13,9 +13,7 @@ import (
 	"github.com/chadit/CloudMCP/pkg/logger"
 )
 
-// BenchmarkConfigReload benchmarks the performance of configuration reload operations.
-// to establish baseline performance metrics for dynamic configuration management.
-//
+// BenchmarkConfigReload benchmarks configuration reload operations.
 // **Benchmark Coverage:**
 // • Configuration file loading and parsing
 // • TOML configuration reload operations
@@ -31,7 +29,7 @@ import (
 // **Benchmark Environment:**
 // • Temporary configuration files for isolation
 // • Realistic configuration structures
-// • Multiple account configurations for comprehensive testing
+// • Multiple account configurations for comprehensive testing.
 func BenchmarkConfigReload(b *testing.B) {
 	tempDir := b.TempDir()
 	configPath := filepath.Join(tempDir, "benchmark-config.toml")
@@ -56,7 +54,7 @@ func BenchmarkConfigReload(b *testing.B) {
 	}
 
 	for _, acc := range accounts {
-		err := manager.AddAccount(acc.name, acc.account)
+		err = manager.AddAccount(acc.name, acc.account)
 		require.NoError(b, err, "Adding account should succeed")
 	}
 
@@ -66,7 +64,7 @@ func BenchmarkConfigReload(b *testing.B) {
 	b.Run("ConfigReload", func(b *testing.B) {
 		b.ResetTimer()
 
-		for range b.N {
+		for b.Loop() {
 			err := manager.Reload()
 			if err != nil {
 				b.Fatalf("Config reload failed: %v", err)
@@ -77,7 +75,7 @@ func BenchmarkConfigReload(b *testing.B) {
 	b.Run("ConfigGetAfterReload", func(b *testing.B) {
 		b.ResetTimer()
 
-		for range b.N {
+		for b.Loop() {
 			// Reload configuration
 			err := manager.Reload()
 			if err != nil {
@@ -95,7 +93,7 @@ func BenchmarkConfigReload(b *testing.B) {
 	b.Run("ConfigSave", func(b *testing.B) {
 		b.ResetTimer()
 
-		for range b.N {
+		for b.Loop() {
 			err := manager.Save()
 			if err != nil {
 				b.Fatalf("Config save failed: %v", err)
@@ -105,13 +103,11 @@ func BenchmarkConfigReload(b *testing.B) {
 }
 
 // BenchmarkConfigMemoryAllocation benchmarks memory allocation patterns.
-// during configuration operations to identify optimization opportunities.
-//
 // **Memory Optimization Targets:**
 // • Minimize allocations per reload operation
 // • Reduce GC pressure for frequent configuration access
 // • Optimize TOML parsing and structure creation
-// • Monitor memory growth patterns during operations
+// • Monitor memory growth patterns during operations.
 func BenchmarkConfigMemoryAllocation(b *testing.B) {
 	tempDir := b.TempDir()
 	configPath := filepath.Join(tempDir, "memory-benchmark-config.toml")
@@ -124,7 +120,7 @@ func BenchmarkConfigMemoryAllocation(b *testing.B) {
 
 	// Add accounts for realistic memory usage
 	for accountIndex := range 10 {
-		err := manager.AddAccount(
+		err = manager.AddAccount(
 			"account"+string(rune('A'+accountIndex)),
 			configpkg.AccountConfig{
 				Token: "token-" + string(rune('A'+accountIndex)) + "-12345",
@@ -141,7 +137,7 @@ func BenchmarkConfigMemoryAllocation(b *testing.B) {
 		b.ReportAllocs()
 		b.ResetTimer()
 
-		for range b.N {
+		for b.Loop() {
 			err := manager.Reload()
 			if err != nil {
 				b.Fatalf("Config reload failed: %v", err)
@@ -153,7 +149,7 @@ func BenchmarkConfigMemoryAllocation(b *testing.B) {
 		b.ReportAllocs()
 		b.ResetTimer()
 
-		for range b.N {
+		for b.Loop() {
 			config := manager.GetConfig()
 			if config == nil {
 				b.Fatal("Config should not be nil")
@@ -167,6 +163,7 @@ func BenchmarkConfigMemoryAllocation(b *testing.B) {
 
 		for accountIndex := range b.N {
 			accountName := "temp-account-" + string(rune(accountIndex%26+'A'))
+
 			err := manager.AddAccount(accountName, configpkg.AccountConfig{
 				Token: "temp-token-" + string(rune(accountIndex%26+'A')),
 				Label: "Temporary Account " + string(rune(accountIndex%26+'A')),
@@ -178,8 +175,7 @@ func BenchmarkConfigMemoryAllocation(b *testing.B) {
 			// Clean up to avoid memory accumulation affecting results
 			if accountIndex%10 == 9 {
 				err := manager.RemoveAccount(accountName)
-				if err != nil {
-					// Account might not exist, which is fine for benchmark
+				if err != nil { // Account might not exist, which is fine for benchmark
 					b.Logf("Account removal expected result: %v", err)
 				}
 			}
@@ -188,14 +184,14 @@ func BenchmarkConfigMemoryAllocation(b *testing.B) {
 }
 
 // BenchmarkServiceReconfiguration benchmarks service reconfiguration performance.
-// when configuration changes occur, simulating real-world dynamic updates.
-//
 // **Service Reconfiguration Performance:**
 // • Service creation with new configuration
 // • Account manager updates with configuration changes
 // • Memory allocation during service reconfiguration
-// • Impact of account count on reconfiguration performance
-func BenchmarkServiceReconfiguration(b *testing.B) { //nolint:gocognit // Benchmark complexity acceptable for comprehensive testing
+// • Impact of account count on reconfiguration performance.
+//
+//nolint:gocognit // unit test can have complex functions.
+func BenchmarkServiceReconfiguration(b *testing.B) {
 	tempDir := b.TempDir()
 	configPath := filepath.Join(tempDir, "service-reconfig-benchmark.toml")
 	log := logger.New("error") // Minimize logging overhead
@@ -216,7 +212,7 @@ func BenchmarkServiceReconfiguration(b *testing.B) { //nolint:gocognit // Benchm
 	}
 
 	for _, acc := range baseAccounts {
-		err := manager.AddAccount(acc.name, acc.account)
+		err = manager.AddAccount(acc.name, acc.account)
 		require.NoError(b, err, "Adding account should succeed")
 	}
 
@@ -229,7 +225,7 @@ func BenchmarkServiceReconfiguration(b *testing.B) { //nolint:gocognit // Benchm
 	b.Run("ServiceCreationWithConfig", func(b *testing.B) {
 		b.ResetTimer()
 
-		for range b.N {
+		for b.Loop() {
 			config := manager.GetConfig()
 			if config == nil {
 				b.Fatal("Config should not be nil")
@@ -254,21 +250,22 @@ func BenchmarkServiceReconfiguration(b *testing.B) { //nolint:gocognit // Benchm
 	b.Run("ConfigReloadAndServiceUpdate", func(b *testing.B) {
 		b.ResetTimer()
 
-		for range b.N {
-			// Reload configuration
+		for b.Loop() {
+			// Reload configuration.
 			err := manager.Reload()
 			if err != nil {
 				b.Fatalf("Config reload failed: %v", err)
 			}
 
-			// Get updated configuration
+			// Get updated configuration.
 			config := manager.GetConfig()
 			if config == nil {
 				b.Fatal("Config should not be nil")
 			}
 
-			// Create service with updated config
+			// Create service with updated config.
 			legacyConfig := config.ToLegacyConfig()
+
 			service, err := linode.New(legacyConfig, log)
 			if err != nil {
 				b.Fatalf("Service creation with updated config failed: %v", err)
@@ -284,7 +281,7 @@ func BenchmarkServiceReconfiguration(b *testing.B) { //nolint:gocognit // Benchm
 		b.ReportAllocs()
 		b.ResetTimer()
 
-		for range b.N {
+		for b.Loop() {
 			// Reload and recreate service
 			err := manager.Reload()
 			if err != nil {
@@ -307,26 +304,27 @@ func BenchmarkServiceReconfiguration(b *testing.B) { //nolint:gocognit // Benchm
 }
 
 // BenchmarkConfigurationPersistence benchmarks configuration file I/O operations.
-// to establish baseline performance for configuration persistence scenarios.
-//
 // **File I/O Performance Targets:**
 // • Configuration loading: <5ms for small files
 // • Configuration saving: <10ms for typical configurations
 // • File system operations: Minimal overhead
-// • TOML parsing/serialization: Efficient processing
-func BenchmarkConfigurationPersistence(b *testing.B) { //nolint:gocognit // Benchmark complexity acceptable for comprehensive testing
+// • TOML parsing/serialization: Efficient processing.
+//
+//nolint:gocognit // unit test can have complex functions.
+func BenchmarkConfigurationPersistence(b *testing.B) {
 	tempDir := b.TempDir()
 	configPath := filepath.Join(tempDir, "persistence-benchmark.toml")
 
-	// Create a realistic configuration file
+	// Create a realistic configuration file.
 	createRealisticConfig := func() error {
 		manager := configpkg.NewTOMLConfigManager(configPath)
+
 		err := manager.LoadOrCreate()
 		if err != nil {
 			return fmt.Errorf("failed to load or create config: %w", err)
 		}
 
-		// Add multiple accounts with realistic data
+		// Add multiple accounts with realistic data.
 		accounts := map[string]configpkg.AccountConfig{
 			"production":  {Token: "pat_1234567890abcdef1234567890abcdef12345678", Label: "Production Environment - Main Account"},
 			"staging":     {Token: "pat_abcdef1234567890abcdef1234567890abcdef12", Label: "Staging Environment - Testing Account"},
@@ -335,7 +333,7 @@ func BenchmarkConfigurationPersistence(b *testing.B) { //nolint:gocognit // Benc
 		}
 
 		for name, account := range accounts {
-			err := manager.AddAccount(name, account)
+			err = manager.AddAccount(name, account)
 			if err != nil {
 				return fmt.Errorf("failed to add account %s: %w", name, err)
 			}
@@ -355,8 +353,9 @@ func BenchmarkConfigurationPersistence(b *testing.B) { //nolint:gocognit // Benc
 	b.Run("ConfigurationLoading", func(b *testing.B) {
 		b.ResetTimer()
 
-		for range b.N {
+		for b.Loop() {
 			manager := configpkg.NewTOMLConfigManager(configPath)
+
 			err := manager.LoadOrCreate()
 			if err != nil {
 				b.Fatalf("Configuration loading failed: %v", err)
@@ -371,7 +370,7 @@ func BenchmarkConfigurationPersistence(b *testing.B) { //nolint:gocognit // Benc
 
 		b.ResetTimer()
 
-		for range b.N {
+		for b.Loop() {
 			err := manager.Save()
 			if err != nil {
 				b.Fatalf("Configuration saving failed: %v", err)
@@ -382,15 +381,16 @@ func BenchmarkConfigurationPersistence(b *testing.B) { //nolint:gocognit // Benc
 	b.Run("FileIOOperations", func(b *testing.B) {
 		b.ResetTimer()
 
-		for range b.N {
+		for b.Loop() {
 			// Read file
 			_, err := os.ReadFile(configPath)
 			if err != nil {
 				b.Fatalf("File read failed: %v", err)
 			}
 
-			// Write file (with different content to avoid caching)
+			// Write file (with different content to avoid caching).
 			testContent := "# Test configuration file\n[system]\nserver_name = \"Test\"\n"
+
 			err = os.WriteFile(configPath+".temp", []byte(testContent), 0o644)
 			if err != nil {
 				b.Fatalf("File write failed: %v", err)
@@ -409,8 +409,8 @@ func BenchmarkConfigurationPersistence(b *testing.B) { //nolint:gocognit // Benc
 		b.ReportAllocs()
 		b.ResetTimer()
 
-		for range b.N {
-			// Complete persistence cycle
+		for b.Loop() {
+			// Complete persistence cycle.
 			err := manager.Reload()
 			if err != nil {
 				b.Fatalf("Config reload failed: %v", err)
@@ -425,14 +425,14 @@ func BenchmarkConfigurationPersistence(b *testing.B) { //nolint:gocognit // Benc
 }
 
 // BenchmarkConcurrentConfigAccess benchmarks concurrent configuration access patterns.
-// to ensure thread safety and performance under concurrent load.
-//
 // **Concurrency Performance:**
 // • Multiple goroutines reading configuration simultaneously
 // • Configuration reload with concurrent access
 // • Thread safety verification under load
-// • Performance degradation under concurrent access
-func BenchmarkConcurrentConfigAccess(b *testing.B) { //nolint:gocognit // Benchmark complexity acceptable for comprehensive testing
+// • Performance degradation under concurrent access.
+//
+//nolint:gocognit // unit test can have complex functions.
+func BenchmarkConcurrentConfigAccess(b *testing.B) {
 	tempDir := b.TempDir()
 	configPath := filepath.Join(tempDir, "concurrent-benchmark.toml")
 
@@ -444,7 +444,7 @@ func BenchmarkConcurrentConfigAccess(b *testing.B) { //nolint:gocognit // Benchm
 
 	// Add accounts for realistic concurrent testing
 	for accountIndex := range 5 {
-		err := manager.AddAccount(
+		err = manager.AddAccount(
 			"account"+string(rune('1'+accountIndex)),
 			configpkg.AccountConfig{
 				Token: "token-" + string(rune('1'+accountIndex)) + "-concurrent",
@@ -471,7 +471,7 @@ func BenchmarkConcurrentConfigAccess(b *testing.B) { //nolint:gocognit // Benchm
 	b.Run("ConcurrentReloadAndGet", func(b *testing.B) {
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
-				// 90% reads, 10% reloads for realistic usage pattern
+				// 90% reads, 10% reloads for realistic usage pattern.
 				if b.N%10 == 0 {
 					err := manager.Reload()
 					if err != nil {
@@ -498,7 +498,7 @@ func BenchmarkConcurrentConfigAccess(b *testing.B) { //nolint:gocognit // Benchm
 					continue
 				}
 
-				// Simulate realistic configuration usage
+				// Simulate realistic configuration usage.
 				_ = len(config.Accounts)
 				_ = config.System.DefaultAccount
 			}

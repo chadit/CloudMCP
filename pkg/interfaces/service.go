@@ -6,7 +6,7 @@ import (
 
 type CloudService interface {
 	Name() string
-	RegisterTools(server interface{}) error
+	RegisterTools(server any) error
 	Initialize(ctx context.Context) error
 	Shutdown(ctx context.Context) error
 }

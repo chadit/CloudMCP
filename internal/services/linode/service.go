@@ -16,6 +16,7 @@ import (
 
 	"github.com/chadit/CloudMCP/internal/config"
 	"github.com/chadit/CloudMCP/pkg/logger"
+	"github.com/chadit/CloudMCP/pkg/metrics"
 	"github.com/chadit/CloudMCP/pkg/types"
 )
 
@@ -32,6 +33,7 @@ type Service struct {
 	config         *config.Config
 	logger         logger.Logger
 	accountManager *AccountManager
+	metrics        *metrics.Collector
 }
 
 // AccountManager provides thread-safe management of multiple Linode accounts.
@@ -52,11 +54,69 @@ type Account struct {
 	Client *linodego.Client
 }
 
+// ToolHandler defines the signature for MCP tool handlers (alias for convenience).
+type ToolHandler = func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error)
+
+// withMetrics wraps a tool handler with metrics collection.
+func (s *Service) withMetrics(toolName string, handler ToolHandler) ToolHandler {
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		// Get current account for metrics labeling
+		currentAccount := s.accountManager.currentAccount
+		if currentAccount == "" {
+			currentAccount = "unknown"
+		}
+
+		// Start timing
+		timer := s.metrics.NewToolExecutionTimer(toolName, currentAccount)
+
+		// Execute the handler
+		result, err := handler(ctx, request)
+
+		// Record metrics
+		status := "success"
+		if err != nil {
+			status = "error"
+		}
+		timer.Finish(status)
+
+		return result, err
+	}
+}
+
+// recordAPIRequest records metrics for API requests to Linode.
+func (s *Service) recordAPIRequest(method, endpoint string, err error) {
+	if !s.metrics.IsEnabled() {
+		return
+	}
+
+	status := "200"
+	if err != nil {
+		status = "error"
+	}
+
+	// This is a simplified approach - in a real implementation you'd want
+	// to capture actual HTTP status codes from the API response
+	s.metrics.RecordAPIRequest(method, endpoint, status, 0) // Duration would be captured in a real HTTP client wrapper
+}
+
 // New creates a new Linode service instance with the provided configuration and logger.
 // It initializes all configured Linode accounts with their API clients and sets up
 // the account manager with the default account. Returns an error if account configuration
 // is invalid or if account initialization fails.
 func New(cfg *config.Config, log logger.Logger) (*Service, error) {
+	return NewWithMetricsConfig(cfg, log, nil)
+}
+
+// NewWithMetricsConfig creates a new Linode service with custom metrics configuration.
+// If metricsConfig is nil, uses default configuration based on cfg.EnableMetrics.
+func NewWithMetricsConfig(cfg *config.Config, log logger.Logger, metricsConfig *metrics.Config) (*Service, error) {
+	// Initialize metrics collector
+	if metricsConfig == nil {
+		metricsConfig = metrics.DefaultConfig()
+		metricsConfig.Enabled = cfg.EnableMetrics
+	}
+	metricsCollector := metrics.NewCollector(metricsConfig)
+
 	service := &Service{
 		config: cfg,
 		logger: log,
@@ -64,6 +124,7 @@ func New(cfg *config.Config, log logger.Logger) (*Service, error) {
 			accounts:       make(map[string]*Account),
 			currentAccount: cfg.DefaultLinodeAccount,
 		},
+		metrics: metricsCollector,
 	}
 
 	for name, accCfg := range cfg.LinodeAccounts {
@@ -132,17 +193,8 @@ func (s *Service) Shutdown(_ context.Context) error {
 	return nil
 }
 
-// RegisterTools registers all Linode MCP tools with the provided MCP server.
-// This includes account management, instance operations, volume management,
-// IP address tools, and image operations. Returns an error if tool registration fails.
-func (s *Service) RegisterTools(server interface{}) error {
-	mcpServer, ok := server.(*mcpserver.MCPServer)
-	if !ok {
-		return fmt.Errorf("%w", ErrInvalidServerType)
-	}
-
-	// Register tools with proper JSON schemas
-	// linode_account_get - no parameters
+// registerAccountTools registers account management tools.
+func (s *Service) registerAccountTools(mcpServer *mcpserver.MCPServer) {
 	mcpServer.AddTool(mcp.Tool{
 		Name:        "linode_account_get",
 		Description: "Get current Linode account information",
@@ -153,7 +205,6 @@ func (s *Service) RegisterTools(server interface{}) error {
 		},
 	}, s.handleAccountGet)
 
-	// linode_account_list - no parameters
 	mcpServer.AddTool(mcp.Tool{
 		Name:        "linode_account_list",
 		Description: "List all configured Linode accounts",
@@ -164,7 +215,6 @@ func (s *Service) RegisterTools(server interface{}) error {
 		},
 	}, s.handleAccountList)
 
-	// linode_account_switch - requires account_name parameter
 	mcpServer.AddTool(mcp.Tool{
 		Name:        "linode_account_switch",
 		Description: "Switch to a different Linode account",
@@ -178,9 +228,11 @@ func (s *Service) RegisterTools(server interface{}) error {
 			},
 			Required: []string{"account_name"},
 		},
-	}, s.handleAccountSwitch)
+	}, s.withMetrics("account_switch", s.handleAccountSwitch))
+}
 
-	// System tools
+// registerSystemTools registers system information tools.
+func (s *Service) registerSystemTools(mcpServer *mcpserver.MCPServer) {
 	mcpServer.AddTool(mcp.Tool{
 		Name:        "cloudmcp_version",
 		Description: "Get CloudMCP version and build information",
@@ -189,7 +241,7 @@ func (s *Service) RegisterTools(server interface{}) error {
 			Properties: map[string]any{},
 			Required:   []string{},
 		},
-	}, s.handleSystemVersion)
+	}, s.withMetrics("cloudmcp_version", s.handleSystemVersion))
 
 	mcpServer.AddTool(mcp.Tool{
 		Name:        "cloudmcp_version_json",
@@ -199,7 +251,21 @@ func (s *Service) RegisterTools(server interface{}) error {
 			Properties: map[string]any{},
 			Required:   []string{},
 		},
-	}, s.handleSystemVersionJSON)
+	}, s.withMetrics("cloudmcp_version_json", s.handleSystemVersionJSON))
+}
+
+// RegisterTools registers all Linode MCP tools with the provided MCP server.
+// This includes account management, instance operations, volume management,
+// IP address tools, and image operations. Returns an error if tool registration fails.
+func (s *Service) RegisterTools(server any) error {
+	mcpServer, ok := server.(*mcpserver.MCPServer)
+	if !ok {
+		return fmt.Errorf("%w", ErrInvalidServerType)
+	}
+
+	// Register tools using helper functions
+	s.registerAccountTools(mcpServer)
+	s.registerSystemTools(mcpServer)
 
 	// Configuration management tools
 	mcpServer.AddTool(mcp.Tool{
@@ -210,7 +276,7 @@ func (s *Service) RegisterTools(server interface{}) error {
 			Properties: map[string]any{},
 			Required:   []string{},
 		},
-	}, s.handleCloudMCPAccountList)
+	}, s.withMetrics("cloudmcp_account_list", s.handleCloudMCPAccountList))
 
 	mcpServer.AddTool(mcp.Tool{
 		Name:        "cloudmcp_account_add",
@@ -237,7 +303,7 @@ func (s *Service) RegisterTools(server interface{}) error {
 			},
 			Required: []string{"name", "token", "label"},
 		},
-	}, s.handleCloudMCPAccountAdd)
+	}, s.withMetrics("cloudmcp_account_add", s.handleCloudMCPAccountAdd))
 
 	mcpServer.AddTool(mcp.Tool{
 		Name:        "cloudmcp_account_remove",
@@ -2510,8 +2576,7 @@ func (am *AccountManager) GetCurrentAccount() (*Account, error) {
 
 	account, exists := am.accounts[am.currentAccount]
 	if !exists {
-		return nil, types.NewServiceError("linode",
-			fmt.Sprintf("current account %q not found", am.currentAccount), nil)
+		return nil, types.NewServiceError("linode", fmt.Sprintf("current account %q not found", am.currentAccount), nil)
 	}
 
 	return account, nil
@@ -2523,8 +2588,7 @@ func (am *AccountManager) GetAccount(name string) (*Account, error) {
 
 	account, exists := am.accounts[name]
 	if !exists {
-		return nil, types.NewServiceError("linode",
-			fmt.Sprintf("account %q not found", name), nil)
+		return nil, types.NewServiceError("linode", fmt.Sprintf("account %q not found", name), nil)
 	}
 
 	return account, nil
@@ -2535,8 +2599,7 @@ func (am *AccountManager) SwitchAccount(name string) error {
 	defer am.mu.Unlock()
 
 	if _, exists := am.accounts[name]; !exists {
-		return types.NewServiceError("linode",
-			fmt.Sprintf("account %q not found", name), nil)
+		return types.NewServiceError("linode", fmt.Sprintf("account %q not found", name), nil)
 	}
 
 	am.currentAccount = name
@@ -2600,17 +2663,23 @@ func (am *AccountManager) SetCurrentAccountForTesting(name string) {
 // NewForTesting creates a service instance for testing with the provided configuration and dependencies.
 // This function allows external test packages to create service instances with custom dependencies.
 func NewForTesting(cfg *config.Config, log logger.Logger, accountManager *AccountManager) *Service {
+	// Use test config for metrics to avoid registry conflicts
+	metricsConfig := metrics.TestConfig()
+	metricsConfig.Enabled = cfg.EnableMetrics
+	metricsCollector := metrics.NewCollector(metricsConfig)
+
 	return &Service{
 		config:         cfg,
 		logger:         log,
 		accountManager: accountManager,
+		metrics:        metricsCollector,
 	}
 }
 
 // CallToolForTesting provides a public interface for testing tool handlers.
 // This allows external test packages to call tool handlers through the public API.
 //
-//nolint:gocyclo // Large switch statement needed to dispatch all tool handlers for testing
+// Large switch statement needed to dispatch all tool handlers for testing
 func (s *Service) CallToolForTesting(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	switch request.Params.Name {
 	case "linode_account_get":
@@ -2822,7 +2891,7 @@ func (s *Service) CallToolForTesting(ctx context.Context, request mcp.CallToolRe
 	case "cloudmcp_version_json":
 		return s.handleSystemVersionJSON(ctx, request)
 	default:
-		return nil, fmt.Errorf("unsupported tool for testing: %s", request.Params.Name) //nolint:err113 // Dynamic error message needed for debugging
+		return nil, fmt.Errorf("unsupported tool for testing: %s", request.Params.Name) // Dynamic error message needed for debugging
 	}
 }
 
@@ -2830,7 +2899,7 @@ func (s *Service) CallToolForTesting(ctx context.Context, request mcp.CallToolRe
 // This allows external test packages to access the text content helper function.
 func GetTextContentForTesting(testingInterface interface {
 	Helper()
-	Errorf(format string, args ...interface{})
+	Errorf(format string, args ...any)
 	FailNow()
 }, result *mcp.CallToolResult,
 ) string {

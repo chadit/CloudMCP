@@ -24,7 +24,7 @@ func (s *Service) handleReservedIPsList(ctx context.Context, _ mcp.CallToolReque
 
 	ips, err := account.Client.ListIPAddresses(ctx, nil)
 	if err != nil {
-		return nil, types.NewToolError("linode", "reserved_ips_list", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "reserved_ips_list",
 			"failed to list IP addresses", err)
 	}
 
@@ -97,7 +97,7 @@ func (s *Service) handleReservedIPGet(ctx context.Context, request mcp.CallToolR
 
 	ipAddress, err := account.Client.GetIPAddress(ctx, address)
 	if err != nil {
-		return nil, types.NewToolError("linode", "reserved_ip_get", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "reserved_ip_get",
 			"failed to get IP address "+address, err)
 	}
 
@@ -246,7 +246,7 @@ func (s *Service) handleReservedIPUpdate(ctx context.Context, request mcp.CallTo
 
 	ipAddress, err := account.Client.UpdateIPAddress(ctx, address, updateOpts)
 	if err != nil {
-		return nil, types.NewToolError("linode", "reserved_ip_update", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "reserved_ip_update",
 			"failed to update IP address "+address, err)
 	}
 
@@ -262,7 +262,7 @@ func (s *Service) handleVLANsList(ctx context.Context, _ mcp.CallToolRequest) (*
 
 	vlans, err := account.Client.ListVLANs(ctx, nil)
 	if err != nil {
-		return nil, types.NewToolError("linode", "vlans_list", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "vlans_list",
 			"failed to list VLANs", err)
 	}
 
@@ -313,7 +313,7 @@ func (s *Service) handleIPv6PoolsList(ctx context.Context, _ mcp.CallToolRequest
 
 	pools, err := account.Client.ListIPv6Pools(ctx, nil)
 	if err != nil {
-		return nil, types.NewToolError("linode", "ipv6_pools_list", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "ipv6_pools_list",
 			"failed to list IPv6 pools", err)
 	}
 
@@ -355,7 +355,7 @@ func (s *Service) handleIPv6RangesList(ctx context.Context, _ mcp.CallToolReques
 
 	ranges, err := account.Client.ListIPv6Ranges(ctx, nil)
 	if err != nil {
-		return nil, types.NewToolError("linode", "ipv6_ranges_list", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "ipv6_ranges_list",
 			"failed to list IPv6 ranges", err)
 	}
 

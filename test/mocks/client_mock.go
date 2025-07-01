@@ -1,4 +1,4 @@
-//nolint:wrapcheck // Mock file returns test errors without wrapping
+// Mock file returns test errors without wrapping
 package mocks
 
 import (
@@ -19,9 +19,11 @@ func (m *MockClient) ListRegions(ctx context.Context, opts *linodego.ListOptions
 
 	regions, ok := args.Get(0).([]linodego.Region)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return regions, args.Error(1)
 }
 
@@ -31,9 +33,11 @@ func (m *MockClient) ListTypes(ctx context.Context, opts *linodego.ListOptions) 
 
 	types, ok := args.Get(0).([]linodego.LinodeType)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return types, args.Error(1)
 }
 
@@ -43,8 +47,10 @@ func (m *MockClient) ListKernels(ctx context.Context, opts *linodego.ListOptions
 
 	kernels, ok := args.Get(0).([]linodego.LinodeKernel)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return kernels, args.Error(1)
 }

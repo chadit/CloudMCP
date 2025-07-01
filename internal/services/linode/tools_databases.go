@@ -130,8 +130,7 @@ func (s *Service) handleDatabasesList(ctx context.Context, _ mcp.CallToolRequest
 
 	databases, databasesErr := account.Client.ListDatabases(ctx, nil)
 	if databasesErr != nil {
-		return nil, types.NewToolError("linode", "databases_list", //nolint:wrapcheck // types.NewToolError already wraps the error
-			"failed to list databases", databasesErr)
+		return nil, types.NewToolError("linode", "databases_list", "failed to list databases", databasesErr)
 	}
 
 	summaries := make([]DatabaseSummary, 0, len(databases))
@@ -177,7 +176,7 @@ func handleDatabasesListGeneric[T any](
 ) (*mcp.CallToolResult, error) {
 	databases, databasesErr := listFunc(ctx, nil)
 	if databasesErr != nil {
-		return nil, types.NewToolError("linode", toolName, //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", toolName,
 			errorMsg, databasesErr)
 	}
 
@@ -191,7 +190,7 @@ func handleDatabasesListGeneric[T any](
 
 // convertMySQLDatabaseToSummary converts a MySQL database to a summary.
 //
-//nolint:ireturn // Returns interface to provide unified database summary type
+// Returns interface to provide unified database summary type
 func convertMySQLDatabaseToSummary(database linodego.MySQLDatabase) TypedDatabaseSummary {
 	return MySQLDatabaseSummary{
 		ID:          database.ID,
@@ -214,7 +213,7 @@ func convertMySQLDatabaseToSummary(database linodego.MySQLDatabase) TypedDatabas
 
 // convertPostgresDatabaseToSummary converts a PostgreSQL database to a summary.
 //
-//nolint:ireturn // Returns interface to provide unified database summary type
+// Returns interface to provide unified database summary type
 func convertPostgresDatabaseToSummary(database linodego.PostgresDatabase) TypedDatabaseSummary {
 	return PostgresDatabaseSummary{
 		ID:          database.ID,
@@ -273,7 +272,7 @@ func (s *Service) handlePostgresDatabasesList(ctx context.Context, _ mcp.CallToo
 
 // TypedDatabaseSummary interface defines common methods for database summaries.
 //
-//nolint:interfacebloat // Interface needs many methods to provide unified access to different database types
+// Interface needs many methods to provide unified access to different database types
 type TypedDatabaseSummary interface {
 	GetID() int
 	GetLabel() string
@@ -392,7 +391,7 @@ func (s *Service) formatSingleDatabaseSummary(stringBuilder *strings.Builder, da
 
 // formatDatabaseDetail formats database details in a standardized way.
 //
-//nolint:interfacebloat // Interface needs many methods to format detailed database information uniformly
+// Interface needs many methods to format detailed database information uniformly
 func formatDatabaseDetail(engineType string, detail interface {
 	GetID() int
 	GetLabel() string
@@ -534,7 +533,7 @@ func (s *Service) handleMySQLDatabaseGet(ctx context.Context, request mcp.CallTo
 
 	database, databaseErr := account.Client.GetMySQLDatabase(ctx, parameters.DatabaseID)
 	if databaseErr != nil {
-		return nil, types.NewToolError("linode", "mysql_database_get", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "mysql_database_get",
 			"failed to get MySQL database", databaseErr)
 	}
 
@@ -557,7 +556,7 @@ func (s *Service) handlePostgresDatabaseGet(ctx context.Context, request mcp.Cal
 
 	database, databaseErr := account.Client.GetPostgresDatabase(ctx, parameters.DatabaseID)
 	if databaseErr != nil {
-		return nil, types.NewToolError("linode", "postgres_database_get", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "postgres_database_get",
 			"failed to get PostgreSQL database", databaseErr)
 	}
 
@@ -567,7 +566,7 @@ func (s *Service) handlePostgresDatabaseGet(ctx context.Context, request mcp.Cal
 }
 
 // handleMySQLDatabaseCreate creates a new MySQL database.
-func (s *Service) handleMySQLDatabaseCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) { //nolint:dupl // Similar structure needed for type safety
+func (s *Service) handleMySQLDatabaseCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) { // Similar structure needed for type safety
 	var parameters MySQLDatabaseCreateParams
 	if parseErr := parseArguments(request.Params.Arguments, &parameters); parseErr != nil {
 		return nil, fmt.Errorf("invalid parameters: %w", parseErr)
@@ -589,7 +588,7 @@ func (s *Service) handleMySQLDatabaseCreate(ctx context.Context, request mcp.Cal
 
 	database, databaseErr := account.Client.CreateMySQLDatabase(ctx, createOptions)
 	if databaseErr != nil {
-		return nil, types.NewToolError("linode", "mysql_database_create", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "mysql_database_create",
 			"failed to create MySQL database", databaseErr)
 	}
 
@@ -597,7 +596,7 @@ func (s *Service) handleMySQLDatabaseCreate(ctx context.Context, request mcp.Cal
 }
 
 // handlePostgresDatabaseCreate creates a new PostgreSQL database.
-func (s *Service) handlePostgresDatabaseCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) { //nolint:dupl // Similar structure needed for type safety
+func (s *Service) handlePostgresDatabaseCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) { // Similar structure needed for type safety
 	var parameters PostgresDatabaseCreateParams
 	if parseErr := parseArguments(request.Params.Arguments, &parameters); parseErr != nil {
 		return nil, fmt.Errorf("invalid parameters: %w", parseErr)
@@ -619,7 +618,7 @@ func (s *Service) handlePostgresDatabaseCreate(ctx context.Context, request mcp.
 
 	database, databaseErr := account.Client.CreatePostgresDatabase(ctx, createOptions)
 	if databaseErr != nil {
-		return nil, types.NewToolError("linode", "postgres_database_create", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "postgres_database_create",
 			"failed to create PostgreSQL database", databaseErr)
 	}
 
@@ -682,7 +681,7 @@ func (d DatabaseResult) GetStatus() string { return d.Status }
 func (d DatabaseResult) GetHosts() DatabaseHosts { return d.Hosts }
 
 // handleMySQLDatabaseUpdate updates an existing MySQL database.
-func (s *Service) handleMySQLDatabaseUpdate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) { //nolint:dupl // Similar structure needed for type safety
+func (s *Service) handleMySQLDatabaseUpdate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) { // Similar structure needed for type safety
 	var parameters MySQLDatabaseUpdateParams
 	if parseErr := parseArguments(request.Params.Arguments, &parameters); parseErr != nil {
 		return nil, fmt.Errorf("invalid parameters: %w", parseErr)
@@ -705,7 +704,7 @@ func (s *Service) handleMySQLDatabaseUpdate(ctx context.Context, request mcp.Cal
 
 	database, databaseErr := account.Client.UpdateMySQLDatabase(ctx, parameters.DatabaseID, updateOptions)
 	if databaseErr != nil {
-		return nil, types.NewToolError("linode", "mysql_database_update", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "mysql_database_update",
 			"failed to update MySQL database", databaseErr)
 	}
 
@@ -715,7 +714,7 @@ func (s *Service) handleMySQLDatabaseUpdate(ctx context.Context, request mcp.Cal
 }
 
 // handlePostgresDatabaseUpdate updates an existing PostgreSQL database.
-func (s *Service) handlePostgresDatabaseUpdate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) { //nolint:dupl // Similar structure needed for type safety
+func (s *Service) handlePostgresDatabaseUpdate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) { // Similar structure needed for type safety
 	var parameters PostgresDatabaseUpdateParams
 	if parseErr := parseArguments(request.Params.Arguments, &parameters); parseErr != nil {
 		return nil, fmt.Errorf("invalid parameters: %w", parseErr)
@@ -738,7 +737,7 @@ func (s *Service) handlePostgresDatabaseUpdate(ctx context.Context, request mcp.
 
 	database, databaseErr := account.Client.UpdatePostgresDatabase(ctx, parameters.DatabaseID, updateOptions)
 	if databaseErr != nil {
-		return nil, types.NewToolError("linode", "postgres_database_update", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "postgres_database_update",
 			"failed to update PostgreSQL database", databaseErr)
 	}
 
@@ -761,7 +760,7 @@ func (s *Service) handleMySQLDatabaseDelete(ctx context.Context, request mcp.Cal
 
 	deleteErr := account.Client.DeleteMySQLDatabase(ctx, parameters.DatabaseID)
 	if deleteErr != nil {
-		return nil, types.NewToolError("linode", "mysql_database_delete", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "mysql_database_delete",
 			"failed to delete MySQL database", deleteErr)
 	}
 
@@ -782,7 +781,7 @@ func (s *Service) handlePostgresDatabaseDelete(ctx context.Context, request mcp.
 
 	deleteErr := account.Client.DeletePostgresDatabase(ctx, parameters.DatabaseID)
 	if deleteErr != nil {
-		return nil, types.NewToolError("linode", "postgres_database_delete", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "postgres_database_delete",
 			"failed to delete PostgreSQL database", deleteErr)
 	}
 
@@ -818,7 +817,7 @@ func (s *Service) handleMySQLDatabaseCredentials(ctx context.Context, request mc
 
 	credentials, credentialsErr := account.Client.GetMySQLDatabaseCredentials(ctx, parameters.DatabaseID)
 	if credentialsErr != nil {
-		return nil, types.NewToolError("linode", "mysql_database_credentials", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "mysql_database_credentials",
 			"failed to get MySQL database credentials", credentialsErr)
 	}
 
@@ -839,7 +838,7 @@ func (s *Service) handlePostgresDatabaseCredentials(ctx context.Context, request
 
 	credentials, credentialsErr := account.Client.GetPostgresDatabaseCredentials(ctx, parameters.DatabaseID)
 	if credentialsErr != nil {
-		return nil, types.NewToolError("linode", "postgres_database_credentials", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "postgres_database_credentials",
 			"failed to get PostgreSQL database credentials", credentialsErr)
 	}
 
@@ -860,7 +859,7 @@ func (s *Service) handleMySQLDatabaseCredentialsReset(ctx context.Context, reque
 
 	resetErr := account.Client.ResetMySQLDatabaseCredentials(ctx, parameters.DatabaseID)
 	if resetErr != nil {
-		return nil, types.NewToolError("linode", "mysql_database_credentials_reset", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "mysql_database_credentials_reset",
 			"failed to reset MySQL database credentials", resetErr)
 	}
 
@@ -881,7 +880,7 @@ func (s *Service) handlePostgresDatabaseCredentialsReset(ctx context.Context, re
 
 	resetErr := account.Client.ResetPostgresDatabaseCredentials(ctx, parameters.DatabaseID)
 	if resetErr != nil {
-		return nil, types.NewToolError("linode", "postgres_database_credentials_reset", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "postgres_database_credentials_reset",
 			"failed to reset PostgreSQL database credentials", resetErr)
 	}
 
@@ -897,7 +896,7 @@ func (s *Service) handleDatabaseEnginesList(ctx context.Context, _ mcp.CallToolR
 
 	engines, enginesErr := account.Client.ListDatabaseEngines(ctx, nil)
 	if enginesErr != nil {
-		return nil, types.NewToolError("linode", "database_engines_list", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "database_engines_list",
 			"failed to list database engines", enginesErr)
 	}
 
@@ -926,7 +925,7 @@ func (s *Service) handleDatabaseTypesList(ctx context.Context, _ mcp.CallToolReq
 
 	databaseTypes, databaseTypesErr := account.Client.ListDatabaseTypes(ctx, nil)
 	if databaseTypesErr != nil {
-		return nil, types.NewToolError("linode", "database_types_list", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "database_types_list",
 			"failed to list database types", databaseTypesErr)
 	}
 

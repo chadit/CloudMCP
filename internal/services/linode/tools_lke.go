@@ -75,7 +75,41 @@ func (s *Service) handleLKEClustersList(ctx context.Context, _ mcp.CallToolReque
 
 // handleLKEClusterGet gets details of a specific LKE cluster.
 //
-//nolint:gocognit // Complex cluster details formatting and validation is required here
+// formatNodePoolDetails formats a single node pool with all its details.
+func formatNodePoolDetails(stringBuilder *strings.Builder, i int, pool LKENodePool) {
+	fmt.Fprintf(stringBuilder, "  %d. Pool ID: %d\n", i+1, pool.ID)
+	fmt.Fprintf(stringBuilder, "     Type: %s\n", pool.Type)
+	fmt.Fprintf(stringBuilder, "     Count: %d nodes\n", pool.Count)
+
+	if pool.Autoscaler.Enabled {
+		fmt.Fprintf(stringBuilder, "     Autoscaler: Enabled (Min: %d, Max: %d)\n", pool.Autoscaler.Min, pool.Autoscaler.Max)
+	} else {
+		fmt.Fprintf(stringBuilder, "     Autoscaler: %s\n", autoscalerStatusDisabled)
+	}
+
+	if len(pool.Disks) > 0 {
+		fmt.Fprintf(stringBuilder, "     Disks:\n")
+
+		for _, disk := range pool.Disks {
+			fmt.Fprintf(stringBuilder, "       - %s: %d GB\n", disk.Type, disk.Size)
+		}
+	}
+
+	if len(pool.Nodes) > 0 {
+		fmt.Fprintf(stringBuilder, "     Nodes:\n")
+
+		for _, node := range pool.Nodes {
+			fmt.Fprintf(stringBuilder, "       - %s (Instance: %d, Status: %s)\n", node.ID, node.InstanceID, node.Status)
+		}
+	}
+
+	if len(pool.Tags) > 0 {
+		fmt.Fprintf(stringBuilder, "     Tags: %s\n", strings.Join(pool.Tags, ", "))
+	}
+
+	stringBuilder.WriteString("\n")
+}
+
 func (s *Service) handleLKEClusterGet(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	var params LKEClusterGetParams
 	if err := parseArguments(request.Params.Arguments, &params); err != nil {
@@ -175,37 +209,7 @@ func (s *Service) handleLKEClusterGet(ctx context.Context, request mcp.CallToolR
 		fmt.Fprintf(&stringBuilder, "Node Pools:\n")
 
 		for i, pool := range detail.NodePools {
-			fmt.Fprintf(&stringBuilder, "  %d. Pool ID: %d\n", i+1, pool.ID)
-			fmt.Fprintf(&stringBuilder, "     Type: %s\n", pool.Type)
-			fmt.Fprintf(&stringBuilder, "     Count: %d nodes\n", pool.Count)
-
-			if pool.Autoscaler.Enabled {
-				fmt.Fprintf(&stringBuilder, "     Autoscaler: Enabled (Min: %d, Max: %d)\n", pool.Autoscaler.Min, pool.Autoscaler.Max)
-			} else {
-				fmt.Fprintf(&stringBuilder, "     Autoscaler: %s\n", autoscalerStatusDisabled)
-			}
-
-			if len(pool.Disks) > 0 {
-				fmt.Fprintf(&stringBuilder, "     Disks:\n")
-
-				for _, disk := range pool.Disks {
-					fmt.Fprintf(&stringBuilder, "       - %s: %d GB\n", disk.Type, disk.Size)
-				}
-			}
-
-			if len(pool.Nodes) > 0 {
-				fmt.Fprintf(&stringBuilder, "     Nodes:\n")
-
-				for _, node := range pool.Nodes {
-					fmt.Fprintf(&stringBuilder, "       - %s (Instance: %d, Status: %s)\n", node.ID, node.InstanceID, node.Status)
-				}
-			}
-
-			if len(pool.Tags) > 0 {
-				fmt.Fprintf(&stringBuilder, "     Tags: %s\n", strings.Join(pool.Tags, ", "))
-			}
-
-			stringBuilder.WriteString("\n")
+			formatNodePoolDetails(&stringBuilder, i, pool)
 		}
 	} else {
 		stringBuilder.WriteString("No node pools found.\n")

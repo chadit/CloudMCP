@@ -17,8 +17,7 @@ func (s *Service) handleAccountGet(ctx context.Context, _ mcp.CallToolRequest) (
 
 	profile, err := account.Client.GetProfile(ctx)
 	if err != nil {
-		return nil, types.NewToolError("linode", "account_get", //nolint:wrapcheck // types.NewToolError already wraps the error
-			"failed to get profile", err)
+		return nil, types.NewToolError("linode", "account_get", "failed to get profile", err)
 	}
 
 	resultText := fmt.Sprintf("Account: %s (%s)\nUsername: %s\nEmail: %s\nUID: %d\nRestricted: %v",
@@ -73,8 +72,7 @@ func (s *Service) handleAccountSwitch(ctx context.Context, request mcp.CallToolR
 
 	profile, err := account.Client.GetProfile(ctx)
 	if err != nil {
-		return nil, types.NewToolError("linode", "account_switch", //nolint:wrapcheck // types.NewToolError already wraps the error
-			"failed to verify switched account", err)
+		return nil, types.NewToolError("linode", "account_switch", "failed to verify switched account", err)
 	}
 
 	s.logger.Info("Switched Linode account",

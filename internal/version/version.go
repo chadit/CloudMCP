@@ -19,20 +19,22 @@ const (
 
 var (
 	// GitCommit can be set at build time using ldflags.
-	GitCommit = "dev" //nolint:gochecknoglobals // Build-time constants set via ldflags
+	GitCommit = "dev" //nolint:gochecknoglobals // Build-time variable set via ldflags
 
 	// GitBranch can be set at build time using ldflags.
-	GitBranch = "main" //nolint:gochecknoglobals // Build-time constants set via ldflags
+	GitBranch = "main" //nolint:gochecknoglobals // Build-time variable set via ldflags
 )
 
 // Info contains version and build information.
+//
+//nolint:tagliatelle // JSON field names maintain API compatibility with snake_case
 type Info struct {
 	Version    string            `json:"version"`
-	APIVersion string            `json:"api_version"` //nolint:tagliatelle // Maintaining API compatibility
-	BuildDate  string            `json:"build_date"`  //nolint:tagliatelle // Maintaining API compatibility
-	GitCommit  string            `json:"git_commit"`  //nolint:tagliatelle // Maintaining API compatibility
-	GitBranch  string            `json:"git_branch"`  //nolint:tagliatelle // Maintaining API compatibility
-	GoVersion  string            `json:"go_version"`  //nolint:tagliatelle // Maintaining API compatibility
+	APIVersion string            `json:"api_version"` // Maintaining API compatibility
+	BuildDate  string            `json:"build_date"`  // Maintaining API compatibility
+	GitCommit  string            `json:"git_commit"`  // Maintaining API compatibility
+	GitBranch  string            `json:"git_branch"`  // Maintaining API compatibility
+	GoVersion  string            `json:"go_version"`  // Maintaining API compatibility
 	Platform   string            `json:"platform"`
 	Features   map[string]string `json:"features"`
 }

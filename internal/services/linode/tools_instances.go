@@ -24,8 +24,7 @@ func (s *Service) handleInstancesList(ctx context.Context, _ mcp.CallToolRequest
 
 	instances, err := account.Client.ListInstances(ctx, nil)
 	if err != nil {
-		return nil, types.NewToolError("linode", "instances_list", //nolint:wrapcheck // types.NewToolError already wraps the error
-			"failed to list instances", err)
+		return nil, types.NewToolError("linode", "instances_list", "failed to list instances", err)
 	}
 
 	summaries := make([]InstanceSummary, 0, len(instances))
@@ -86,7 +85,7 @@ func (s *Service) handleInstanceGet(ctx context.Context, request mcp.CallToolReq
 
 	instance, err := account.Client.GetInstance(ctx, instanceID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "instance_get", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "instance_get",
 			fmt.Sprintf("failed to get instance %d", instanceID), err)
 	}
 
@@ -232,7 +231,7 @@ func (s *Service) handleInstanceCreate(ctx context.Context, request mcp.CallTool
 	// Create the instance
 	instance, err := account.Client.CreateInstance(ctx, createOpts)
 	if err != nil {
-		return nil, types.NewToolError("linode", "instance_create", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "instance_create",
 			"failed to create instance", err)
 	}
 
@@ -281,13 +280,13 @@ func (s *Service) handleInstanceDelete(ctx context.Context, request mcp.CallTool
 
 	instance, err := account.Client.GetInstance(ctx, instanceID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "instance_delete", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "instance_delete",
 			fmt.Sprintf("failed to get instance %d", instanceID), err)
 	}
 
 	err = account.Client.DeleteInstance(ctx, instanceID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "instance_delete", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "instance_delete",
 			fmt.Sprintf("failed to delete instance %d", instanceID), err)
 	}
 
@@ -345,14 +344,14 @@ func (s *Service) handleInstanceShutdown(ctx context.Context, request mcp.CallTo
 	// Shutdown the instance
 	err = account.Client.ShutdownInstance(ctx, instanceID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "instance_shutdown", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "instance_shutdown",
 			fmt.Sprintf("failed to shutdown instance %d", instanceID), err)
 	}
 
 	// Get updated instance status
 	instance, err := account.Client.GetInstance(ctx, instanceID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "instance_shutdown", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "instance_shutdown",
 			"failed to get updated instance status", err)
 	}
 
@@ -416,14 +415,14 @@ func (s *Service) performInstanceOperation(ctx context.Context, instanceID, conf
 	// Perform the operation
 	err = operation(ctx, instanceID, configID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "instance_"+operationName, //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "instance_"+operationName,
 			fmt.Sprintf("failed to %s instance %d", operationName, instanceID), err)
 	}
 
 	// Get updated instance status
 	instance, err := account.Client.GetInstance(ctx, instanceID)
 	if err != nil {
-		return nil, types.NewToolError("linode", "instance_"+operationName, //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "instance_"+operationName,
 			"failed to get updated instance status", err)
 	}
 
