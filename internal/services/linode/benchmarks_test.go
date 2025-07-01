@@ -92,7 +92,9 @@ const (
 // • Realistic data payloads matching production
 // • Multiple account configurations for switching tests.
 //
-//nolint:gocognit // Complex benchmark with multiple scenarios is necessary for comprehensive testing
+// Complex benchmark with multiple scenarios is necessary for comprehensive testing.
+//
+//nolint:gocognit // unit test can have complex functions.
 func BenchmarkToolExecution(b *testing.B) {
 	// Create benchmark test server with realistic response times.
 	testServer := createBenchmarkTestServer()
@@ -234,7 +236,9 @@ func BenchmarkToolExecution(b *testing.B) {
 // • Rapid sequential account switching
 // • Account switch with subsequent tool execution.
 //
-//nolint:gocognit // Complex benchmark with multiple account switching scenarios is necessary
+// Complex benchmark with multiple account switching scenarios is necessary
+//
+//nolint:gocognit // unit test can have complex functions.
 func BenchmarkAccountSwitching(b *testing.B) {
 	testServer := createBenchmarkTestServer()
 	defer testServer.Close()

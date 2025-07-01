@@ -62,7 +62,7 @@ func (r *Registry) RegisterProvider(name string, factory interfaces.ProviderFact
 // GetProvider retrieves a provider instance by name.
 // Creates a new provider instance using the registered factory.
 // Returns an error if the provider is not registered or creation fails.
-func (r *Registry) GetProvider(name string) (interfaces.CloudProvider, error) { //nolint:ireturn // Registry method should return interface
+func (r *Registry) GetProvider(name string) (interfaces.CloudProvider, error) { // Registry method should return interface
 	r.mu.RLock()
 	factory, exists := r.factories[name]
 	r.mu.RUnlock()
@@ -169,7 +169,7 @@ func (r *Registry) Count() int {
 
 // defaultRegistry is the global registry instance used by CloudMCP.
 // It provides convenient package-level functions for provider registration.
-var defaultRegistry = NewRegistry() //nolint:gochecknoglobals // Package-level registry is intentional
+var defaultRegistry = NewRegistry() // Package-level registry is intentional
 
 // RegisterProvider registers a provider with the default global registry.
 // This is a convenience function for the most common use case.
@@ -179,7 +179,7 @@ func RegisterProvider(name string, factory interfaces.ProviderFactory) error {
 
 // GetProvider retrieves a provider from the default global registry.
 // This is a convenience function for the most common use case.
-func GetProvider(name string) (interfaces.CloudProvider, error) { //nolint:ireturn // Registry function should return interface
+func GetProvider(name string) (interfaces.CloudProvider, error) { // Registry function should return interface
 	return defaultRegistry.GetProvider(name)
 }
 

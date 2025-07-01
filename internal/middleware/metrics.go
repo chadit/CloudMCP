@@ -134,7 +134,7 @@ func NewMetricsMiddleware(config *Config, logger pkglogger.Logger, collector Met
 }
 
 // Execute implements the Middleware interface for metrics collection.
-func (mm *MetricsMiddleware) Execute(ctx context.Context, tool interfaces.Tool, params map[string]interface{}, next ToolHandler) (interface{}, error) {
+func (mm *MetricsMiddleware) Execute(ctx context.Context, tool interfaces.Tool, params map[string]any, next ToolHandler) (any, error) {
 	if !mm.IsEnabled() {
 		return next(ctx, tool, params)
 	}
@@ -280,7 +280,7 @@ func NewUsageMetricsMiddleware(config *Config, logger pkglogger.Logger, collecto
 }
 
 // Execute implements the Middleware interface for usage metrics collection.
-func (umm *UsageMetricsMiddleware) Execute(ctx context.Context, tool interfaces.Tool, params map[string]interface{}, next ToolHandler) (interface{}, error) {
+func (umm *UsageMetricsMiddleware) Execute(ctx context.Context, tool interfaces.Tool, params map[string]any, next ToolHandler) (any, error) {
 	if !umm.IsEnabled() {
 		return next(ctx, tool, params)
 	}

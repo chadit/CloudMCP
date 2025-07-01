@@ -1,4 +1,4 @@
-//nolint:wrapcheck // Mock file returns test errors without wrapping
+// Mock file returns test errors without wrapping
 package mocks
 
 import (
@@ -22,9 +22,11 @@ func (m *MockDatabaseService) ListDatabases(ctx context.Context, opts *linodego.
 	if result := args.Get(0); result != nil {
 		databases, ok := result.([]linodego.Database)
 		if !ok {
+			//nolint:wrapcheck // mock does not need to wrap errors.
 			return nil, args.Error(1)
 		}
 
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return databases, args.Error(1)
 	}
 
@@ -41,9 +43,11 @@ func (m *MockDatabaseService) ListDatabaseEngines(ctx context.Context, opts *lin
 	if result := args.Get(0); result != nil {
 		engines, ok := result.([]linodego.DatabaseEngine)
 		if !ok {
+			//nolint:wrapcheck // mock does not need to wrap errors.
 			return nil, args.Error(1)
 		}
 
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return engines, args.Error(1)
 	}
 
@@ -60,9 +64,11 @@ func (m *MockDatabaseService) ListDatabaseTypes(ctx context.Context, opts *linod
 	if result := args.Get(0); result != nil {
 		types, ok := result.([]linodego.DatabaseType)
 		if !ok {
+			//nolint:wrapcheck // mock does not need to wrap errors.
 			return nil, args.Error(1)
 		}
 
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return types, args.Error(1)
 	}
 
@@ -79,9 +85,11 @@ func (m *MockDatabaseService) ListMySQLDatabases(ctx context.Context, opts *lino
 
 	mysqlDatabases, ok := args.Get(0).([]linodego.MySQLDatabase)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return mysqlDatabases, args.Error(1)
 }
 
@@ -90,9 +98,11 @@ func (m *MockDatabaseService) GetMySQLDatabase(ctx context.Context, databaseID i
 
 	mysqlDB, ok := args.Get(0).(*linodego.MySQLDatabase)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return mysqlDB, args.Error(1)
 }
 
@@ -101,9 +111,11 @@ func (m *MockDatabaseService) CreateMySQLDatabase(ctx context.Context, opts lino
 
 	mysqlDB, ok := args.Get(0).(*linodego.MySQLDatabase)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return mysqlDB, args.Error(1)
 }
 
@@ -112,15 +124,18 @@ func (m *MockDatabaseService) UpdateMySQLDatabase(ctx context.Context, databaseI
 
 	mysqlDB, ok := args.Get(0).(*linodego.MySQLDatabase)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return mysqlDB, args.Error(1)
 }
 
 func (m *MockDatabaseService) DeleteMySQLDatabase(ctx context.Context, databaseID int) error {
 	args := m.Called(ctx, databaseID)
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return args.Error(0)
 }
 
@@ -129,15 +144,18 @@ func (m *MockDatabaseService) GetMySQLDatabaseCredentials(ctx context.Context, d
 
 	creds, ok := args.Get(0).(*linodego.MySQLDatabaseCredential)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return creds, args.Error(1)
 }
 
 func (m *MockDatabaseService) ResetMySQLDatabaseCredentials(ctx context.Context, databaseID int) error {
 	args := m.Called(ctx, databaseID)
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return args.Error(0)
 }
 
@@ -147,9 +165,11 @@ func (m *MockDatabaseService) ListPostgresDatabases(ctx context.Context, opts *l
 
 	postgresDatabases, ok := args.Get(0).([]linodego.PostgresDatabase)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return postgresDatabases, args.Error(1)
 }
 
@@ -158,9 +178,11 @@ func (m *MockDatabaseService) GetPostgresDatabase(ctx context.Context, databaseI
 
 	postgresDB, ok := args.Get(0).(*linodego.PostgresDatabase)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return postgresDB, args.Error(1)
 }
 
@@ -169,9 +191,11 @@ func (m *MockDatabaseService) CreatePostgresDatabase(ctx context.Context, opts l
 
 	postgresDB, ok := args.Get(0).(*linodego.PostgresDatabase)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return postgresDB, args.Error(1)
 }
 
@@ -180,15 +204,18 @@ func (m *MockDatabaseService) UpdatePostgresDatabase(ctx context.Context, databa
 
 	postgresDB, ok := args.Get(0).(*linodego.PostgresDatabase)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return postgresDB, args.Error(1)
 }
 
 func (m *MockDatabaseService) DeletePostgresDatabase(ctx context.Context, databaseID int) error {
 	args := m.Called(ctx, databaseID)
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return args.Error(0)
 }
 
@@ -197,15 +224,18 @@ func (m *MockDatabaseService) GetPostgresDatabaseCredentials(ctx context.Context
 
 	creds, ok := args.Get(0).(*linodego.PostgresDatabaseCredential)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return creds, args.Error(1)
 }
 
 func (m *MockDatabaseService) ResetPostgresDatabaseCredentials(ctx context.Context, databaseID int) error {
 	args := m.Called(ctx, databaseID)
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return args.Error(0)
 }
 

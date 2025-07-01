@@ -1,4 +1,4 @@
-//nolint:wrapcheck // Mock file returns test errors without wrapping
+// Mock file returns test errors without wrapping
 package mocks
 
 import (
@@ -20,9 +20,11 @@ func (m *MockNodeBalancerService) ListNodeBalancers(ctx context.Context, opts *l
 
 	nodeBalancers, ok := args.Get(0).([]linodego.NodeBalancer)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return nodeBalancers, args.Error(1)
 }
 
@@ -32,9 +34,11 @@ func (m *MockNodeBalancerService) GetNodeBalancer(ctx context.Context, nodebalan
 
 	nodeBalancer, ok := args.Get(0).(*linodego.NodeBalancer)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return nodeBalancer, args.Error(1)
 }
 
@@ -44,9 +48,11 @@ func (m *MockNodeBalancerService) CreateNodeBalancer(ctx context.Context, opts l
 
 	nodeBalancer, ok := args.Get(0).(*linodego.NodeBalancer)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return nodeBalancer, args.Error(1)
 }
 
@@ -56,9 +62,11 @@ func (m *MockNodeBalancerService) UpdateNodeBalancer(ctx context.Context, nodeba
 
 	nodeBalancer, ok := args.Get(0).(*linodego.NodeBalancer)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return nodeBalancer, args.Error(1)
 }
 
@@ -66,6 +74,7 @@ func (m *MockNodeBalancerService) UpdateNodeBalancer(ctx context.Context, nodeba
 func (m *MockNodeBalancerService) DeleteNodeBalancer(ctx context.Context, nodebalancerID int) error {
 	args := m.Called(ctx, nodebalancerID)
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return args.Error(0)
 }
 
@@ -75,9 +84,11 @@ func (m *MockNodeBalancerService) ListNodeBalancerConfigs(ctx context.Context, n
 
 	configs, ok := args.Get(0).([]linodego.NodeBalancerConfig)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return configs, args.Error(1)
 }
 
@@ -86,9 +97,11 @@ func (m *MockNodeBalancerService) CreateNodeBalancerConfig(ctx context.Context, 
 
 	config, ok := args.Get(0).(*linodego.NodeBalancerConfig)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return config, args.Error(1)
 }
 
@@ -97,15 +110,18 @@ func (m *MockNodeBalancerService) UpdateNodeBalancerConfig(ctx context.Context, 
 
 	config, ok := args.Get(0).(*linodego.NodeBalancerConfig)
 	if !ok {
+		//nolint:wrapcheck // mock does not need to wrap errors.
 		return nil, args.Error(1)
 	}
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return config, args.Error(1)
 }
 
 func (m *MockNodeBalancerService) DeleteNodeBalancerConfig(ctx context.Context, nodebalancerID int, configID int) error {
 	args := m.Called(ctx, nodebalancerID, configID)
 
+	//nolint:wrapcheck // mock does not need to wrap errors.
 	return args.Error(0)
 }
 

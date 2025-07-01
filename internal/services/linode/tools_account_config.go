@@ -98,20 +98,20 @@ func (s *Service) handleCloudMCPAccountList(_ context.Context, _ mcp.CallToolReq
 func (s *Service) handleCloudMCPAccountAdd(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	var params CloudMCPAccountAddParams
 	if err := parseArguments(request.Params.Arguments, &params); err != nil {
-		return nil, types.NewToolError("cloudmcp", "account_add", "invalid parameters", err) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("cloudmcp", "account_add", "invalid parameters", err)
 	}
 
 	// Validate required parameters
 	if params.Name == "" {
-		return nil, types.NewToolError("cloudmcp", "account_add", "account name is required", nil) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("cloudmcp", "account_add", "account name is required", nil)
 	}
 
 	if params.Token == "" {
-		return nil, types.NewToolError("cloudmcp", "account_add", "account token is required", nil) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("cloudmcp", "account_add", "account token is required", nil)
 	}
 
 	if params.Label == "" {
-		return nil, types.NewToolError("cloudmcp", "account_add", "account label is required", nil) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("cloudmcp", "account_add", "account label is required", nil)
 	}
 
 	// Validate token by testing API connection
@@ -125,7 +125,7 @@ func (s *Service) handleCloudMCPAccountAdd(ctx context.Context, request mcp.Call
 
 	// Test the connection
 	if _, err := client.GetProfile(ctx); err != nil {
-		return nil, types.NewToolError("cloudmcp", "account_add", "invalid token or API URL", err) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("cloudmcp", "account_add", "invalid token or API URL", err)
 	}
 
 	// Load or create TOML configuration
@@ -133,7 +133,7 @@ func (s *Service) handleCloudMCPAccountAdd(ctx context.Context, request mcp.Call
 	configManager := config.NewTOMLConfigManager(configPath)
 
 	if err := configManager.LoadOrCreate(); err != nil {
-		return nil, types.NewToolError("cloudmcp", "account_add", "failed to load configuration", err) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("cloudmcp", "account_add", "failed to load configuration", err)
 	}
 
 	// Add the account
@@ -144,7 +144,7 @@ func (s *Service) handleCloudMCPAccountAdd(ctx context.Context, request mcp.Call
 	}
 
 	if err := configManager.AddAccount(params.Name, accountConfig); err != nil {
-		return nil, types.NewToolError("cloudmcp", "account_add", "failed to add account", err) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("cloudmcp", "account_add", "failed to add account", err)
 	}
 
 	// Update service configuration in memory for immediate use
@@ -175,11 +175,11 @@ func (s *Service) handleCloudMCPAccountAdd(ctx context.Context, request mcp.Call
 func (s *Service) handleCloudMCPAccountRemove(_ context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	var params CloudMCPAccountRemoveParams
 	if err := parseArguments(request.Params.Arguments, &params); err != nil {
-		return nil, types.NewToolError("cloudmcp", "account_remove", "invalid parameters", err) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("cloudmcp", "account_remove", "invalid parameters", err)
 	}
 
 	if params.Name == "" {
-		return nil, types.NewToolError("cloudmcp", "account_remove", "account name is required", nil) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("cloudmcp", "account_remove", "account name is required", nil)
 	}
 
 	// Load TOML configuration
@@ -187,18 +187,18 @@ func (s *Service) handleCloudMCPAccountRemove(_ context.Context, request mcp.Cal
 	configManager := config.NewTOMLConfigManager(configPath)
 
 	if err := configManager.LoadOrCreate(); err != nil {
-		return nil, types.NewToolError("cloudmcp", "account_remove", "failed to load configuration", err) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("cloudmcp", "account_remove", "failed to load configuration", err)
 	}
 
 	// Prevent removing the default account
 	currentConfig := configManager.GetConfig()
 	if params.Name == currentConfig.System.DefaultAccount {
-		return nil, types.NewToolError("cloudmcp", "account_remove", fmt.Sprintf("cannot remove the default account '%s'. Change the default account first", params.Name), nil) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("cloudmcp", "account_remove", fmt.Sprintf("cannot remove the default account '%s'. Change the default account first", params.Name), nil)
 	}
 
 	// Remove the account
 	if err := configManager.RemoveAccount(params.Name); err != nil {
-		return nil, types.NewToolError("cloudmcp", "account_remove", "failed to remove account", err) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("cloudmcp", "account_remove", "failed to remove account", err)
 	}
 
 	// Remove from service configuration
@@ -219,11 +219,11 @@ func (s *Service) handleCloudMCPAccountRemove(_ context.Context, request mcp.Cal
 func (s *Service) handleCloudMCPAccountUpdate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	var params CloudMCPAccountUpdateParams
 	if err := parseArguments(request.Params.Arguments, &params); err != nil {
-		return nil, types.NewToolError("cloudmcp", "account_update", "invalid parameters", err) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("cloudmcp", "account_update", "invalid parameters", err)
 	}
 
 	if params.Name == "" {
-		return nil, types.NewToolError("cloudmcp", "account_update", "account name is required", nil) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("cloudmcp", "account_update", "account name is required", nil)
 	}
 
 	// Load TOML configuration
@@ -231,7 +231,7 @@ func (s *Service) handleCloudMCPAccountUpdate(ctx context.Context, request mcp.C
 	configManager := config.NewTOMLConfigManager(configPath)
 
 	if err := configManager.LoadOrCreate(); err != nil {
-		return nil, types.NewToolError("cloudmcp", "account_update", "failed to load configuration", err) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("cloudmcp", "account_update", "failed to load configuration", err)
 	}
 
 	// Get current account configuration
@@ -239,7 +239,7 @@ func (s *Service) handleCloudMCPAccountUpdate(ctx context.Context, request mcp.C
 	existingAccount, exists := currentConfig.Accounts[params.Name]
 
 	if !exists {
-		return nil, types.NewToolError("cloudmcp", "account_update", fmt.Sprintf("account '%s' does not exist", params.Name), nil) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("cloudmcp", "account_update", fmt.Sprintf("account '%s' does not exist", params.Name), nil)
 	}
 
 	// Build updated account config (preserve existing values if not provided)
@@ -272,13 +272,13 @@ func (s *Service) handleCloudMCPAccountUpdate(ctx context.Context, request mcp.C
 		}
 
 		if _, err := client.GetProfile(ctx); err != nil {
-			return nil, types.NewToolError("cloudmcp", "account_update", "invalid token or API URL", err) //nolint:wrapcheck // types.NewToolError already wraps the error
+			return nil, types.NewToolError("cloudmcp", "account_update", "invalid token or API URL", err)
 		}
 	}
 
 	// Update the account
 	if err := configManager.UpdateAccount(params.Name, updatedAccount); err != nil {
-		return nil, types.NewToolError("cloudmcp", "account_update", "failed to update account", err) //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("cloudmcp", "account_update", "failed to update account", err)
 	}
 
 	// Update service configuration

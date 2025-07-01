@@ -24,7 +24,7 @@ func (s *Service) handleIPsList(ctx context.Context, _ mcp.CallToolRequest) (*mc
 	// Get all instances to fetch their IPs
 	instances, err := account.Client.ListInstances(ctx, nil)
 	if err != nil {
-		return nil, types.NewToolError("linode", "ips_list", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "ips_list",
 			"failed to list instances for IPs", err)
 	}
 
@@ -121,7 +121,7 @@ func (s *Service) handleIPGet(ctx context.Context, request mcp.CallToolRequest) 
 	// We need to find the IP by searching through instances
 	instances, err := account.Client.ListInstances(ctx, nil)
 	if err != nil {
-		return nil, types.NewToolError("linode", "ip_get", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "ip_get",
 			"failed to list instances", err)
 	}
 

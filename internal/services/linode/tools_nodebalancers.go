@@ -49,7 +49,7 @@ func (s *Service) handleNodeBalancersList(ctx context.Context, _ mcp.CallToolReq
 
 	nodebalancers, nodebalancersErr := account.Client.ListNodeBalancers(ctx, nil)
 	if nodebalancersErr != nil {
-		return nil, types.NewToolError("linode", "nodebalancers_list", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "nodebalancers_list",
 			"failed to list NodeBalancers", nodebalancersErr)
 	}
 
@@ -119,14 +119,14 @@ func (s *Service) handleNodeBalancerGet(ctx context.Context, request mcp.CallToo
 
 	nodeBalancer, nodeBalancerErr := account.Client.GetNodeBalancer(ctx, nodebalancerID)
 	if nodeBalancerErr != nil {
-		return nil, types.NewToolError("linode", "nodebalancer_get", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "nodebalancer_get",
 			"failed to get NodeBalancer", nodeBalancerErr)
 	}
 
 	// Get configurations.
 	configurations, configurationsErr := account.Client.ListNodeBalancerConfigs(ctx, nodebalancerID, nil)
 	if configurationsErr != nil {
-		return nil, types.NewToolError("linode", "nodebalancer_configs_list", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "nodebalancer_configs_list",
 			"failed to get NodeBalancer configurations", configurationsErr)
 	}
 
@@ -238,7 +238,7 @@ func (s *Service) handleNodeBalancerCreate(ctx context.Context, request mcp.Call
 
 	nodeBalancer, createErr := account.Client.CreateNodeBalancer(ctx, createOptions)
 	if createErr != nil {
-		return nil, types.NewToolError("linode", "nodebalancer_create", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "nodebalancer_create",
 			"failed to create NodeBalancer", createErr)
 	}
 
@@ -273,7 +273,7 @@ func (s *Service) handleNodeBalancerUpdate(ctx context.Context, request mcp.Call
 
 	nodeBalancer, updateErr := account.Client.UpdateNodeBalancer(ctx, params.NodeBalancerID, updateOptions)
 	if updateErr != nil {
-		return nil, types.NewToolError("linode", "nodebalancer_update", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "nodebalancer_update",
 			"failed to update NodeBalancer", updateErr)
 	}
 
@@ -297,7 +297,7 @@ func (s *Service) handleNodeBalancerDelete(ctx context.Context, request mcp.Call
 
 	deleteErr := account.Client.DeleteNodeBalancer(ctx, nodebalancerID)
 	if deleteErr != nil {
-		return nil, types.NewToolError("linode", "nodebalancer_delete", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "nodebalancer_delete",
 			"failed to delete NodeBalancer", deleteErr)
 	}
 
@@ -371,7 +371,7 @@ func (s *Service) handleNodeBalancerConfigCreate(ctx context.Context, request mc
 
 	configuration, createErr := account.Client.CreateNodeBalancerConfig(ctx, params.NodeBalancerID, createOptions)
 	if createErr != nil {
-		return nil, types.NewToolError("linode", "nodebalancer_config_create", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "nodebalancer_config_create",
 			"failed to create NodeBalancer configuration", createErr)
 	}
 
@@ -451,7 +451,7 @@ func (s *Service) handleNodeBalancerConfigUpdate(ctx context.Context, request mc
 
 	configuration, updateErr := account.Client.UpdateNodeBalancerConfig(ctx, params.NodeBalancerID, params.ConfigID, updateOptions)
 	if updateErr != nil {
-		return nil, types.NewToolError("linode", "nodebalancer_config_update", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "nodebalancer_config_update",
 			"failed to update NodeBalancer configuration", updateErr)
 	}
 
@@ -481,7 +481,7 @@ func (s *Service) handleNodeBalancerConfigDelete(ctx context.Context, request mc
 
 	deleteErr := account.Client.DeleteNodeBalancerConfig(ctx, nodebalancerID, configurationID)
 	if deleteErr != nil {
-		return nil, types.NewToolError("linode", "nodebalancer_config_delete", //nolint:wrapcheck // types.NewToolError already wraps the error
+		return nil, types.NewToolError("linode", "nodebalancer_config_delete",
 			"failed to delete NodeBalancer configuration", deleteErr)
 	}
 

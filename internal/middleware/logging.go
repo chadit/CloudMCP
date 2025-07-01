@@ -33,7 +33,7 @@ func NewLoggingMiddleware(config *Config, logger pkglogger.Logger) *LoggingMiddl
 }
 
 // Execute implements the Middleware interface for logging tool execution.
-func (lm *LoggingMiddleware) Execute(ctx context.Context, tool interfaces.Tool, params map[string]interface{}, next ToolHandler) (interface{}, error) {
+func (lm *LoggingMiddleware) Execute(ctx context.Context, tool interfaces.Tool, params map[string]any, next ToolHandler) (any, error) {
 	if !lm.IsEnabled() {
 		return next(ctx, tool, params)
 	}
@@ -109,7 +109,7 @@ func NewSecurityLoggingMiddleware(config *Config, logger pkglogger.Logger) *Secu
 }
 
 // Execute implements the Middleware interface for security logging.
-func (slm *SecurityLoggingMiddleware) Execute(ctx context.Context, tool interfaces.Tool, params map[string]interface{}, next ToolHandler) (interface{}, error) {
+func (slm *SecurityLoggingMiddleware) Execute(ctx context.Context, tool interfaces.Tool, params map[string]any, next ToolHandler) (any, error) {
 	if !slm.IsEnabled() {
 		return next(ctx, tool, params)
 	}
@@ -208,7 +208,7 @@ func NewStructuredLoggingMiddleware(config *Config, logger pkglogger.Logger) *St
 }
 
 // Execute implements the Middleware interface for structured logging.
-func (slm *StructuredLoggingMiddleware) Execute(ctx context.Context, tool interfaces.Tool, params map[string]interface{}, next ToolHandler) (interface{}, error) {
+func (slm *StructuredLoggingMiddleware) Execute(ctx context.Context, tool interfaces.Tool, params map[string]any, next ToolHandler) (any, error) {
 	if !slm.IsEnabled() {
 		return next(ctx, tool, params)
 	}
@@ -221,7 +221,7 @@ func (slm *StructuredLoggingMiddleware) Execute(ctx context.Context, tool interf
 	}
 
 	// Create structured log entry
-	logEntry := map[string]interface{}{
+	logEntry := map[string]any{
 		"event_type":   "tool_execution",
 		"tool_name":    tool.Definition().Name,
 		"request_id":   execCtx.RequestID,

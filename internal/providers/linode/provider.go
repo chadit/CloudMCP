@@ -98,7 +98,10 @@ func (p *Provider) createSampleTools() []interfaces.Tool {
 }
 
 // createAccountInfoTool creates a sample account info tool.
-func (p *Provider) createAccountInfoTool() interfaces.Tool { //nolint:ireturn // Factory method should return interface
+//
+//nolint:ireturn // factories typically return an interface.
+func (p *Provider) createAccountInfoTool() interfaces.Tool {
+	//nolint:ireturn // factories typically return an interface.
 	return &SampleTool{
 		name:        "linode_account_info",
 		description: "Get Linode account information",
@@ -108,7 +111,9 @@ func (p *Provider) createAccountInfoTool() interfaces.Tool { //nolint:ireturn //
 }
 
 // createInstanceListTool creates a sample instance list tool.
-func (p *Provider) createInstanceListTool() interfaces.Tool { //nolint:ireturn // Factory method should return interface
+//
+//nolint:ireturn // factories typically return an interface.
+func (p *Provider) createInstanceListTool() interfaces.Tool {
 	return &SampleTool{
 		name:        "linode_instances_list",
 		description: "List Linode instances",
@@ -258,7 +263,9 @@ func NewFactory() *Factory {
 }
 
 // CreateProvider creates a new instance of the Linode cloud provider.
-func (f *Factory) CreateProvider() interfaces.CloudProvider { //nolint:ireturn // Factory method should return interface
+//
+//nolint:ireturn // factories typically return an interface.
+func (f *Factory) CreateProvider() interfaces.CloudProvider {
 	return NewProvider()
 }
 

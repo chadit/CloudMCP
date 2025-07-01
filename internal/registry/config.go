@@ -172,7 +172,7 @@ func (c *ConfigAdapter) GetAllKeys() []string {
 }
 
 // Clone creates a deep copy of the configuration.
-func (c *ConfigAdapter) Clone() interfaces.Config { //nolint:ireturn // Clone method should return interface
+func (c *ConfigAdapter) Clone() interfaces.Config { // Clone method should return interface
 	clone := make(map[string]interface{})
 	for key, value := range c.data {
 		clone[key] = value
