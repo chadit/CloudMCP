@@ -210,6 +210,7 @@ func TestConfigReloadIntegration(t *testing.T) {
 	// Step 7: Test concurrent access during reload
 	t.Run("ConcurrentReloadAccess", func(t *testing.T) {
 		const numGoroutines = 5
+
 		const numOperations = 10
 
 		done := make(chan bool, numGoroutines)
@@ -270,7 +271,9 @@ func TestConfigReloadIntegration(t *testing.T) {
 
 		// Check for errors
 		close(errors)
+
 		var errorCount int
+
 		for err := range errors {
 			t.Logf("Concurrent operation error: %v", err)
 			errorCount++

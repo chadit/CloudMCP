@@ -14,6 +14,7 @@ import (
 func TestNewMetricsCollector(t *testing.T) {
 	t.Parallel()
 	// Test enabled collector
+
 	collector := linode.NewMetricsCollector(true)
 	require.NotNil(t, collector, "Collector should not be nil")
 
@@ -24,6 +25,7 @@ func TestNewMetricsCollector(t *testing.T) {
 
 func TestMetricsCollector_RecordToolExecution(t *testing.T) {
 	t.Parallel()
+
 	collector := linode.NewMetricsCollector(true)
 
 	// Record a successful tool execution
@@ -38,6 +40,7 @@ func TestMetricsCollector_RecordToolExecution(t *testing.T) {
 
 func TestMetricsCollector_RecordToolExecution_Disabled(t *testing.T) {
 	t.Parallel()
+
 	collector := linode.NewMetricsCollector(false)
 
 	// Record tool execution on disabled collector
@@ -49,6 +52,7 @@ func TestMetricsCollector_RecordToolExecution_Disabled(t *testing.T) {
 
 func TestMetricsCollector_RecordAPIRequest(t *testing.T) {
 	t.Parallel()
+
 	collector := linode.NewMetricsCollector(true)
 
 	// Record an API request
@@ -62,6 +66,7 @@ func TestMetricsCollector_RecordAPIRequest(t *testing.T) {
 
 func TestMetricsCollector_RecordCache(t *testing.T) {
 	t.Parallel()
+
 	collector := linode.NewMetricsCollector(true)
 
 	// Record cache hit
@@ -75,6 +80,7 @@ func TestMetricsCollector_RecordCache(t *testing.T) {
 
 func TestMetricsCollector_RecordAccountSwitch(t *testing.T) {
 	t.Parallel()
+
 	collector := linode.NewMetricsCollector(true)
 
 	// Record successful account switch
@@ -88,6 +94,7 @@ func TestMetricsCollector_RecordAccountSwitch(t *testing.T) {
 
 func TestMetricsCollector_UpdateActiveConnections(t *testing.T) {
 	t.Parallel()
+
 	collector := linode.NewMetricsCollector(true)
 
 	// Update active connections
@@ -101,6 +108,7 @@ func TestMetricsCollector_UpdateActiveConnections(t *testing.T) {
 
 func TestMetricsCollector_UpdateResourceCount(t *testing.T) {
 	t.Parallel()
+
 	collector := linode.NewMetricsCollector(true)
 
 	// Update resource count
@@ -114,6 +122,7 @@ func TestMetricsCollector_UpdateResourceCount(t *testing.T) {
 
 func TestToolExecutionTimer(t *testing.T) {
 	t.Parallel()
+
 	collector := linode.NewMetricsCollector(true)
 
 	// Create and use timer
@@ -132,6 +141,7 @@ func TestToolExecutionTimer(t *testing.T) {
 
 func TestAPIRequestTimer(t *testing.T) {
 	t.Parallel()
+
 	collector := linode.NewMetricsCollector(true)
 
 	// Create and use timer
@@ -149,6 +159,7 @@ func TestAPIRequestTimer(t *testing.T) {
 
 func TestMetricsMiddleware_Success(t *testing.T) {
 	t.Parallel()
+
 	collector := linode.NewMetricsCollector(true)
 
 	// Create mock next function that succeeds
@@ -179,6 +190,7 @@ var ErrTest = errors.New("test error")
 
 func TestMetricsMiddleware_Error(t *testing.T) {
 	t.Parallel()
+
 	collector := linode.NewMetricsCollector(true)
 
 	// Create mock next function that fails
@@ -202,13 +214,17 @@ func TestMetricsMiddleware_Error(t *testing.T) {
 
 func TestGetMetricsRegistry(t *testing.T) {
 	t.Parallel()
+
 	registry := linode.GetMetricsRegistry()
+
 	require.NotNil(t, registry, "Registry should not be nil")
 }
 
 func TestMetricsCollector_DisabledOperations(t *testing.T) {
 	t.Parallel()
+
 	// Test that all operations work correctly when disabled
+
 	collector := linode.NewMetricsCollector(false)
 
 	// These should all execute without panics or errors
@@ -234,6 +250,8 @@ func TestMetricsCollector_DisabledOperations(t *testing.T) {
 		return nil
 	}
 	middleware := linode.NewMetricsMiddleware(collector, nextFunc)
+
 	err := middleware.Execute(t.Context(), "tool", "account")
+
 	require.NoError(t, err, "Middleware should work when metrics are disabled")
 }

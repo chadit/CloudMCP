@@ -153,6 +153,7 @@ func TestHandleIPGet_MissingParameter(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "address", "error result should mention missing address parameter")
@@ -210,6 +211,7 @@ func TestHandleIPGet_EmptyParameter(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "address", "error result should mention missing address parameter")
@@ -267,6 +269,7 @@ func TestHandleIPGet_InvalidIPFormat(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "invalid IP address", "error result should mention invalid IP address format")
@@ -324,6 +327,7 @@ func TestHandleIPGet_InvalidIPFormat_Numbers(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "invalid IP address", "error result should mention invalid IP address format")

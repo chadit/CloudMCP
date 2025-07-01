@@ -153,6 +153,7 @@ func TestHandleVolumeGet_MissingParameter(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "volume_id", "error result should mention missing volume_id parameter")
@@ -210,6 +211,7 @@ func TestHandleVolumeGet_InvalidParameter(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "volume_id", "error result should mention invalid volume_id parameter")
@@ -265,6 +267,7 @@ func TestHandleVolumeCreate_MissingRequiredParameters(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "required", "error result should mention missing required parameters")
@@ -323,6 +326,7 @@ func TestHandleVolumeCreate_PartialParameters(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "size", "error result should mention missing size parameter")
@@ -381,6 +385,7 @@ func TestHandleVolumeCreate_InvalidSize(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "between 10 and 8192", "error result should mention size range requirements")
@@ -436,6 +441,7 @@ func TestHandleVolumeDelete_MissingParameter(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "volume_id", "error result should mention missing volume_id parameter")
@@ -491,6 +497,7 @@ func TestHandleVolumeAttach_MissingParameters(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			// Should mention either volume_id or linode_id as missing required parameter
@@ -550,6 +557,7 @@ func TestHandleVolumeDetach_MissingParameter(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "volume_id", "error result should mention missing volume_id parameter")

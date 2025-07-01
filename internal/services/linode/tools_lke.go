@@ -72,6 +72,8 @@ func (s *Service) handleLKEClustersList(ctx context.Context, _ mcp.CallToolReque
 }
 
 // handleLKEClusterGet gets details of a specific LKE cluster.
+//
+//nolint:gocognit // Complex cluster details formatting and validation is required here
 func (s *Service) handleLKEClusterGet(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	var params LKEClusterGetParams
 	if err := parseArguments(request.Params.Arguments, &params); err != nil {

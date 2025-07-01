@@ -153,6 +153,7 @@ func TestHandleInstanceGet_MissingParameter(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "instance_id", "error result should mention missing instance_id parameter")
@@ -210,6 +211,7 @@ func TestHandleInstanceGet_InvalidParameter(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "instance_id", "error result should mention invalid instance_id parameter")
@@ -265,6 +267,7 @@ func TestHandleInstanceCreate_MissingRequiredParameters(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "required", "error result should mention missing required parameters")
@@ -323,6 +326,7 @@ func TestHandleInstanceCreate_PartialParameters(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "required", "error result should mention missing required parameters")
@@ -378,6 +382,7 @@ func TestHandleInstanceDelete_MissingParameter(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "instance_id", "error result should mention missing instance_id parameter")
@@ -433,6 +438,7 @@ func TestHandleInstanceBoot_MissingParameter(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "instance_id", "error result should mention missing instance_id parameter")
@@ -488,6 +494,7 @@ func TestHandleInstanceShutdown_MissingParameter(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "instance_id", "error result should mention missing instance_id parameter")
@@ -543,6 +550,7 @@ func TestHandleInstanceReboot_MissingParameter(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "instance_id", "error result should mention missing instance_id parameter")

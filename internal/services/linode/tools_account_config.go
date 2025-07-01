@@ -281,11 +281,7 @@ func (s *Service) handleCloudMCPAccountUpdate(ctx context.Context, request mcp.C
 	}
 
 	// Update service configuration
-	s.config.LinodeAccounts[params.Name] = config.LinodeAccount{
-		Token:  updatedAccount.Token,
-		Label:  updatedAccount.Label,
-		APIURL: updatedAccount.APIURL,
-	}
+	s.config.LinodeAccounts[params.Name] = config.LinodeAccount(updatedAccount)
 
 	// Update account manager if token changed
 	if params.Token != "" {

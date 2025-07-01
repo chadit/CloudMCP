@@ -64,7 +64,7 @@ func (s *Service) handleFirewallsList(ctx context.Context, _ mcp.CallToolRequest
 			Tags:   firewall.Tags,
 			Rules: FirewallRuleSet{
 				Inbound:        inboundRules,
-				InboundPolicy:  string(firewall.Rules.InboundPolicy),
+				InboundPolicy:  firewall.Rules.InboundPolicy,
 				Outbound:       outboundRules,
 				OutboundPolicy: firewall.Rules.OutboundPolicy,
 			},
@@ -168,9 +168,9 @@ func (s *Service) handleFirewallGet(ctx context.Context, request mcp.CallToolReq
 		Tags:   firewall.Tags,
 		Rules: FirewallRuleSet{
 			Inbound:        inboundRules,
-			InboundPolicy:  string(firewall.Rules.InboundPolicy),
+			InboundPolicy:  firewall.Rules.InboundPolicy,
 			Outbound:       outboundRules,
-			OutboundPolicy: string(firewall.Rules.OutboundPolicy),
+			OutboundPolicy: firewall.Rules.OutboundPolicy,
 		},
 		Devices: devices,
 		Created: firewall.Created.Format("2006-01-02T15:04:05"),

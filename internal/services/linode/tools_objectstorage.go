@@ -55,13 +55,14 @@ func (s *Service) handleObjectStorageBucketsList(ctx context.Context, _ mcp.Call
 		sizeDisplay := "0 bytes"
 
 		if bucket.Size > 0 {
-			if bucket.Size >= bytesPerGB {
+			switch {
+			case bucket.Size >= bytesPerGB:
 				sizeDisplay = fmt.Sprintf("%.2f GB", float64(bucket.Size)/bytesPerGB)
-			} else if bucket.Size >= bytesPerMB {
+			case bucket.Size >= bytesPerMB:
 				sizeDisplay = fmt.Sprintf("%.2f MB", float64(bucket.Size)/bytesPerMB)
-			} else if bucket.Size >= bytesPerKB {
+			case bucket.Size >= bytesPerKB:
 				sizeDisplay = fmt.Sprintf("%.2f KB", float64(bucket.Size)/bytesPerKB)
-			} else {
+			default:
 				sizeDisplay = fmt.Sprintf("%d bytes", bucket.Size)
 			}
 		}
@@ -113,13 +114,14 @@ func (s *Service) handleObjectStorageBucketGet(ctx context.Context, request mcp.
 	sizeDisplay := "0 bytes"
 
 	if detail.Size > 0 {
-		if detail.Size >= bytesPerGB {
+		switch {
+		case detail.Size >= bytesPerGB:
 			sizeDisplay = fmt.Sprintf("%.2f GB", float64(detail.Size)/bytesPerGB)
-		} else if detail.Size >= bytesPerMB {
+		case detail.Size >= bytesPerMB:
 			sizeDisplay = fmt.Sprintf("%.2f MB", float64(detail.Size)/bytesPerMB)
-		} else if detail.Size >= bytesPerKB {
+		case detail.Size >= bytesPerKB:
 			sizeDisplay = fmt.Sprintf("%.2f KB", float64(detail.Size)/bytesPerKB)
-		} else {
+		default:
 			sizeDisplay = fmt.Sprintf("%d bytes", detail.Size)
 		}
 	}
@@ -415,7 +417,7 @@ func (s *Service) handleObjectStorageKeyUpdate(ctx context.Context, request mcp.
 	}
 
 	if len(params.BucketAccess) > 0 {
-		// TODO: BucketAccess field not available in ObjectStorageKeyUpdateOptions
+		// BucketAccess field not available in ObjectStorageKeyUpdateOptions
 		// Once the Linode API supports updating bucket access, implement this:
 		// var bucketAccess []linodego.ObjectStorageKeyBucketAccess
 		// for _, access := range params.BucketAccess {

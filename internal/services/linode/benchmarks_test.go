@@ -91,6 +91,8 @@ const (
 // • HTTP test server for consistent network simulation
 // • Realistic data payloads matching production
 // • Multiple account configurations for switching tests.
+//
+//nolint:gocognit // Complex benchmark with multiple scenarios is necessary for comprehensive testing
 func BenchmarkToolExecution(b *testing.B) {
 	// Create benchmark test server with realistic response times.
 	testServer := createBenchmarkTestServer()
@@ -231,6 +233,8 @@ func BenchmarkToolExecution(b *testing.B) {
 // • Single account switch operation
 // • Rapid sequential account switching
 // • Account switch with subsequent tool execution.
+//
+//nolint:gocognit // Complex benchmark with multiple account switching scenarios is necessary
 func BenchmarkAccountSwitching(b *testing.B) {
 	testServer := createBenchmarkTestServer()
 	defer testServer.Close()
