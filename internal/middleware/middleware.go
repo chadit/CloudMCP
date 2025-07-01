@@ -333,7 +333,7 @@ func (bm *BaseMiddleware) Config() *Config {
 }
 
 // Logger returns the middleware logger.
-func (bm *BaseMiddleware) Logger() pkglogger.Logger {
+func (bm *BaseMiddleware) Logger() pkglogger.Logger { //nolint:ireturn // Getter method should return interface
 	return bm.logger
 }
 

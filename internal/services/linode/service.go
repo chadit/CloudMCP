@@ -2871,6 +2871,7 @@ func GetTextContentForTesting(testingInterface interface {
 // buildDomainRecordProperties builds the common domain record properties for schema definitions.
 func (s *Service) buildDomainRecordProperties(isUpdate bool) map[string]any {
 	const srvRecordSuffix = " (for SRV records)"
+
 	properties := map[string]any{
 		"domain_id": map[string]any{
 			"type":        "number",

@@ -93,6 +93,7 @@ func (s *Service) handleFirewallsList(ctx context.Context, _ mcp.CallToolRequest
 		fmt.Fprintf(&stringBuilder, "ID: %d | %s (%s)\n", firewall.ID, firewall.Label, firewall.Status)
 		fmt.Fprintf(&stringBuilder, "  Rules: %d inbound, %d outbound\n", len(firewall.Rules.Inbound), len(firewall.Rules.Outbound))
 		fmt.Fprintf(&stringBuilder, "  Devices: %s\n", devicesList.String())
+
 		if len(firewall.Tags) > 0 {
 			fmt.Fprintf(&stringBuilder, "  Tags: %s\n", strings.Join(firewall.Tags, ", "))
 		}
@@ -191,22 +192,28 @@ func (s *Service) handleFirewallGet(ctx context.Context, request mcp.CallToolReq
 	}
 
 	fmt.Fprintf(&stringBuilder, "Inbound Rules (Policy: %s):\n", detail.Rules.InboundPolicy)
+
 	for ruleIndex, rule := range detail.Rules.Inbound {
 		fmt.Fprintf(&stringBuilder, "  %d. %s %s:%s -> %s\n", ruleIndex+1, rule.Action, rule.Protocol, rule.Ports, strings.Join(rule.Addresses.IPv4, ", "))
+
 		if rule.Label != "" {
 			fmt.Fprintf(&stringBuilder, "     Label: %s\n", rule.Label)
 		}
+
 		if rule.Description != "" {
 			fmt.Fprintf(&stringBuilder, "     Description: %s\n", rule.Description)
 		}
 	}
 
 	fmt.Fprintf(&stringBuilder, "\nOutbound Rules (Policy: %s):\n", detail.Rules.OutboundPolicy)
+
 	for ruleIndex, rule := range detail.Rules.Outbound {
 		fmt.Fprintf(&stringBuilder, "  %d. %s %s:%s -> %s\n", ruleIndex+1, rule.Action, rule.Protocol, rule.Ports, strings.Join(rule.Addresses.IPv4, ", "))
+
 		if rule.Label != "" {
 			fmt.Fprintf(&stringBuilder, "     Label: %s\n", rule.Label)
 		}
+
 		if rule.Description != "" {
 			fmt.Fprintf(&stringBuilder, "     Description: %s\n", rule.Description)
 		}
@@ -305,9 +312,11 @@ func (s *Service) handleFirewallUpdate(ctx context.Context, request mcp.CallTool
 
 	// Parse additional update parameters
 	updateOpts := linodego.FirewallUpdateOptions{}
+
 	if label, labelExists := arguments["label"].(string); labelExists && label != "" {
 		updateOpts.Label = label
 	}
+
 	if tagsRaw, tagsExists := arguments["tags"]; tagsExists {
 		if tagsSlice, tagsSliceValid := tagsRaw.([]interface{}); tagsSliceValid {
 			tags := make([]string, len(tagsSlice))
@@ -317,6 +326,7 @@ func (s *Service) handleFirewallUpdate(ctx context.Context, request mcp.CallTool
 					tags[tagIndex] = tagStr
 				}
 			}
+
 			updateOpts.Tags = &tags
 		}
 	}

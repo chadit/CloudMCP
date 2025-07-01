@@ -11,6 +11,7 @@ import (
 
 func TestDefaultHTTPClientConfig(t *testing.T) {
 	t.Parallel()
+
 	config := linode.DefaultHTTPClientConfig()
 
 	// Verify default values are set appropriately
@@ -31,17 +32,16 @@ func TestDefaultHTTPClientConfig(t *testing.T) {
 
 func TestCreateOptimizedLinodeClient(t *testing.T) {
 	t.Parallel()
+
 	config := linode.DefaultHTTPClientConfig()
 	client := linode.CreateOptimizedLinodeClient("test-token", config)
 
 	require.NotNil(t, client, "Client should not be nil")
-	// Verify the client was created successfully
-	// Note: We can't easily test the internal configuration without exposing internals
-	// but we can verify the client is functional by checking it's not nil
 }
 
 func TestCreateStandardLinodeClient(t *testing.T) {
 	t.Parallel()
+
 	client := linode.CreateStandardLinodeClient("test-token")
 
 	require.NotNil(t, client, "Standard client should not be nil")
@@ -49,6 +49,7 @@ func TestCreateStandardLinodeClient(t *testing.T) {
 
 func TestGetHTTPClientStats(t *testing.T) {
 	t.Parallel()
+
 	config := linode.DefaultHTTPClientConfig()
 	client := linode.CreateOptimizedLinodeClient("test-token", config)
 
@@ -62,6 +63,7 @@ func TestGetHTTPClientStats(t *testing.T) {
 
 func TestClientValidator_ValidateConfig(t *testing.T) {
 	t.Parallel()
+
 	validator := &linode.ClientValidator{}
 
 	tests := []struct {
@@ -143,12 +145,13 @@ func TestClientValidator_ValidateConfig(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			warnings := validator.ValidateConfig(tt.config)
-			require.Len(t, warnings, tt.wantWarnings, "Should have expected number of warnings: %s", tt.description)
+			warnings := validator.ValidateConfig(testCase.config)
+
+			require.Len(t, warnings, testCase.wantWarnings, "Should have expected number of warnings: %s", testCase.description)
 		})
 	}
 }
@@ -165,6 +168,7 @@ func TestClientValidator_RecommendConfig(t *testing.T) {
 		{
 			usage: "high-throughput",
 			testFunc: func(t *testing.T, config linode.HTTPClientConfig) {
+				t.Helper()
 				require.Equal(t, 200, config.MaxIdleConns, "High-throughput should have many idle connections")
 				require.Equal(t, 20, config.MaxIdleConnsPerHost, "High-throughput should have many connections per host")
 				require.Equal(t, 50, config.MaxConnsPerHost, "High-throughput should allow many concurrent connections")
@@ -174,6 +178,7 @@ func TestClientValidator_RecommendConfig(t *testing.T) {
 		{
 			usage: "low-latency",
 			testFunc: func(t *testing.T, config linode.HTTPClientConfig) {
+				t.Helper()
 				require.Equal(t, 3*time.Second, config.DialTimeout, "Low-latency should have fast dial timeout")
 				require.Equal(t, 3*time.Second, config.TLSHandshakeTimeout, "Low-latency should have fast TLS timeout")
 				require.Equal(t, 15*time.Second, config.Timeout, "Low-latency should have short overall timeout")
@@ -182,6 +187,7 @@ func TestClientValidator_RecommendConfig(t *testing.T) {
 		{
 			usage: "resource-constrained",
 			testFunc: func(t *testing.T, config linode.HTTPClientConfig) {
+				t.Helper()
 				require.Equal(t, 20, config.MaxIdleConns, "Resource-constrained should limit connections")
 				require.Equal(t, 2, config.MaxIdleConnsPerHost, "Resource-constrained should limit per-host connections")
 				require.Equal(t, 5, config.MaxConnsPerHost, "Resource-constrained should limit concurrent connections")
@@ -190,6 +196,7 @@ func TestClientValidator_RecommendConfig(t *testing.T) {
 		{
 			usage: "batch-processing",
 			testFunc: func(t *testing.T, config linode.HTTPClientConfig) {
+				t.Helper()
 				require.Equal(t, 300, config.MaxIdleConns, "Batch processing should allow many connections")
 				require.Equal(t, 100, config.MaxConnsPerHost, "Batch processing should allow many concurrent connections")
 				require.Equal(t, 120*time.Second, config.Timeout, "Batch processing should have long timeout")
@@ -198,6 +205,7 @@ func TestClientValidator_RecommendConfig(t *testing.T) {
 		{
 			usage: "unknown-usage",
 			testFunc: func(t *testing.T, config linode.HTTPClientConfig) {
+				t.Helper()
 				defaultConfig := linode.DefaultHTTPClientConfig()
 				require.Equal(t, defaultConfig.MaxIdleConns, config.MaxIdleConns, "Unknown usage should return default config")
 				require.Equal(t, defaultConfig.Timeout, config.Timeout, "Unknown usage should return default config")
@@ -205,11 +213,13 @@ func TestClientValidator_RecommendConfig(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.usage, func(t *testing.T) {
+	for _, testCase := range tests {
+		t.Run(testCase.usage, func(t *testing.T) {
 			t.Parallel()
-			config := validator.RecommendConfig(tt.usage)
-			tt.testFunc(t, config)
+
+			config := validator.RecommendConfig(testCase.usage)
+
+			testCase.testFunc(t, config)
 		})
 	}
 }
@@ -220,12 +230,13 @@ func TestHTTPClientConfig_EdgeCases(t *testing.T) {
 
 	t.Run("zero values", func(t *testing.T) {
 		t.Parallel()
+
 		config := linode.HTTPClientConfig{}
 		validator := &linode.ClientValidator{}
 
 		warnings := validator.ValidateConfig(config)
 		// Zero values should generate multiple warnings
-		require.Greater(t, len(warnings), 0, "Zero values should generate warnings")
+		require.NotEmpty(t, warnings, "Zero values should generate warnings")
 	})
 
 	t.Run("negative timeouts", func(t *testing.T) {
@@ -239,7 +250,7 @@ func TestHTTPClientConfig_EdgeCases(t *testing.T) {
 
 		warnings := validator.ValidateConfig(config)
 		// Negative timeouts should be caught as very low
-		require.Greater(t, len(warnings), 0, "Negative timeouts should generate warnings")
+		require.NotEmpty(t, warnings, "Negative timeouts should generate warnings")
 	})
 }
 
@@ -306,6 +317,6 @@ func TestPerformanceStructs(t *testing.T) {
 		require.Equal(t, 100, result.TotalRequests, "TotalRequests should be set")
 		require.Equal(t, 95, result.SuccessfulRequests, "SuccessfulRequests should be set")
 		require.Equal(t, 5, result.FailedRequests, "FailedRequests should be set")
-		require.Equal(t, 5.0, result.ErrorRate, "ErrorRate should be set")
+		require.InDelta(t, 5.0, result.ErrorRate, 0.01, "ErrorRate should be set")
 	})
 }

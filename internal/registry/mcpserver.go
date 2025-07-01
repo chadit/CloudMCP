@@ -121,7 +121,7 @@ func (m *MCPServerAdapter) HasTool(name string) bool {
 }
 
 // GetTool retrieves a registered tool by name.
-func (m *MCPServerAdapter) GetTool(name string) (interfaces.Tool, error) {
+func (m *MCPServerAdapter) GetTool(name string) (interfaces.Tool, error) { //nolint:ireturn // Adapter method should return interface
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
@@ -261,6 +261,6 @@ func (stb *SimpleToolBuilder) WithValidator(validator func(map[string]interface{
 }
 
 // Build returns the constructed tool.
-func (stb *SimpleToolBuilder) Build() interfaces.Tool {
+func (stb *SimpleToolBuilder) Build() interfaces.Tool { //nolint:ireturn // Builder method should return interface
 	return stb.tool
 }
