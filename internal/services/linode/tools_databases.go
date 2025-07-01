@@ -190,6 +190,8 @@ func handleDatabasesListGeneric[T any](
 }
 
 // convertMySQLDatabaseToSummary converts a MySQL database to a summary.
+//
+//nolint:ireturn // Returns interface to provide unified database summary type
 func convertMySQLDatabaseToSummary(database linodego.MySQLDatabase) TypedDatabaseSummary {
 	return MySQLDatabaseSummary{
 		ID:          database.ID,
@@ -211,6 +213,8 @@ func convertMySQLDatabaseToSummary(database linodego.MySQLDatabase) TypedDatabas
 }
 
 // convertPostgresDatabaseToSummary converts a PostgreSQL database to a summary.
+//
+//nolint:ireturn // Returns interface to provide unified database summary type
 func convertPostgresDatabaseToSummary(database linodego.PostgresDatabase) TypedDatabaseSummary {
 	return PostgresDatabaseSummary{
 		ID:          database.ID,
@@ -268,6 +272,8 @@ func (s *Service) handlePostgresDatabasesList(ctx context.Context, _ mcp.CallToo
 }
 
 // TypedDatabaseSummary interface defines common methods for database summaries.
+//
+//nolint:interfacebloat // Interface needs many methods to provide unified access to different database types
 type TypedDatabaseSummary interface {
 	GetID() int
 	GetLabel() string
@@ -383,6 +389,8 @@ func (s *Service) formatSingleDatabaseSummary(stringBuilder *strings.Builder, da
 }
 
 // formatDatabaseDetail formats database details in a standardized way.
+//
+//nolint:interfacebloat // Interface needs many methods to format detailed database information uniformly
 func formatDatabaseDetail(engineType string, detail interface {
 	GetID() int
 	GetLabel() string
@@ -557,7 +565,7 @@ func (s *Service) handlePostgresDatabaseGet(ctx context.Context, request mcp.Cal
 }
 
 // handleMySQLDatabaseCreate creates a new MySQL database.
-func (s *Service) handleMySQLDatabaseCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (s *Service) handleMySQLDatabaseCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) { //nolint:dupl // Similar structure needed for type safety
 	var parameters MySQLDatabaseCreateParams
 	if parseErr := parseArguments(request.Params.Arguments, &parameters); parseErr != nil {
 		return nil, fmt.Errorf("invalid parameters: %w", parseErr)
@@ -587,7 +595,7 @@ func (s *Service) handleMySQLDatabaseCreate(ctx context.Context, request mcp.Cal
 }
 
 // handlePostgresDatabaseCreate creates a new PostgreSQL database.
-func (s *Service) handlePostgresDatabaseCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (s *Service) handlePostgresDatabaseCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) { //nolint:dupl // Similar structure needed for type safety
 	var parameters PostgresDatabaseCreateParams
 	if parseErr := parseArguments(request.Params.Arguments, &parameters); parseErr != nil {
 		return nil, fmt.Errorf("invalid parameters: %w", parseErr)
@@ -672,7 +680,7 @@ func (d DatabaseResult) GetStatus() string { return d.Status }
 func (d DatabaseResult) GetHosts() DatabaseHosts { return d.Hosts }
 
 // handleMySQLDatabaseUpdate updates an existing MySQL database.
-func (s *Service) handleMySQLDatabaseUpdate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (s *Service) handleMySQLDatabaseUpdate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) { //nolint:dupl // Similar structure needed for type safety
 	var parameters MySQLDatabaseUpdateParams
 	if parseErr := parseArguments(request.Params.Arguments, &parameters); parseErr != nil {
 		return nil, fmt.Errorf("invalid parameters: %w", parseErr)
@@ -703,7 +711,7 @@ func (s *Service) handleMySQLDatabaseUpdate(ctx context.Context, request mcp.Cal
 }
 
 // handlePostgresDatabaseUpdate updates an existing PostgreSQL database.
-func (s *Service) handlePostgresDatabaseUpdate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (s *Service) handlePostgresDatabaseUpdate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) { //nolint:dupl // Similar structure needed for type safety
 	var parameters PostgresDatabaseUpdateParams
 	if parseErr := parseArguments(request.Params.Arguments, &parameters); parseErr != nil {
 		return nil, fmt.Errorf("invalid parameters: %w", parseErr)

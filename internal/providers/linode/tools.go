@@ -327,6 +327,8 @@ func (trh *ToolRegistrationHelper) ValidateToolConfiguration() error {
 }
 
 // CreateCustomTool creates a custom tool for specialized Linode operations.
+//
+//nolint:ireturn // Returns interface to provide unified tool registration capability
 func (trh *ToolRegistrationHelper) CreateCustomTool(
 	name, description string,
 	inputSchema mcp.ToolInputSchema,

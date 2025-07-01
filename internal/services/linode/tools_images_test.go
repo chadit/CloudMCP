@@ -153,6 +153,7 @@ func TestHandleImageGet_MissingParameter(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "image_id", "error result should mention missing image_id parameter")
@@ -210,6 +211,7 @@ func TestHandleImageGet_EmptyParameter(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "image_id", "error result should mention missing image_id parameter")
@@ -265,6 +267,7 @@ func TestHandleImageCreate_MissingRequiredParameters(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "required", "error result should mention missing required parameters")
@@ -323,6 +326,7 @@ func TestHandleImageCreate_PartialParameters(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "label", "error result should mention missing label parameter")
@@ -378,6 +382,7 @@ func TestHandleImageUpdate_MissingParameter(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "image_id", "error result should mention missing image_id parameter")
@@ -433,6 +438,7 @@ func TestHandleImageDelete_MissingParameter(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "image_id", "error result should mention missing image_id parameter")
@@ -488,6 +494,7 @@ func TestHandleImageReplicate_MissingParameter(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "image_id", "error result should mention missing image_id parameter")
@@ -543,6 +550,7 @@ func TestHandleImageUploadCreate_MissingParameter(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "required", "error result should mention missing required parameters")

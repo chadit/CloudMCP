@@ -21,6 +21,7 @@ func TestNewCache_DefaultTTL(t *testing.T) {
 
 func TestNewCache_CustomTTL(t *testing.T) {
 	t.Parallel()
+
 	customTTL := 10 * time.Minute
 	cache := linode.NewCache(linode.CacheConfig{TTL: customTTL})
 	require.NotNil(t, cache, "Cache should not be nil")
@@ -249,6 +250,7 @@ func TestCache_ConcurrentAccess(t *testing.T) {
 	const numGoroutines = 10
 
 	var waitGroup sync.WaitGroup
+
 	results := make([][]linodego.Region, numGoroutines)
 	errors := make([]error, numGoroutines)
 
@@ -257,6 +259,7 @@ func TestCache_ConcurrentAccess(t *testing.T) {
 	for goroutineIndex := range numGoroutines {
 		go func(index int) {
 			defer waitGroup.Done()
+
 			regions, err := cache.GetRegions(ctx, mockClient)
 			results[index] = regions
 			errors[index] = err
