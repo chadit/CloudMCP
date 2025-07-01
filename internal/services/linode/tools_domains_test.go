@@ -158,6 +158,7 @@ func TestHandleDomainGet_ParameterValidation(t *testing.T) {
 
 	// Check that it's an error result due to missing parameter
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "domain_id", "error result should mention missing domain_id parameter")
@@ -180,6 +181,7 @@ func TestHandleDomainGet_ParameterValidation(t *testing.T) {
 
 	// Check that it's an error result due to invalid parameter type
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "domain_id", "error result should mention invalid domain_id parameter")

@@ -42,6 +42,7 @@ func TestGet_DefaultValues(t *testing.T) {
 
 func TestGet_Platform(t *testing.T) {
 	t.Parallel()
+
 	info := version.Get()
 
 	expectedPlatform := runtime.GOOS + "/" + runtime.GOARCH
@@ -51,6 +52,7 @@ func TestGet_Platform(t *testing.T) {
 
 func TestGet_Features(t *testing.T) {
 	t.Parallel()
+
 	info := version.Get()
 
 	// Test that required features are present

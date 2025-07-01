@@ -146,6 +146,7 @@ func TestClientValidator_ValidateConfig(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			warnings := validator.ValidateConfig(tt.config)
 			require.Len(t, warnings, tt.wantWarnings, "Should have expected number of warnings: %s", tt.description)
 		})
@@ -154,6 +155,7 @@ func TestClientValidator_ValidateConfig(t *testing.T) {
 
 func TestClientValidator_RecommendConfig(t *testing.T) {
 	t.Parallel()
+
 	validator := &linode.ClientValidator{}
 
 	tests := []struct {
@@ -228,6 +230,7 @@ func TestHTTPClientConfig_EdgeCases(t *testing.T) {
 
 	t.Run("negative timeouts", func(t *testing.T) {
 		t.Parallel()
+
 		config := linode.HTTPClientConfig{
 			Timeout:     -1 * time.Second,
 			DialTimeout: -1 * time.Second,

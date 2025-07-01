@@ -10,7 +10,9 @@ import (
 
 var (
 	// Tool execution metrics.
-	toolExecutionDuration = promauto.NewHistogramVec(
+	// Global variables are used here for Prometheus metrics collection
+	// following the recommended pattern from prometheus/client_golang.
+	toolExecutionDuration = promauto.NewHistogramVec( //nolint:gochecknoglobals
 		prometheus.HistogramOpts{
 			Name:    "cloudmcp_tool_execution_duration_seconds",
 			Help:    "Duration of tool execution",
@@ -19,7 +21,7 @@ var (
 		[]string{"tool", "account", "status"},
 	)
 
-	toolExecutionTotal = promauto.NewCounterVec(
+	toolExecutionTotal = promauto.NewCounterVec( //nolint:gochecknoglobals
 		prometheus.CounterOpts{
 			Name: "cloudmcp_tool_execution_total",
 			Help: "Total number of tool executions",
@@ -28,7 +30,7 @@ var (
 	)
 
 	// API request metrics.
-	apiRequestDuration = promauto.NewHistogramVec(
+	apiRequestDuration = promauto.NewHistogramVec( //nolint:gochecknoglobals
 		prometheus.HistogramOpts{
 			Name:    "cloudmcp_linode_api_duration_seconds",
 			Help:    "Duration of Linode API requests",
@@ -37,7 +39,7 @@ var (
 		[]string{"method", "endpoint", "status"},
 	)
 
-	apiRequestTotal = promauto.NewCounterVec(
+	apiRequestTotal = promauto.NewCounterVec( //nolint:gochecknoglobals
 		prometheus.CounterOpts{
 			Name: "cloudmcp_linode_api_requests_total",
 			Help: "Total number of Linode API requests",
@@ -46,7 +48,7 @@ var (
 	)
 
 	// Cache metrics.
-	cacheHitTotal = promauto.NewCounterVec(
+	cacheHitTotal = promauto.NewCounterVec( //nolint:gochecknoglobals
 		prometheus.CounterOpts{
 			Name: "cloudmcp_cache_hits_total",
 			Help: "Total number of cache hits",
@@ -54,7 +56,7 @@ var (
 		[]string{"cache_type", "account"},
 	)
 
-	cacheMissTotal = promauto.NewCounterVec(
+	cacheMissTotal = promauto.NewCounterVec( //nolint:gochecknoglobals
 		prometheus.CounterOpts{
 			Name: "cloudmcp_cache_misses_total",
 			Help: "Total number of cache misses",
@@ -63,7 +65,7 @@ var (
 	)
 
 	// Account switching metrics.
-	accountSwitchTotal = promauto.NewCounterVec(
+	accountSwitchTotal = promauto.NewCounterVec( //nolint:gochecknoglobals
 		prometheus.CounterOpts{
 			Name: "cloudmcp_account_switches_total",
 			Help: "Total number of account switches",
@@ -72,7 +74,7 @@ var (
 	)
 
 	// Active connections.
-	activeConnections = promauto.NewGaugeVec(
+	activeConnections = promauto.NewGaugeVec( //nolint:gochecknoglobals
 		prometheus.GaugeOpts{
 			Name: "cloudmcp_active_connections",
 			Help: "Number of active connections per account",
@@ -81,7 +83,7 @@ var (
 	)
 
 	// Resource count metrics.
-	resourceCount = promauto.NewGaugeVec(
+	resourceCount = promauto.NewGaugeVec( //nolint:gochecknoglobals
 		prometheus.GaugeOpts{
 			Name: "cloudmcp_resources",
 			Help: "Number of resources by type and account",
@@ -247,5 +249,11 @@ func (m *MetricsMiddleware) Execute(ctx context.Context, tool string, account st
 
 // GetMetricsRegistry returns the default Prometheus registry for external access.
 func GetMetricsRegistry() *prometheus.Registry {
-	return prometheus.DefaultRegisterer.(*prometheus.Registry)
+	registry, ok := prometheus.DefaultRegisterer.(*prometheus.Registry)
+	if !ok {
+		// This should not happen in normal operation, but we provide a fallback.
+		return prometheus.NewRegistry()
+	}
+
+	return registry
 }

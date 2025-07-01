@@ -58,6 +58,7 @@ func TestHandleObjectStorageBucketsList_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -112,6 +113,7 @@ func TestHandleObjectStorageBucketGet_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -164,6 +166,7 @@ func TestHandleObjectStorageBucketCreate_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -217,6 +220,7 @@ func TestHandleObjectStorageBucketUpdate_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -269,6 +273,7 @@ func TestHandleObjectStorageBucketDelete_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -318,6 +323,7 @@ func TestHandleObjectStorageKeysList_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -369,6 +375,7 @@ func TestHandleObjectStorageKeyGet_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -420,6 +427,7 @@ func TestHandleObjectStorageKeyCreate_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -472,6 +480,7 @@ func TestHandleObjectStorageKeyUpdate_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -523,6 +532,7 @@ func TestHandleObjectStorageKeyDelete_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -572,6 +582,7 @@ func TestHandleObjectStorageClustersList_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")

@@ -152,6 +152,7 @@ func TestHandleReservedIPAllocate_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")
@@ -205,6 +206,7 @@ func TestHandleReservedIPAssign_AccountError(t *testing.T) {
 
 	// Check that it's an error result
 	require.NotEmpty(t, result.Content, "result should have content")
+
 	if len(result.Content) > 0 {
 		if textContent, ok := result.Content[0].(mcp.TextContent); ok {
 			require.Contains(t, textContent.Text, "account", "error result should mention account issue")

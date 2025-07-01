@@ -268,6 +268,8 @@ func (s *Service) handleDomainGet(ctx context.Context, request mcp.CallToolReque
 }
 
 // handleDomainCreate creates a new domain.
+//
+//nolint:gocognit,gocyclo // Complex validation and creation logic for domain records is required here
 func (s *Service) handleDomainCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	requestArguments, argumentsOK := request.Params.Arguments.(map[string]interface{})
 	if !argumentsOK {

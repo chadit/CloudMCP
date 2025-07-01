@@ -128,7 +128,7 @@ func CreateOptimizedLinodeClient(token string, config HTTPClientConfig) *linodeg
 		// TLS settings
 		TLSHandshakeTimeout: config.TLSHandshakeTimeout,
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: config.InsecureSkipVerify,
+			InsecureSkipVerify: config.InsecureSkipVerify, //nolint:gosec // Configurable for testing environments
 		},
 
 		// HTTP settings
@@ -306,7 +306,7 @@ func (v *ClientValidator) RecommendConfig(usage string) HTTPClientConfig {
 		config.IdleConnTimeout = batchIdleTimeoutSeconds * time.Second
 	default:
 		// Return default config for unknown usage patterns
-}
+	}
 
 	return config
 }

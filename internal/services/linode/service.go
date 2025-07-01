@@ -2609,6 +2609,8 @@ func NewForTesting(cfg *config.Config, log logger.Logger, accountManager *Accoun
 
 // CallToolForTesting provides a public interface for testing tool handlers.
 // This allows external test packages to call tool handlers through the public API.
+//
+//nolint:gocyclo // Large switch statement needed to dispatch all tool handlers for testing
 func (s *Service) CallToolForTesting(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	switch request.Params.Name {
 	case "linode_account_get":
@@ -2868,6 +2870,7 @@ func GetTextContentForTesting(testingInterface interface {
 
 // buildDomainRecordProperties builds the common domain record properties for schema definitions.
 func (s *Service) buildDomainRecordProperties(isUpdate bool) map[string]any {
+	const srvRecordSuffix = " (for SRV records)"
 	properties := map[string]any{
 		"domain_id": map[string]any{
 			"type":        "number",
@@ -2890,36 +2893,84 @@ func (s *Service) buildDomainRecordProperties(isUpdate bool) map[string]any {
 	// Add common record properties
 	recordProperties := map[string]map[string]any{
 		"type": {
-			"type":        "string",
-			"description": descriptionPrefix + "record type" + func() string { if !isUpdate { return " (A, AAAA, CNAME, MX, TXT, SRV, PTR, CAA, NS)" }; return "" }(),
+			"type": "string",
+			"description": descriptionPrefix + "record type" + func() string {
+				if !isUpdate {
+					return " (A, AAAA, CNAME, MX, TXT, SRV, PTR, CAA, NS)"
+				}
+
+				return ""
+			}(),
 		},
 		"name": {
-			"type":        "string",
-			"description": descriptionPrefix + "record name" + func() string { if !isUpdate { return " (subdomain)" }; return "" }(),
+			"type": "string",
+			"description": descriptionPrefix + "record name" + func() string {
+				if !isUpdate {
+					return " (subdomain)"
+				}
+
+				return ""
+			}(),
 		},
 		"target": {
-			"type":        "string",
-			"description": descriptionPrefix + "record target" + func() string { if !isUpdate { return " (IP, hostname, etc.)" }; return "" }(),
+			"type": "string",
+			"description": descriptionPrefix + "record target" + func() string {
+				if !isUpdate {
+					return " (IP, hostname, etc.)"
+				}
+
+				return ""
+			}(),
 		},
 		"priority": {
-			"type":        "number",
-			"description": descriptionPrefix + "record priority" + func() string { if !isUpdate { return " (for MX and SRV records)" }; return "" }(),
+			"type": "number",
+			"description": descriptionPrefix + "record priority" + func() string {
+				if !isUpdate {
+					return " (for MX and SRV records)"
+				}
+
+				return ""
+			}(),
 		},
 		"weight": {
-			"type":        "number",
-			"description": descriptionPrefix + "record weight" + func() string { if !isUpdate { return " (for SRV records)" }; return "" }(),
+			"type": "number",
+			"description": descriptionPrefix + "record weight" + func() string {
+				if !isUpdate {
+					return srvRecordSuffix
+				}
+
+				return ""
+			}(),
 		},
 		"port": {
-			"type":        "number",
-			"description": descriptionPrefix + "record port" + func() string { if !isUpdate { return " (for SRV records)" }; return "" }(),
+			"type": "number",
+			"description": descriptionPrefix + "record port" + func() string {
+				if !isUpdate {
+					return srvRecordSuffix
+				}
+
+				return ""
+			}(),
 		},
 		"service": {
-			"type":        "string",
-			"description": descriptionPrefix + "service name" + func() string { if !isUpdate { return " (for SRV records)" }; return "" }(),
+			"type": "string",
+			"description": descriptionPrefix + "service name" + func() string {
+				if !isUpdate {
+					return srvRecordSuffix
+				}
+
+				return ""
+			}(),
 		},
 		"protocol": {
-			"type":        "string",
-			"description": descriptionPrefix + "protocol name" + func() string { if !isUpdate { return " (for SRV records)" }; return "" }(),
+			"type": "string",
+			"description": descriptionPrefix + "protocol name" + func() string {
+				if !isUpdate {
+					return srvRecordSuffix
+				}
+
+				return ""
+			}(),
 		},
 		"ttl_sec": {
 			"type":        "number",

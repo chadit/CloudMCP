@@ -14,7 +14,7 @@ import (
 )
 
 // BenchmarkConfigReload benchmarks the performance of configuration reload operations
-// to establish baseline performance metrics for dynamic configuration management.
+// to establish baseline performance metrics for dynamic configuration management. //nolint:godot
 //
 // **Benchmark Coverage:**
 // • Configuration file loading and parsing
@@ -105,7 +105,7 @@ func BenchmarkConfigReload(b *testing.B) {
 }
 
 // BenchmarkConfigMemoryAllocation benchmarks memory allocation patterns
-// during configuration operations to identify optimization opportunities.
+// during configuration operations to identify optimization opportunities. //nolint:godot
 //
 // **Memory Optimization Targets:**
 // • Minimize allocations per reload operation
@@ -187,15 +187,15 @@ func BenchmarkConfigMemoryAllocation(b *testing.B) {
 	})
 }
 
-// BenchmarkServiceReconfiguration benchmarks service reconfiguration performance.
-// when configuration changes occur, simulating real-world dynamic updates.
+// BenchmarkServiceReconfiguration benchmarks service reconfiguration performance
+// when configuration changes occur, simulating real-world dynamic updates. //nolint:godot
 //
 // **Service Reconfiguration Performance:**
 // • Service creation with new configuration
 // • Account manager updates with configuration changes
 // • Memory allocation during service reconfiguration
 // • Impact of account count on reconfiguration performance
-func BenchmarkServiceReconfiguration(b *testing.B) {
+func BenchmarkServiceReconfiguration(b *testing.B) { //nolint:gocognit // Benchmark complexity acceptable for comprehensive testing
 	tempDir := b.TempDir()
 	configPath := filepath.Join(tempDir, "service-reconfig-benchmark.toml")
 	log := logger.New("error") // Minimize logging overhead
@@ -306,15 +306,15 @@ func BenchmarkServiceReconfiguration(b *testing.B) {
 	})
 }
 
-// BenchmarkConfigurationPersistence benchmarks configuration file I/O operations.
-// to establish baseline performance for configuration persistence scenarios.
+// BenchmarkConfigurationPersistence benchmarks configuration file I/O operations
+// to establish baseline performance for configuration persistence scenarios. //nolint:godot
 //
 // **File I/O Performance Targets:**
 // • Configuration loading: <5ms for small files
 // • Configuration saving: <10ms for typical configurations
 // • File system operations: Minimal overhead
 // • TOML parsing/serialization: Efficient processing
-func BenchmarkConfigurationPersistence(b *testing.B) {
+func BenchmarkConfigurationPersistence(b *testing.B) { //nolint:gocognit // Benchmark complexity acceptable for comprehensive testing
 	tempDir := b.TempDir()
 	configPath := filepath.Join(tempDir, "persistence-benchmark.toml")
 
@@ -424,15 +424,15 @@ func BenchmarkConfigurationPersistence(b *testing.B) {
 	})
 }
 
-// BenchmarkConcurrentConfigAccess benchmarks concurrent configuration access patterns.
-// to ensure thread safety and performance under concurrent load.
+// BenchmarkConcurrentConfigAccess benchmarks concurrent configuration access patterns
+// to ensure thread safety and performance under concurrent load. //nolint:godot
 //
 // **Concurrency Performance:**
 // • Multiple goroutines reading configuration simultaneously
 // • Configuration reload with concurrent access
 // • Thread safety verification under load
 // • Performance degradation under concurrent access
-func BenchmarkConcurrentConfigAccess(b *testing.B) {
+func BenchmarkConcurrentConfigAccess(b *testing.B) { //nolint:gocognit // Benchmark complexity acceptable for comprehensive testing
 	tempDir := b.TempDir()
 	configPath := filepath.Join(tempDir, "concurrent-benchmark.toml")
 
@@ -494,6 +494,7 @@ func BenchmarkConcurrentConfigAccess(b *testing.B) {
 				config := manager.GetConfig()
 				if config == nil {
 					b.Error("Config should not be nil")
+
 					continue
 				}
 
