@@ -1,3 +1,6 @@
+// Package main provides the CloudMCP server application entry point.
+// This binary starts the CloudMCP server in minimal shell mode, offering
+// a basic health check tool through the Model Context Protocol (MCP).
 package main
 
 import (
@@ -26,7 +29,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Set up enhanced logging with rotation
+	// Set up enhanced logging with rotation.
 	logConfig := logger.LogConfig{
 		Level:      cfg.LogLevel,
 		FilePath:   config.GetLogPath(),
@@ -35,10 +38,10 @@ func main() {
 		MaxAge:     defaultLogMaxAge,     // 30 days
 	}
 
-	// Ensure log directory exists
+	// Ensure log directory exists.
 	if err := config.EnsureLogDir(); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to create log directory: %v\n", err)
-		// Fall back to stderr logging
+		// Fall back to stderr logging.
 		logConfig.FilePath = ""
 	}
 

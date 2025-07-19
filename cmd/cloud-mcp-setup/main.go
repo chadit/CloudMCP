@@ -1,5 +1,5 @@
 // Package main provides a setup utility for configuring CloudMCP with Claude Code and VS Code.
-// It automates the installation and configuration of CloudMCP as an MCP server, creating
+// It automates the installation and configuration of CloudMCP as an MCP server, creating.
 // necessary configuration files and wrapper scripts for seamless integration.
 package main
 
@@ -121,7 +121,7 @@ func parseFlags() *config {
 func safeReadFile(path string) ([]byte, error) {
 	cleanPath := filepath.Clean(path)
 
-	// Validate path is within expected directories
+	// Validate path is within expected directories.
 	if !isValidConfigPath(cleanPath) {
 		return nil, fmt.Errorf("%w: %s", ErrInvalidFilePath, cleanPath)
 	}
@@ -141,7 +141,7 @@ func isValidConfigPath(path string) bool {
 		return false
 	}
 
-	// Expected configuration directories
+	// Expected configuration directories.
 	validPrefixes := []string{
 		filepath.Join(homeDir, ".claude"),
 		filepath.Join(homeDir, ".config"),
@@ -154,20 +154,20 @@ func isValidConfigPath(path string) bool {
 		return false
 	}
 
-	// Check if path starts with any valid prefix
+	// Check if path starts with any valid prefix.
 	for _, prefix := range validPrefixes {
 		absPrefix, err := filepath.Abs(prefix)
 		if err != nil {
 			continue
 		}
 
-		// Check if path is within this prefix directory
+		// Check if path is within this prefix directory.
 		rel, err := filepath.Rel(absPrefix, absPath)
 		if err != nil {
 			continue
 		}
 
-		// Path is valid if it doesn't escape the prefix directory
+		// Path is valid if it doesn't escape the prefix directory.
 		if !strings.HasPrefix(rel, "..") {
 			return true
 		}
@@ -217,13 +217,14 @@ func printHelp() {
 }
 
 func setupLocalMode(localPath string) (string, string) {
-	// Local development mode
+	// Local development mode.
 	if localPath == "" {
 		localPath = findProjectDirectory()
 	}
 
-	// Verify project directory
+	// Verify project directory.
 	wrapperPath := filepath.Join(localPath, "cloud-mcp-wrapper.sh")
+
 	if _, err := os.Stat(wrapperPath); os.IsNotExist(err) {
 		fmt.Fprintf(os.Stderr, "Error: cloud-mcp-wrapper.sh not found in %s\n", localPath)
 		os.Exit(1)
@@ -235,7 +236,7 @@ func setupLocalMode(localPath string) (string, string) {
 }
 
 func findProjectDirectory() string {
-	// Try to find the project directory
+	// Try to find the project directory.
 	cwd, _ := os.Getwd()
 
 	if _, err := os.Stat(filepath.Join(cwd, "cloud-mcp-wrapper.sh")); err == nil {
@@ -253,15 +254,17 @@ func findProjectDirectory() string {
 }
 
 func setupGoInstallMode(homeDir string, forceSetup bool) (string, string) {
-	// Go install mode - use ~/.cloud-mcp
+	// Go install mode - use ~/.cloud-mcp.
 	cloudMCPDir := filepath.Join(homeDir, ".cloud-mcp")
+
 	if err := os.MkdirAll(cloudMCPDir, directoryPerms); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Cannot create directory %s: %v\n", cloudMCPDir, err)
 		os.Exit(1)
 	}
 
-	// Create wrapper script
+	// Create wrapper script.
 	wrapperPath := filepath.Join(cloudMCPDir, "cloud-mcp-wrapper.sh")
+
 	if _, err := os.Stat(wrapperPath); err == nil && !forceSetup {
 		fmt.Printf("✓ Wrapper script already exists at %s\n", wrapperPath)
 	} else {
@@ -277,7 +280,7 @@ func createWrapperScript(wrapperPath string) {
 		os.Exit(1)
 	}
 
-	// Make script executable
+	// Make script executable.
 	if err := os.Chmod(wrapperPath, filePermExecutable); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Cannot make wrapper script executable: %v\n", err)
 		os.Exit(1)
@@ -287,7 +290,7 @@ func createWrapperScript(wrapperPath string) {
 }
 
 func createTOMLConfigTemplate(cloudMCPDir string) string {
-	// For go install mode, create a basic TOML config template
+	// For go install mode, create a basic TOML config template.
 	configPath := filepath.Join(cloudMCPDir, "config-template.toml")
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
@@ -325,18 +328,18 @@ func doSetup(localMode bool, localPath string, forceSetup bool) {
 		wrapperPath, cloudMCPDir = setupGoInstallMode(homeDir, forceSetup)
 	}
 
-	// Handle TOML configuration
+	// Handle TOML configuration.
 	if !localMode {
 		configPath = createTOMLConfigTemplate(cloudMCPDir)
 	}
 
-	// Setup Claude Code
+	// Setup Claude Code.
 	setupClaudeCode(wrapperPath, forceSetup)
 
-	// Setup Claude Desktop
+	// Setup Claude Desktop.
 	setupClaudeDesktop(wrapperPath, forceSetup)
 
-	// Setup VS Code
+	// Setup VS Code.
 	setupVSCode(wrapperPath, forceSetup)
 
 	fmt.Println()
@@ -373,7 +376,7 @@ func setupClaudeCode(wrapperPath string, forceSetup bool) {
 	fmt.Println()
 	fmt.Println("Setting up Claude Code...")
 
-	// Check if claude CLI is available
+	// Check if claude CLI is available.
 	if _, err := exec.LookPath("claude"); err != nil {
 		fmt.Println("⚠️  Claude Code CLI not found")
 		fmt.Println("   Install from: https://claude.ai/code")
@@ -381,7 +384,7 @@ func setupClaudeCode(wrapperPath string, forceSetup bool) {
 		return
 	}
 
-	// Check if already configured
+	// Check if already configured.
 	homeDir, _ := os.UserHomeDir()
 	claudeConfigPath := filepath.Join(homeDir, ".claude.json")
 
@@ -393,8 +396,9 @@ func setupClaudeCode(wrapperPath string, forceSetup bool) {
 		}
 	}
 
-	// Add using claude CLI
+	// Add using claude CLI.
 	cmd := exec.Command("claude", "mcp", "add", "-s", "user", "cloud-mcp", wrapperPath)
+
 	if output, err := cmd.CombinedOutput(); err != nil {
 		fmt.Printf("⚠️  Failed to add CloudMCP to Claude Code: %v\n", err)
 
@@ -419,7 +423,7 @@ func setupClaudeDesktop(wrapperPath string, forceSetup bool) {
 	homeDir, _ := os.UserHomeDir()
 	configPath := filepath.Join(homeDir, "Library", "Application Support", "Claude", "claude_desktop_config.json")
 
-	// Check if config exists
+	// Check if config exists.
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		fmt.Println("⚠️  Claude Desktop configuration not found")
 		fmt.Println("   Please run Claude Desktop at least once")
@@ -427,7 +431,7 @@ func setupClaudeDesktop(wrapperPath string, forceSetup bool) {
 		return
 	}
 
-	// Read existing config
+	// Read existing config.
 	data, err := safeReadFile(configPath)
 	if err != nil {
 		fmt.Printf("⚠️  Cannot read Claude Desktop config: %v\n", err)
@@ -435,14 +439,14 @@ func setupClaudeDesktop(wrapperPath string, forceSetup bool) {
 		return
 	}
 
-	// Check if already configured
+	// Check if already configured.
 	if strings.Contains(string(data), "cloud-mcp") && !forceSetup {
 		fmt.Println("✓ CloudMCP already configured in Claude Desktop")
 
 		return
 	}
 
-	// Parse config
+	// Parse config.
 	var config map[string]interface{}
 	if unmarshalErr := json.Unmarshal(data, &config); unmarshalErr != nil {
 		fmt.Printf("⚠️  Cannot parse Claude Desktop config: %v\n", unmarshalErr)
@@ -450,7 +454,7 @@ func setupClaudeDesktop(wrapperPath string, forceSetup bool) {
 		return
 	}
 
-	// Add CloudMCP
+	// Add CloudMCP.
 	if servers, ok := config["mcpServers"].(map[string]interface{}); ok {
 		servers["cloud-mcp"] = map[string]interface{}{
 			"command": wrapperPath,
@@ -467,7 +471,7 @@ func setupClaudeDesktop(wrapperPath string, forceSetup bool) {
 		}
 	}
 
-	// Write back
+	// Write back.
 	newData, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		fmt.Printf("⚠️  Cannot marshal config: %v\n", err)
@@ -475,15 +479,16 @@ func setupClaudeDesktop(wrapperPath string, forceSetup bool) {
 		return
 	}
 
-	// Backup original
+	// Backup original.
 	backupPath := configPath + ".bak"
+
 	if err := os.WriteFile(backupPath, data, filePermSecure); err != nil {
 		fmt.Printf("⚠️  Cannot create backup: %v\n", err)
 
 		return
 	}
 
-	// Write new config
+	// Write new config.
 	if err := os.WriteFile(configPath, newData, filePermSecure); err != nil {
 		fmt.Printf("⚠️  Cannot write config: %v\n", err)
 
@@ -497,10 +502,10 @@ func setupVSCode(wrapperPath string, forceSetup bool) {
 	fmt.Println()
 	fmt.Println("Setting up VS Code...")
 
-	// Check for VS Code settings
+	// Check for VS Code settings.
 	homeDir, _ := os.UserHomeDir()
 
-	// VS Code settings locations (in order of preference)
+	// VS Code settings locations (in order of preference).
 	settingsPaths := []string{
 		filepath.Join(homeDir, ".config", "Code", "User", "settings.json"),                        // Linux
 		filepath.Join(homeDir, "Library", "Application Support", "Code", "User", "settings.json"), // macOS
@@ -531,7 +536,7 @@ func setupVSCode(wrapperPath string, forceSetup bool) {
 		return
 	}
 
-	// Read existing settings
+	// Read existing settings.
 	data, err := safeReadFile(settingsPath)
 	if err != nil {
 		fmt.Printf("⚠️  Cannot read VS Code settings: %v\n", err)
@@ -539,18 +544,18 @@ func setupVSCode(wrapperPath string, forceSetup bool) {
 		return
 	}
 
-	// Check if already configured
+	// Check if already configured.
 	if strings.Contains(string(data), "cloud-mcp") && !forceSetup {
 		fmt.Println("✓ CloudMCP already configured in VS Code")
 
 		return
 	}
 
-	// Parse settings (VS Code allows comments, so we need to handle them)
-	// For simplicity, we'll do a string-based approach
+	// Parse settings (VS Code allows comments, so we need to handle them).
+	// For simplicity, we'll do a string-based approach.
 	settingsStr := string(data)
 
-	// Check if github.copilot.chat.mcpServers exists
+	// Check if github.copilot.chat.mcpServers exists.
 	if strings.Contains(settingsStr, "github.copilot.chat.mcpServers") {
 		showManualVSCodeInstructions(wrapperPath)
 	} else {
@@ -559,7 +564,7 @@ func setupVSCode(wrapperPath string, forceSetup bool) {
 }
 
 func showManualVSCodeInstructions(wrapperPath string) {
-	// Add to existing mcpServers
+	// Add to existing mcpServers.
 	fmt.Println("⚠️  github.copilot.chat.mcpServers already exists in settings")
 	fmt.Println("   Please manually add cloud-mcp to the existing configuration:")
 	fmt.Println()
@@ -570,8 +575,9 @@ func showManualVSCodeInstructions(wrapperPath string) {
 }
 
 func updateVSCodeSettings(settingsPath, settingsStr, wrapperPath string, data []byte) {
-	// Create backup
+	// Create backup.
 	backupPath := settingsPath + ".bak"
+
 	if err := os.WriteFile(backupPath, data, filePermSecure); err != nil {
 		fmt.Printf("⚠️  Cannot create backup: %v\n", err)
 
@@ -579,14 +585,15 @@ func updateVSCodeSettings(settingsPath, settingsStr, wrapperPath string, data []
 	}
 
 	newSettings := buildVSCodeSettings(settingsStr, wrapperPath)
+
 	if newSettings == "" {
 		return
 	}
 
-	// Write the new settings
+	// Write the new settings.
 	if err := os.WriteFile(settingsPath, []byte(newSettings), filePermSecure); err != nil {
 		fmt.Printf("⚠️  Cannot write VS Code settings: %v\n", err)
-		// Restore backup
+		// Restore backup.
 		_ = os.Rename(backupPath, settingsPath)
 
 		return
@@ -596,15 +603,16 @@ func updateVSCodeSettings(settingsPath, settingsStr, wrapperPath string, data []
 }
 
 func buildVSCodeSettings(settingsStr, wrapperPath string) string {
-	// Find the last closing brace
+	// Find the last closing brace.
 	lastBrace := strings.LastIndex(settingsStr, "}")
+
 	if lastBrace == -1 {
 		fmt.Println("⚠️  Invalid VS Code settings format")
 
 		return ""
 	}
 
-	// Insert the new configuration
+	// Insert the new configuration.
 	newConfig := fmt.Sprintf(`  "github.copilot.chat.mcpServers": {
     "cloud-mcp": {
       "command": "%s",
@@ -612,7 +620,7 @@ func buildVSCodeSettings(settingsStr, wrapperPath string) string {
     }
   }`, wrapperPath)
 
-	// Check if we need a comma before our new config
+	// Check if we need a comma before our new config.
 	trimmed := strings.TrimSpace(settingsStr[:lastBrace])
 	needsComma := len(trimmed) > 0 && trimmed[len(trimmed)-1] != '{'
 
@@ -620,7 +628,7 @@ func buildVSCodeSettings(settingsStr, wrapperPath string) string {
 		newConfig = ",\n" + newConfig
 	}
 
-	// Build the new settings
+	// Build the new settings.
 	return settingsStr[:lastBrace] + newConfig + "\n" + settingsStr[lastBrace:]
 }
 
@@ -679,6 +687,7 @@ func updateClaudeDesktopConfig(configPath string, data []byte) {
 	}
 
 	servers, ok := config["mcpServers"].(map[string]interface{})
+
 	if !ok {
 		return
 	}

@@ -20,7 +20,7 @@ func TestNew_DefaultConfig(t *testing.T) {
 
 	require.NotNil(t, log, "Logger should not be nil")
 
-	// Test that it's a slogWrapper - using interface, so no internal access needed
+	// Test that it's a slogWrapper - using interface, so no internal access needed.
 	require.NotNil(t, log, "Logger should be properly initialized")
 }
 
@@ -75,7 +75,7 @@ func TestNewWithConfig_LogLevels(t *testing.T) {
 			log := logger.NewWithConfig(config)
 			require.NotNil(t, log, "Logger should not be nil")
 
-			// Test that the logger was created correctly - using interface only
+			// Test that the logger was created correctly - using interface only.
 			require.NotNil(t, log, "Logger should be properly initialized")
 		})
 	}
@@ -97,10 +97,10 @@ func TestNewWithConfig_FileOutput(t *testing.T) {
 	log := logger.NewWithConfig(config)
 	require.NotNil(t, log, "Logger should not be nil")
 
-	// Log a test message
+	// Log a test message.
 	log.Info("test message", "key", "value")
 
-	// Verify log file was created and contains expected content
+	// Verify log file was created and contains expected content.
 	require.FileExists(t, logFile, "Log file should be created")
 
 	content, err := os.ReadFile(logFile)
@@ -112,7 +112,7 @@ func TestNewWithConfig_FileOutput(t *testing.T) {
 
 func TestLogger_DebugMethods(t *testing.T) {
 	t.Parallel()
-	// Create logger with debug level that writes to file
+	// Create logger with debug level that writes to file.
 	tempDir := t.TempDir()
 	logFile := filepath.Join(tempDir, "debug.log")
 
@@ -123,14 +123,14 @@ func TestLogger_DebugMethods(t *testing.T) {
 
 	log := logger.NewWithConfig(config)
 
-	// Test Debug method
+	// Test Debug method.
 	log.Debug("debug message", "debug_key", "debug_value")
 
-	// Test DebugContext method
+	// Test DebugContext method.
 	ctx := t.Context()
 	log.DebugContext(ctx, "debug context message", "ctx_key", "ctx_value")
 
-	// Verify log file contains debug messages
+	// Verify log file contains debug messages.
 	content, err := os.ReadFile(logFile)
 	require.NoError(t, err, "Should read log file")
 
@@ -153,14 +153,14 @@ func TestLogger_InfoMethods(t *testing.T) {
 
 	log := logger.NewWithConfig(config)
 
-	// Test Info method
+	// Test Info method.
 	log.Info("info message", "info_key", "info_value")
 
-	// Test InfoContext method
+	// Test InfoContext method.
 	ctx := t.Context()
 	log.InfoContext(ctx, "info context message", "ctx_key", "ctx_value")
 
-	// Verify log file contains info messages
+	// Verify log file contains info messages.
 	content, err := os.ReadFile(logFile)
 	require.NoError(t, err, "Should read log file")
 
@@ -183,14 +183,14 @@ func TestLogger_WarnMethods(t *testing.T) {
 
 	log := logger.NewWithConfig(config)
 
-	// Test Warn method
+	// Test Warn method.
 	log.Warn("warn message", "warn_key", "warn_value")
 
-	// Test WarnContext method
+	// Test WarnContext method.
 	ctx := t.Context()
 	log.WarnContext(ctx, "warn context message", "ctx_key", "ctx_value")
 
-	// Verify log file contains warn messages
+	// Verify log file contains warn messages.
 	content, err := os.ReadFile(logFile)
 	require.NoError(t, err, "Should read log file")
 
@@ -213,14 +213,14 @@ func TestLogger_ErrorMethods(t *testing.T) {
 
 	log := logger.NewWithConfig(config)
 
-	// Test Error method
+	// Test Error method.
 	log.Error("error message", "error_key", "error_value")
 
-	// Test ErrorContext method
+	// Test ErrorContext method.
 	ctx := t.Context()
 	log.ErrorContext(ctx, "error context message", "ctx_key", "ctx_value")
 
-	// Verify log file contains error messages
+	// Verify log file contains error messages.
 	content, err := os.ReadFile(logFile)
 	require.NoError(t, err, "Should read log file")
 
@@ -243,14 +243,14 @@ func TestLogger_With(t *testing.T) {
 
 	log := logger.NewWithConfig(config)
 
-	// Create a child logger with additional context
+	// Create a child logger with additional context.
 	childLogger := log.With("service", "test", "version", "1.0.0")
 	require.NotNil(t, childLogger, "Child logger should not be nil")
 
-	// Log with child logger
+	// Log with child logger.
 	childLogger.Info("child log message", "extra", "data")
 
-	// Verify log contains both original and new context
+	// Verify log contains both original and new context.
 	content, err := os.ReadFile(logFile)
 	require.NoError(t, err, "Should read log file")
 
@@ -269,7 +269,7 @@ func TestLogger_LogLevelFiltering(t *testing.T) {
 	tempDir := t.TempDir()
 	logFile := filepath.Join(tempDir, "level_filter.log")
 
-	// Create logger with warn level (should filter out debug and info)
+	// Create logger with warn level (should filter out debug and info).
 	config := logger.LogConfig{
 		Level:    "warn",
 		FilePath: logFile,
@@ -277,23 +277,23 @@ func TestLogger_LogLevelFiltering(t *testing.T) {
 
 	log := logger.NewWithConfig(config)
 
-	// Log messages at different levels
+	// Log messages at different levels.
 	log.Debug("debug message")
 	log.Info("info message")
 	log.Warn("warn message")
 	log.Error("error message")
 
-	// Read log content
+	// Read log content.
 	content, err := os.ReadFile(logFile)
 	require.NoError(t, err, "Should read log file")
 
 	logContent := string(content)
 
-	// Should NOT contain debug and info messages
+	// Should NOT contain debug and info messages.
 	require.NotContains(t, logContent, "debug message", "Debug message should be filtered out")
 	require.NotContains(t, logContent, "info message", "Info message should be filtered out")
 
-	// Should contain warn and error messages
+	// Should contain warn and error messages.
 	require.Contains(t, logContent, "warn message", "Warn message should be included")
 	require.Contains(t, logContent, "error message", "Error message should be included")
 }
@@ -310,22 +310,22 @@ func TestLogger_JSONFormat(t *testing.T) {
 
 	log := logger.NewWithConfig(config)
 
-	// Log a structured message
+	// Log a structured message.
 	log.Info("test message", "key1", "value1", "key2", 42, "key3", true)
 
-	// Read and parse log content
+	// Read and parse log content.
 	content, err := os.ReadFile(logFile)
 	require.NoError(t, err, "Should read log file")
 
-	// Verify it's valid JSON
+	// Verify it's valid JSON.
 	lines := strings.Split(strings.TrimSpace(string(content)), "\n")
 	require.Len(t, lines, 1, "Should have exactly one log line")
 
-	var logEntry map[string]interface{}
+	var logEntry map[string]any
 	err = json.Unmarshal([]byte(lines[0]), &logEntry)
 	require.NoError(t, err, "Log entry should be valid JSON")
 
-	// Verify JSON structure
+	// Verify JSON structure.
 	require.Equal(t, "test message", logEntry["msg"], "Message should be in msg field")
 	require.Equal(t, "INFO", logEntry["level"], "Level should be INFO")
 	require.Equal(t, "value1", logEntry["key1"], "Custom key1 should be present")
@@ -336,7 +336,7 @@ func TestLogger_JSONFormat(t *testing.T) {
 
 func TestLogConfig_Validation(t *testing.T) {
 	t.Parallel()
-	// Test that LogConfig struct can be created with various configurations
+	// Test that LogConfig struct can be created with various configurations.
 	configs := []logger.LogConfig{
 		{
 			Level: "debug",
@@ -361,7 +361,7 @@ func TestLogConfig_Validation(t *testing.T) {
 			log := logger.NewWithConfig(config)
 			require.NotNil(t, log, "Logger should be created with any valid config")
 
-			// Test that basic logging works
+			// Test that basic logging works.
 			log.Info("test message")
 		})
 	}
