@@ -229,8 +229,16 @@ install_tool() {
         return 1
     fi
     
-    # Parse configuration
-    IFS=':' read -r version os arch url checksum <<< "$config"
+    # Parse configuration (handle URLs with colons correctly)
+    # Format: version:os:arch:url:checksum
+    # Extract each field carefully to handle URLs with colons
+    version=$(echo "$config" | cut -d':' -f1)
+    os=$(echo "$config" | cut -d':' -f2)
+    arch=$(echo "$config" | cut -d':' -f3)
+    # Extract URL by removing version:os:arch: prefix and :checksum suffix
+    temp_config="${config#*:*:*:}"  # Remove first 3 fields
+    checksum="${temp_config##*:}"   # Get last field (checksum)
+    url="${temp_config%:*}"         # Remove checksum, leaving URL
     
     local tool_dir="${TOOLS_DIR}/${tool_name}"
     local tool_binary="${tool_dir}/${tool_name}"
@@ -311,7 +319,14 @@ update_checksums() {
             local tool_name="${tool_key%-*}"
             local config
             config=$(get_tool_config "$tool_key")
-            IFS=':' read -r version os arch url checksum <<< "$config"
+            # Parse configuration (handle URLs with colons correctly)
+            version=$(echo "$config" | cut -d':' -f1)
+            os=$(echo "$config" | cut -d':' -f2)
+            arch=$(echo "$config" | cut -d':' -f3)
+            # Extract URL by removing version:os:arch: prefix and :checksum suffix
+            temp_config="${config#*:*:*:}"  # Remove first 3 fields
+            checksum="${temp_config##*:}"   # Get last field (checksum)
+            url="${temp_config%:*}"         # Remove checksum, leaving URL
             
             log_info "Verifying checksum for: $tool_name"
             
