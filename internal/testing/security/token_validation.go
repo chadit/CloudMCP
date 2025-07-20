@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -82,19 +83,31 @@ type TokenValidationResult struct {
 }
 
 // TokenValidator provides secure token validation and redaction capabilities.
+// It is safe for concurrent use.
 type TokenValidator struct {
+	mu      sync.RWMutex
 	configs map[string]TokenValidationConfig
 }
 
 // NewTokenValidator creates a new token validator with default configurations.
 func NewTokenValidator() *TokenValidator {
+	// Create a copy of the default configs to avoid sharing the same map
+	configsCopy := make(map[string]TokenValidationConfig)
+	for k, v := range DefaultTokenConfigs {
+		configsCopy[k] = v
+	}
+	
 	return &TokenValidator{
-		configs: DefaultTokenConfigs,
+		configs: configsCopy,
 	}
 }
 
 // AddConfig adds or updates a token validation configuration.
+// This method is safe for concurrent use.
 func (v *TokenValidator) AddConfig(tokenName string, config TokenValidationConfig) {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	
 	if v.configs == nil {
 		v.configs = make(map[string]TokenValidationConfig)
 	}
@@ -102,9 +115,11 @@ func (v *TokenValidator) AddConfig(tokenName string, config TokenValidationConfi
 }
 
 // ValidateToken performs comprehensive validation of a token using constant-time comparison
-// to prevent timing attacks.
+// to prevent timing attacks. This method is safe for concurrent use.
 func (v *TokenValidator) ValidateToken(tokenName, tokenValue string) TokenValidationResult {
+	v.mu.RLock()
 	config, exists := v.configs[tokenName]
+	v.mu.RUnlock()
 	if !exists {
 		return TokenValidationResult{
 			Valid:    false,
@@ -249,10 +264,20 @@ func RedactToken(token string) string {
 }
 
 // ValidateEnvironmentTokens validates all configured tokens from environment variables.
+// This method is safe for concurrent use.
 func (v *TokenValidator) ValidateEnvironmentTokens(getEnv func(string) string) map[string]TokenValidationResult {
 	results := make(map[string]TokenValidationResult)
 	
+	// Get all token names safely
+	v.mu.RLock()
+	tokenNames := make([]string, 0, len(v.configs))
 	for tokenName := range v.configs {
+		tokenNames = append(tokenNames, tokenName)
+	}
+	v.mu.RUnlock()
+	
+	// Validate each token (ValidateToken handles its own locking)
+	for _, tokenName := range tokenNames {
 		tokenValue := getEnv(tokenName)
 		results[tokenName] = v.ValidateToken(tokenName, tokenValue)
 	}
@@ -303,7 +328,9 @@ func (v *TokenValidator) GenerateSecurityAuditReport(getEnv func(string) string)
 					fmt.Sprintf("%s: %s", tokenName, result.Error.Error()))
 			}
 			
+			v.mu.RLock()
 			config := v.configs[tokenName]
+			v.mu.RUnlock()
 			if config.Required && result.TokenLength == 0 {
 				report.RequiredMissing++
 			}
