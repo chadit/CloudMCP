@@ -44,16 +44,16 @@ get_tool_config() {
     
     case "$tool_key" in
         "golangci-lint-linux-amd64")
-            echo "v2.2.2:linux:amd64:https://github.com/golangci/golangci-lint/releases/download/v2.2.2/golangci-lint-2.2.2-linux-amd64.tar.gz:c27fbde948a87d326feacd21df2f61a9c54dbd2e3bfa185c0a1cd6917a6f964f"
+            echo "v1.64.2:linux:amd64:https://github.com/golangci/golangci-lint/releases/download/v1.64.2/golangci-lint-1.64.2-linux-amd64.tar.gz:a893e7c9211f70a0cb8c5121ab80d5b089109c23af6bc2923820ba8b42365072"
             ;;
         "golangci-lint-linux-arm64")
-            echo "v2.2.2:linux:arm64:https://github.com/golangci/golangci-lint/releases/download/v2.2.2/golangci-lint-2.2.2-linux-arm64.tar.gz:fce5317bb885db91d4104dfb4dc4fd0574ae266775b62132dcb39ffe322119bb"
+            echo "v1.64.2:linux:arm64:https://github.com/golangci/golangci-lint/releases/download/v1.64.2/golangci-lint-1.64.2-linux-arm64.tar.gz:949a5fe70ff746c8d4c26e17a7cebd1b85b7f66bc9060527dc200b8b3ea9afdb"
             ;;
         "golangci-lint-darwin-amd64")
-            echo "v2.2.2:darwin:amd64:https://github.com/golangci/golangci-lint/releases/download/v2.2.2/golangci-lint-2.2.2-darwin-amd64.tar.gz:d7e2d0b2b16ef5ba6d8055f098351ba9d90cb658a38128fdd076500f40036054"
+            echo "v1.64.2:darwin:amd64:https://github.com/golangci/golangci-lint/releases/download/v1.64.2/golangci-lint-1.64.2-darwin-amd64.tar.gz:ab6a9e08c4f534a9523cb2d25847169cda7857feffb39893f958f29016b21364"
             ;;
         "golangci-lint-darwin-arm64")
-            echo "v2.2.2:darwin:arm64:https://github.com/golangci/golangci-lint/releases/download/v2.2.2/golangci-lint-2.2.2-darwin-arm64.tar.gz:d84d94d042c0d495fd1746f3d18948a75de163b17a14e8de3ef840928dd2df74"
+            echo "v1.64.2:darwin:arm64:https://github.com/golangci/golangci-lint/releases/download/v1.64.2/golangci-lint-1.64.2-darwin-arm64.tar.gz:8ae47cfa821fa17cb6984d0644e2cba9acb61f37ee524d4186d5f0458918da80"
             ;;
         "hadolint-linux-amd64")
             echo "v2.12.0:linux:amd64:https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-x86_64:56de6d5e5ec427e17b74fa48d51271c7fc0d61244bf5c90e828aab8362d55010"
