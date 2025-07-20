@@ -75,3 +75,5 @@ metrics/
 lint_output.txt
 
 !pkg/metrics
+
+.mcp.json

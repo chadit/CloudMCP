@@ -1,4 +1,4 @@
-.PHONY: help build run test test-race test-integration clean lint fmt install-tools setup-mcp
+.PHONY: help build run test test-race test-integration clean lint fmt install-tools
 
 # Default target
 help:
@@ -32,23 +32,18 @@ help:
 	@echo "Setup Commands:"
 	@echo "  make clean           - Clean build artifacts"
 	@echo "  make install-tools   - Install development tools"
-	@echo "  make setup-mcp       - Setup CloudMCP for Claude Desktop and Claude Code"
 
 # Build binary (development - fast build)
 build:
 	@echo "Building cloud-mcp (development)..."
-	@go build -o bin/cloud-mcp cmd/server/main.go
-	@echo "Building cloud-mcp-setup..."
-	@go build -o bin/cloud-mcp-setup cmd/cloud-mcp-setup/main.go
+	@go build -o bin/cloud-mcp cmd/cloud-mcp/main.go
 
 # Build optimized binary (production - smaller, faster)
 build-prod:
 	@echo "Building optimized cloud-mcp (production)..."
-	@go build -ldflags="-s -w" -trimpath -o bin/cloud-mcp cmd/server/main.go
-	@echo "Building optimized cloud-mcp-setup..."
-	@go build -ldflags="-s -w" -trimpath -o bin/cloud-mcp-setup cmd/cloud-mcp-setup/main.go
+	@go build -ldflags="-s -w" -trimpath -o bin/cloud-mcp cmd/cloud-mcp/main.go
 	@echo "Optimized build complete!"
-	@ls -lah bin/cloud-mcp bin/cloud-mcp-setup
+	@ls -lah bin/cloud-mcp
 
 # Run server
 run: build
@@ -121,10 +116,10 @@ install-tools:
 build-all:
 	@echo "Building for multiple platforms (optimized)..."
 	@mkdir -p dist
-	@GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o dist/cloud-mcp-linux-amd64 cmd/server/main.go
-	@GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o dist/cloud-mcp-darwin-amd64 cmd/server/main.go
-	@GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -trimpath -o dist/cloud-mcp-darwin-arm64 cmd/server/main.go
-	@GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o dist/cloud-mcp-windows-amd64.exe cmd/server/main.go
+	@GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o dist/cloud-mcp-linux-amd64 cmd/cloud-mcp/main.go
+	@GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o dist/cloud-mcp-darwin-amd64 cmd/cloud-mcp/main.go
+	@GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -trimpath -o dist/cloud-mcp-darwin-arm64 cmd/cloud-mcp/main.go
+	@GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o dist/cloud-mcp-windows-amd64.exe cmd/cloud-mcp/main.go
 	@echo "Build complete. Optimized binaries in dist/"
 	@ls -lah dist/
 
@@ -183,11 +178,6 @@ test-stdio: build
 		exit 1; \
 	fi
 
-# Setup CloudMCP for Claude Desktop and Claude Code
-.PHONY: setup-mcp
-setup-mcp: build
-	@echo "Setting up CloudMCP for Claude..."
-	@./bin/cloud-mcp-setup -local
 
 # Build Docker image
 .PHONY: docker-build
@@ -213,7 +203,7 @@ docker-run:
 analyze: build-prod
 	@echo "=== Dependency Analysis ==="
 	@echo "Total dependencies for main binary:"
-	@go list -deps ./cmd/server | wc -l
+	@go list -deps ./cmd/cloud-mcp | wc -l
 	@echo "Total modules in dependency graph:"
 	@go mod graph | wc -l
 	@echo ""
