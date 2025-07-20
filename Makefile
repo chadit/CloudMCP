@@ -50,7 +50,7 @@ build:
 build-prod:
 	@echo "Building security-hardened cloud-mcp (production)..."
 	@go build \
-		-ldflags="-s -w -buildid= -linkmode=external -extldflags=-static" \
+		-ldflags="-s -w -buildid=" \
 		-trimpath \
 		-buildmode=pie \
 		-tags=netgo,osusergo \
@@ -65,18 +65,29 @@ build-secure:
 	@echo "  -buildmode=pie       : Position Independent Executable (ASLR support)"
 	@echo "  -trimpath            : Remove file system paths from binary"
 	@echo "  -buildid=            : Remove build ID for reproducible builds"
-	@echo "  -linkmode=external   : Use external linker for better security"
-	@echo "  -extldflags=-static  : Static linking (no dynamic dependencies)"
 	@echo "  -tags=netgo,osusergo : Pure Go network and OS user implementations"
 	@echo "  -s -w                : Strip debug symbols and DWARF tables"
+ifeq ($(shell uname -s),Linux)
+	@echo "  -linkmode=external   : Use external linker for better security (Linux)"
+	@echo "  -extldflags=-static  : Static linking (no dynamic dependencies) (Linux)"
 	@CGO_ENABLED=1 go build \
-		-ldflags="-s -w -buildid= -linkmode=external -extldflags='-static -fPIE'" \
+		-ldflags="-s -w -buildid= -linkmode=external -extldflags=-static -extldflags=-fPIE" \
 		-trimpath \
 		-buildmode=pie \
 		-tags=netgo,osusergo \
 		-a \
 		-installsuffix=cgo \
 		-o bin/cloud-mcp cmd/cloud-mcp/main.go
+else
+	@echo "  Note: Static linking disabled on macOS (not supported)"
+	@CGO_ENABLED=0 go build \
+		-ldflags="-s -w -buildid=" \
+		-trimpath \
+		-buildmode=pie \
+		-tags=netgo,osusergo \
+		-a \
+		-o bin/cloud-mcp cmd/cloud-mcp/main.go
+endif
 	@echo "Maximum security-hardened build complete!"
 	@echo "Binary analysis:"
 	@file bin/cloud-mcp
