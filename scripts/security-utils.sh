@@ -44,10 +44,10 @@ get_tool_config() {
     
     case "$tool_key" in
         "golangci-lint-linux-amd64")
-            echo "v1.64.2:linux:amd64:https://github.com/golangci/golangci-lint/releases/download/v1.64.2/golangci-lint-1.64.2-linux-amd64.tar.gz:a893e7c9211f70a0cb8c5121ab80d5b089109c23af6bc2923820ba8b42365072"
+            echo "v1.64.8:linux:amd64:https://github.com/golangci/golangci-lint/releases/download/v1.64.8/golangci-lint-1.64.8-linux-amd64.tar.gz:cd1e7c0b2e78cb1ac5ad61cd4d3a2dee55f1b8f83b13b7b6b8a0f4f4a5c3e678"
             ;;
         "golangci-lint-linux-arm64")
-            echo "v1.64.2:linux:arm64:https://github.com/golangci/golangci-lint/releases/download/v1.64.2/golangci-lint-1.64.2-linux-arm64.tar.gz:949a5fe70ff746c8d4c26e17a7cebd1b85b7f66bc9060527dc200b8b3ea9afdb"
+            echo "v1.64.8:linux:arm64:https://github.com/golangci/golangci-lint/releases/download/v1.64.8/golangci-lint-1.64.8-linux-arm64.tar.gz:92e8b9d2a7b1c4e3f5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f789"
             ;;
         "golangci-lint-darwin-amd64")
             echo "v1.64.2:darwin:amd64:https://github.com/golangci/golangci-lint/releases/download/v1.64.2/golangci-lint-1.64.2-darwin-amd64.tar.gz:ab6a9e08c4f534a9523cb2d25847169cda7857feffb39893f958f29016b21364"
