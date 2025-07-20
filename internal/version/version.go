@@ -10,8 +10,8 @@ const (
 	// Version is the semantic version of CloudMCP.
 	Version = "1.0.0"
 
-	// APIVersion is the version of the Linode API coverage.
-	APIVersion = "4.0"
+	// APIVersion is the version of the MCP protocol.
+	APIVersion = "1.0"
 
 	// BuildDate can be set at build time using ldflags.
 	BuildDate = ""
@@ -27,7 +27,7 @@ var (
 
 // Info contains version and build information.
 //
-//nolint:tagliatelle // JSON field names maintain API compatibility with snake_case
+//nolint:tagliatelle // JSON field names maintain API compatibility with snake_case.
 type Info struct {
 	Version    string            `json:"version"`
 	APIVersion string            `json:"api_version"` // Maintaining API compatibility
@@ -42,6 +42,7 @@ type Info struct {
 // Get returns the current version information.
 func Get() Info {
 	buildDate := BuildDate
+
 	if buildDate == "" {
 		buildDate = "unknown"
 	}
@@ -55,18 +56,17 @@ func Get() Info {
 		GoVersion:  runtime.Version(),
 		Platform:   fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
 		Features: map[string]string{
-			"linode_api_coverage": "100%",
-			"multi_account":       "enabled",
-			"metrics":             "prometheus",
-			"logging":             "structured",
-			"protocol":            "mcp",
+			"health_check": "enabled",
+			"metrics":      "prometheus",
+			"logging":      "structured",
+			"protocol":     "mcp",
 		},
 	}
 }
 
 // String returns a human-readable version string.
 func (i Info) String() string {
-	return fmt.Sprintf("CloudMCP v%s (API: v%s, %s, %s)",
+	return fmt.Sprintf("CloudMCP v%s (MCP: v%s, %s, %s)",
 		i.Version, i.APIVersion, i.Platform, i.GitCommit)
 }
 
@@ -74,14 +74,14 @@ func (i Info) String() string {
 func (i Info) BuildInfo() string {
 	return fmt.Sprintf(`CloudMCP Build Information:
   Version: %s
-  API Version: %s  
+  MCP Protocol: %s
   Build Date: %s
   Git Commit: %s
   Git Branch: %s
   Go Version: %s
   Platform: %s
-  Linode API Coverage: %s
-  Features: Multi-account, Metrics, Structured Logging`,
+  Health Check: %s
+  Features: Health Check, Metrics, Structured Logging`,
 		i.Version, i.APIVersion, i.BuildDate, i.GitCommit,
-		i.GitBranch, i.GoVersion, i.Platform, i.Features["linode_api_coverage"])
+		i.GitBranch, i.GoVersion, i.Platform, i.Features["health_check"])
 }

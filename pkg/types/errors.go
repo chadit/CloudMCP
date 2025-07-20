@@ -1,5 +1,5 @@
 // Package types provides common types and error handling utilities for the CloudMCP system.
-// It defines structured error types that provide context about which service and tool
+// It defines structured error types that provide context about which service and tool.
 // encountered an error, enabling better error reporting and debugging across the MCP server.
 package types
 

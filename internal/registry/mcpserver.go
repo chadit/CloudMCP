@@ -1,3 +1,47 @@
+// Package registry provides MCP (Model Context Protocol) server adapters and tool management.
+// It acts as an abstraction layer between CloudMCP's internal tool system and the underlying
+// MCP server implementation, enabling loose coupling and easier testing.
+//
+// # Core Components
+//
+// The package centers around the MCPServerAdapter, which wraps the mark3labs/mcp-go server
+// implementation and provides a clean interface for tool registration and management.
+//
+// # Tool Registration
+//
+// Tools implementing the interfaces.Tool interface can be registered with the MCP server:
+//
+//	adapter := registry.NewMCPServerAdapter(mcpServer)
+//	healthTool := tools.NewHealthCheckTool("server-name")
+//	err := adapter.RegisterTool(healthTool)
+//
+// # Thread Safety
+//
+// All adapter operations are thread-safe using read-write mutexes, allowing concurrent
+// access to tool information while protecting against race conditions during registration.
+//
+// # Tool Management Features
+//
+//   - Tool registration with automatic MCP protocol integration
+//   - Tool lookup by name with O(n) search
+//   - Tool counting and listing capabilities
+//   - Thread-safe concurrent access to tool registry
+//   - Batch tool registration for efficient setup
+//   - Clear functionality for testing scenarios
+//
+// # MCP Protocol Integration
+//
+// The adapter automatically handles:
+//   - Converting tool definitions to MCP format
+//   - Creating request handlers that bridge tool execution
+//   - Managing tool input schema validation
+//   - Wrapping tool responses in proper MCP result format
+//
+// # Usage in CloudMCP
+//
+// This package is primarily used by the server package to register and manage
+// tools like health checks, with the adapter serving as the bridge between
+// CloudMCP's tool interface and the MCP protocol requirements.
 package registry
 
 import (
@@ -19,7 +63,7 @@ var (
 )
 
 // MCPServerAdapter adapts the mark3labs MCP server to the interfaces.MCPServer interface.
-// This allows providers to register tools without being tightly coupled to a specific
+// This allows providers to register tools without being tightly coupled to a specific.
 // MCP server implementation.
 type MCPServerAdapter struct {
 	server *mcpserver.MCPServer
@@ -41,33 +85,27 @@ func (m *MCPServerAdapter) RegisterTool(tool interfaces.Tool) error {
 		return ErrToolCannotBeNil
 	}
 
-	// Get the tool definition
-	definition := tool.Definition()
-
-	// Create a handler function that wraps the tool execution
-	handler := func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		// Get arguments from the request
-		args := request.GetArguments()
-
-		// Validate parameters first
-		if err := tool.Validate(args); err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("parameter validation failed: %v", err)), nil
-		}
-
-		// Execute the tool
-		result, err := tool.Execute(ctx, args)
-		if err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("tool execution failed: %v", err)), nil
-		}
-
-		// Convert result to MCP tool result
-		return mcp.NewToolResultText(fmt.Sprintf("%v", result)), nil
+	// Create the tool definition.
+	schema, _ := tool.InputSchema().(mcp.ToolInputSchema)
+	definition := mcp.Tool{
+		Name:        tool.Name(),
+		Description: tool.Description(),
+		InputSchema: schema,
 	}
 
-	// Register with the underlying MCP server using AddTool method
+	// Create a handler function that wraps the tool execution.
+	handler := func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		// Get arguments from the request.
+		args := request.GetArguments()
+
+		// Execute the tool directly (no separate validation step).
+		return tool.Execute(ctx, args)
+	}
+
+	// Register with the underlying MCP server using AddTool method.
 	m.server.AddTool(definition, handler)
 
-	// Track the tool in our internal list
+	// Track the tool in our internal list.
 	m.mu.Lock()
 	m.tools = append(m.tools, tool)
 	m.mu.Unlock()
@@ -91,7 +129,7 @@ func (m *MCPServerAdapter) GetRegisteredTools() []interfaces.Tool {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	// Return a copy to prevent external modification
+	// Return a copy to prevent external modification.
 	result := make([]interfaces.Tool, len(m.tools))
 	copy(result, m.tools)
 
@@ -112,7 +150,7 @@ func (m *MCPServerAdapter) HasTool(name string) bool {
 	defer m.mu.RUnlock()
 
 	for _, tool := range m.tools {
-		if tool.Definition().Name == name {
+		if tool.Name() == name {
 			return true
 		}
 	}
@@ -121,12 +159,14 @@ func (m *MCPServerAdapter) HasTool(name string) bool {
 }
 
 // GetTool retrieves a registered tool by name.
+//
+//nolint:ireturn // GetTool returns interface to allow multiple metric implementations.
 func (m *MCPServerAdapter) GetTool(name string) (interfaces.Tool, error) { // Adapter method should return interface
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
 	for _, tool := range m.tools {
-		if tool.Definition().Name == name {
+		if tool.Name() == name {
 			return tool, nil
 		}
 	}
@@ -141,7 +181,7 @@ func (m *MCPServerAdapter) ListToolNames() []string {
 
 	names := make([]string, len(m.tools))
 	for i, tool := range m.tools {
-		names[i] = tool.Definition().Name
+		names[i] = tool.Name()
 	}
 
 	return names
@@ -153,8 +193,14 @@ func (m *MCPServerAdapter) GetToolDefinitions() []mcp.Tool {
 	defer m.mu.RUnlock()
 
 	definitions := make([]mcp.Tool, len(m.tools))
+
 	for i, tool := range m.tools {
-		definitions[i] = tool.Definition()
+		schema, _ := tool.InputSchema().(mcp.ToolInputSchema)
+		definitions[i] = mcp.Tool{
+			Name:        tool.Name(),
+			Description: tool.Description(),
+			InputSchema: schema,
+		}
 	}
 
 	return definitions
@@ -172,95 +218,4 @@ func (m *MCPServerAdapter) Clear() {
 // This allows access to advanced features not exposed through the adapter interface.
 func (m *MCPServerAdapter) GetUnderlyingServer() *mcpserver.MCPServer {
 	return m.server
-}
-
-// ToolWrapper wraps a function to implement the interfaces.Tool interface.
-// This is useful for creating simple tools without implementing the full interface.
-type ToolWrapper struct {
-	definition mcp.Tool
-	handler    func(map[string]interface{}) (interface{}, error)
-	validator  func(map[string]interface{}) error
-}
-
-// NewToolWrapper creates a new tool wrapper with the provided definition and handler.
-func NewToolWrapper(
-	definition mcp.Tool,
-	handler func(map[string]interface{}) (interface{}, error),
-	validator func(map[string]interface{}) error,
-) *ToolWrapper {
-	if validator == nil {
-		// Default validator that always passes
-		validator = func(map[string]interface{}) error {
-			return nil
-		}
-	}
-
-	return &ToolWrapper{
-		definition: definition,
-		handler:    handler,
-		validator:  validator,
-	}
-}
-
-// Definition returns the MCP tool definition.
-func (tw *ToolWrapper) Definition() mcp.Tool {
-	return tw.definition
-}
-
-// Execute handles the tool execution.
-func (tw *ToolWrapper) Execute(_ context.Context, params map[string]interface{}) (interface{}, error) {
-	return tw.handler(params)
-}
-
-// Validate validates the tool parameters.
-func (tw *ToolWrapper) Validate(params map[string]interface{}) error {
-	return tw.validator(params)
-}
-
-// SimpleToolBuilder helps build simple tools with a fluent interface.
-type SimpleToolBuilder struct {
-	tool *ToolWrapper
-}
-
-// NewSimpleToolBuilder creates a new simple tool builder.
-func NewSimpleToolBuilder(name, description string) *SimpleToolBuilder {
-	definition := mcp.Tool{
-		Name:        name,
-		Description: description,
-	}
-
-	return &SimpleToolBuilder{
-		tool: &ToolWrapper{
-			definition: definition,
-			validator: func(map[string]interface{}) error {
-				return nil
-			},
-		},
-	}
-}
-
-// WithInputSchema sets the input schema for the tool.
-func (stb *SimpleToolBuilder) WithInputSchema(schema mcp.ToolInputSchema) *SimpleToolBuilder {
-	stb.tool.definition.InputSchema = schema
-
-	return stb
-}
-
-// WithHandler sets the execution handler for the tool.
-func (stb *SimpleToolBuilder) WithHandler(handler func(map[string]interface{}) (interface{}, error)) *SimpleToolBuilder {
-	stb.tool.handler = handler
-
-	return stb
-}
-
-// WithValidator sets the parameter validator for the tool.
-func (stb *SimpleToolBuilder) WithValidator(validator func(map[string]interface{}) error) *SimpleToolBuilder {
-	stb.tool.validator = validator
-
-	return stb
-}
-
-// Build returns the constructed tool.
-func (stb *SimpleToolBuilder) Build() interfaces.Tool { // Builder method should return interface
-	return stb.tool
 }
