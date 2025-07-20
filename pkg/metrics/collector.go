@@ -12,25 +12,25 @@ import (
 type Collector struct {
 	enabled bool
 
-	// Tool execution metrics
+	// Tool execution metrics.
 	toolExecutionDuration *prometheus.HistogramVec
 	toolExecutionTotal    *prometheus.CounterVec
 
-	// API request metrics
+	// API request metrics.
 	apiRequestDuration *prometheus.HistogramVec
 	apiRequestTotal    *prometheus.CounterVec
 
-	// Cache metrics
+	// Cache metrics.
 	cacheHitTotal  *prometheus.CounterVec
 	cacheMissTotal *prometheus.CounterVec
 
-	// Account switching metrics
+	// Account switching metrics.
 	accountSwitchTotal *prometheus.CounterVec
 
-	// Active connections
+	// Active connections.
 	activeConnections *prometheus.GaugeVec
 
-	// Resource count metrics
+	// Resource count metrics.
 	resourceCount *prometheus.GaugeVec
 }
 
@@ -62,6 +62,16 @@ func TestConfig() *Config {
 	}
 }
 
+// TestConfigWithNamespace returns a test configuration with a custom namespace for better isolation.
+func TestConfigWithNamespace(namespace string) *Config {
+	return &Config{
+		Enabled:   true,
+		Namespace: namespace,
+		Subsystem: "",
+		Registry:  prometheus.NewRegistry(),
+	}
+}
+
 // NewCollector creates a new metrics collector with the specified configuration.
 // If enabled is false, all metric operations become no-ops.
 func NewCollector(config *Config) *Collector {
@@ -73,7 +83,7 @@ func NewCollector(config *Config) *Collector {
 		enabled: config.Enabled,
 	}
 
-	// Only initialize metrics if enabled
+	// Only initialize metrics if enabled.
 	if config.Enabled {
 		collector.initializeMetrics(config)
 	}
@@ -85,7 +95,7 @@ func NewCollector(config *Config) *Collector {
 func (c *Collector) initializeMetrics(config *Config) {
 	factory := promauto.With(config.Registry)
 
-	// Tool execution metrics
+	// Tool execution metrics.
 	c.toolExecutionDuration = factory.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Namespace: config.Namespace,
@@ -107,13 +117,13 @@ func (c *Collector) initializeMetrics(config *Config) {
 		[]string{"tool", "account", "status"},
 	)
 
-	// API request metrics
+	// API request metrics.
 	c.apiRequestDuration = factory.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Namespace: config.Namespace,
-			Subsystem: "linode",
+			Subsystem: config.Subsystem,
 			Name:      "api_duration_seconds",
-			Help:      "Duration of Linode API requests",
+			Help:      "Duration of API requests",
 			Buckets:   prometheus.DefBuckets,
 		},
 		[]string{"method", "endpoint", "status"},
@@ -122,14 +132,14 @@ func (c *Collector) initializeMetrics(config *Config) {
 	c.apiRequestTotal = factory.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: config.Namespace,
-			Subsystem: "linode",
+			Subsystem: config.Subsystem,
 			Name:      "api_requests_total",
-			Help:      "Total number of Linode API requests",
+			Help:      "Total number of API requests",
 		},
 		[]string{"method", "endpoint", "status"},
 	)
 
-	// Cache metrics
+	// Cache metrics.
 	c.cacheHitTotal = factory.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: config.Namespace,
@@ -150,7 +160,7 @@ func (c *Collector) initializeMetrics(config *Config) {
 		[]string{"cache_type", "account"},
 	)
 
-	// Account switching metrics
+	// Account switching metrics.
 	c.accountSwitchTotal = factory.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: config.Namespace,
@@ -161,7 +171,7 @@ func (c *Collector) initializeMetrics(config *Config) {
 		[]string{"from_account", "to_account", "status"},
 	)
 
-	// Active connections
+	// Active connections.
 	c.activeConnections = factory.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: config.Namespace,
@@ -172,7 +182,7 @@ func (c *Collector) initializeMetrics(config *Config) {
 		[]string{"account"},
 	)
 
-	// Resource count metrics
+	// Resource count metrics.
 	c.resourceCount = factory.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: config.Namespace,
@@ -199,7 +209,7 @@ func (c *Collector) RecordToolExecution(tool, account, status string, duration t
 	c.toolExecutionTotal.WithLabelValues(tool, account, status).Inc()
 }
 
-// RecordAPIRequest records metrics for Linode API requests.
+// RecordAPIRequest records metrics for API requests.
 func (c *Collector) RecordAPIRequest(method, endpoint, status string, duration time.Duration) {
 	if !c.enabled || c.apiRequestDuration == nil {
 		return
@@ -257,6 +267,7 @@ func (c *Collector) UpdateResourceCount(resourceType, account string, count int)
 // GetMetricsRegistry returns the default Prometheus registry for external access.
 func GetMetricsRegistry() *prometheus.Registry {
 	registry, ok := prometheus.DefaultRegisterer.(*prometheus.Registry)
+
 	if !ok {
 		// This should not happen in normal operation, but we provide a fallback.
 		return prometheus.NewRegistry()

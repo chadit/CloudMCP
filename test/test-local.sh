@@ -35,10 +35,10 @@ echo '{"jsonrpc": "2.0", "method": "tools/list", "params": {}, "id": 2}' | ../bi
 
 echo -e "\n3. Testing tool execution..."
 echo "---------------------------"
-echo "Getting current account:"
+echo "Testing health check:"
 cat <<EOF | ../bin/cloud-mcp | jq '.result'
 {"jsonrpc": "2.0", "method": "initialize", "params": {"protocolVersion": "0.1.0", "capabilities": {}, "clientInfo": {"name": "test-script", "version": "1.0.0"}}, "id": 1}
-{"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "linode_account_get", "arguments": {}}, "id": 2}
+{"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "health_check", "arguments": {}}, "id": 2}
 EOF
 
 echo -e "\nTesting complete!"

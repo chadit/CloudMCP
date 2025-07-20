@@ -35,9 +35,9 @@ type slogWrapper struct {
 	logger *slog.Logger
 }
 
-// New creates a logger that outputs to stderr
+// New creates a logger that outputs to stderr.
 //
-//nolint:ireturn // logger should return an interface.
+//nolint:ireturn // returns interface to allow.
 func New(level string) Logger {
 	return NewWithConfig(LogConfig{
 		Level: level,
@@ -46,7 +46,7 @@ func New(level string) Logger {
 
 // NewWithConfig creates a logger with the specified configuration.
 //
-//nolint:ireturn // logger should return an interface.
+//nolint:ireturn // returns interface to allow.
 func NewWithConfig(config LogConfig) Logger {
 	var logLevel slog.Level
 
@@ -69,7 +69,7 @@ func NewWithConfig(config LogConfig) Logger {
 
 	var writer io.Writer
 	if config.FilePath != "" {
-		// Use lumberjack for file rotation
+		// Use lumberjack for file rotation.
 		writer = &lumberjack.Logger{
 			Filename:   config.FilePath,
 			MaxSize:    config.MaxSize,    // MB
@@ -78,7 +78,7 @@ func NewWithConfig(config LogConfig) Logger {
 			Compress:   true,              // Compress rotated files
 		}
 	} else {
-		// Default to stderr
+		// Default to stderr.
 		writer = os.Stderr
 	}
 
@@ -119,7 +119,9 @@ func (l *slogWrapper) ErrorContext(ctx context.Context, msg string, args ...any)
 	l.logger.ErrorContext(ctx, msg, args...)
 }
 
-//nolint:ireturn // logger should return an interface.
+// With creates a new logger with additional context.
+//
+//nolint:ireturn // returns interface to allow.
 func (l *slogWrapper) With(args ...any) Logger {
 	return &slogWrapper{logger: l.logger.With(args...)}
 }
