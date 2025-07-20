@@ -228,20 +228,28 @@ func (v *TokenValidator) validateBase64Token(token string) bool {
 	return base64Pattern.MatchString(token) && len(token)%4 == 0
 }
 
-// validateJWTToken validates JWT token format (3 base64 sections separated by dots).
+// validateJWTToken validates JWT token format (3 base64url sections separated by dots).
 func (v *TokenValidator) validateJWTToken(token string) bool {
 	parts := strings.Split(token, ".")
 	if len(parts) != 3 {
 		return false
 	}
 	
-	// Validate each part is base64
+	// Validate each part is base64url (no padding requirement, allows URL-safe characters)
 	for _, part := range parts {
-		if !v.validateBase64Token(part) {
+		if !v.validateBase64URLToken(part) {
 			return false
 		}
 	}
 	return true
+}
+
+// validateBase64URLToken validates base64url-encoded token format (used in JWT).
+func (v *TokenValidator) validateBase64URLToken(token string) bool {
+	// Base64url uses A-Z, a-z, 0-9, - (minus), _ (underscore) instead of + and /
+	// and doesn't require padding (=), so length doesn't need to be multiple of 4
+	base64URLPattern := regexp.MustCompile(`^[A-Za-z0-9_\-]*$`)
+	return base64URLPattern.MatchString(token) && len(token) > 0
 }
 
 // RedactToken securely redacts a token for logging and display purposes.

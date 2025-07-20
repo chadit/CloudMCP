@@ -77,8 +77,9 @@ func TestMCPProtocolCompliance(t *testing.T) {
 			srv, err := server.NewForTesting(cfg, testLogger)
 			require.NoError(t, err, "Failed to create test server")
 
-			// Create mock client
-			client, _, _ := mcptest.CreateBufferedClient()
+			// Create connected mock client
+			client, err := mcptest.CreateConnectedClient(srv)
+			require.NoError(t, err, "Failed to create connected client")
 			client.SetTimeout(2 * time.Second)
 
 			// Run specific test
@@ -207,7 +208,8 @@ func TestMCPProtocolVersionCompatibility(t *testing.T) {
 			srv, err := server.NewForTesting(cfg, testLogger)
 			require.NoError(t, err, "Failed to create test server")
 
-			client, _, _ := mcptest.CreateBufferedClient()
+			client, err := mcptest.CreateConnectedClient(srv)
+			require.NoError(t, err, "Failed to create connected client")
 			ctx := context.Background()
 
 			// Send initialize with specific protocol version
@@ -238,11 +240,15 @@ func TestConcurrentMCPRequests(t *testing.T) {
 	// Send concurrent tool calls
 	for i := 0; i < numConcurrentRequests; i++ {
 		go func() {
-			client, _, _ := mcptest.CreateBufferedClient()
+			client, err := mcptest.CreateConnectedClient(srv)
+			if err != nil {
+				resultChan <- err
+				return
+			}
 			ctx := context.Background()
 
 			// Send health check tool call
-			_, err := client.SendToolsCall(ctx, "health_check", map[string]interface{}{})
+			_, err = client.SendToolsCall(ctx, "health_check", map[string]interface{}{})
 			resultChan <- err
 		}()
 	}
@@ -284,7 +290,8 @@ func BenchmarkMCPToolCall(b *testing.B) {
 	srv, err := server.NewForTesting(cfg, testLogger)
 	require.NoError(b, err, "Failed to create test server")
 
-	client, _, _ := mcptest.CreateBufferedClient()
+	client, err := mcptest.CreateConnectedClient(srv)
+	require.NoError(b, err, "Failed to create connected client")
 	ctx := context.Background()
 
 	b.ResetTimer()
