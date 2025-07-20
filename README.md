@@ -1,113 +1,50 @@
 # CloudMCP
 
-Full disclosure: I am an employee of Linode/Akamai, however this project is being developed independently in my own free time and is not associated in any way with Linode, LLC or Akamai Technologies, Inc. Only publicly-available documentation and information is being used in the development of this project.
+CloudMCP is a minimal Model Context Protocol (MCP) server shell designed as a
+foundation for cloud infrastructure management through natural language commands.
 
-CloudMCP enables you to manage your Linode cloud infrastructure using **natural language** through AI assistants like Claude and GitHub Copilot.
-
-**Instead of complex CLI commands, just say:**
-
-- *"Create a 2GB Linode in Newark with Ubuntu 22.04"*
-- *"List all my instances and their status"*
-- *"Switch to my development account"*
+**Current Status**: 🎉 **Minimal Shell Architecture** - Clean Foundation
+Ready for Extension
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-You need one of these AI tools installed:
+You need one of these MCP-compatible AI tools:
 
 - [Claude Desktop](https://claude.ai/desktop) (recommended)
 - [Claude Code](https://claude.ai/code)
-- [VS Code with GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat)
+- [VS Code with MCP Extension](https://marketplace.visualstudio.com/items?itemName=mark3labs.mcp)
 
-### Installation (2 minutes)
+### Installation Methods
 
-```bash
-# Install CloudMCP with automated setup
-go install github.com/chadit/CloudMCP/cmd/server@latest
-go install github.com/chadit/CloudMCP/cmd/cloud-mcp-setup@latest
-
-# Auto-configure your AI tools
-cloud-mcp-setup
-```
-
-### Add Your Linode Token
-
-Through your AI assistant, say:
-*"Add a Linode account named 'primary' with token YOUR_LINODE_TOKEN and label 'Production'"*
-
-### Test It Works
-
-Ask your AI assistant:
-*"List my Linode instances"*
-
-**That's it!** You're now managing Linode through natural language.
-
-## 💡 What You Can Do
-
-CloudMCP provides complete Linode API coverage through natural language:
-
-### Compute Management
-
-- *"Create a 4GB Linode in Dallas with Ubuntu 22.04"*
-- *"Shutdown my web-server instance"*
-- *"Boot all instances in the us-east region"*
-
-### Storage Operations
-
-- *"List all my block storage volumes"*
-- *"Create a 50GB volume and attach it to my database server"*
-- *"Create an image backup from my production server"*
-
-### Account Operations
-
-- *"Switch to development account"*
-- *"Show current account usage and billing"*
-- *"List all configured accounts"*
-
-### Multi-Account Support
-
-- Manage multiple Linode accounts seamlessly
-- Switch between accounts with simple commands
-- Secure token management with validation
-
-## 📦 Installation Options
-
-### Option 1: Automated Setup (Recommended)
-
-For most users who want everything configured automatically:
+#### Option 1: Go Install (Recommended)
 
 ```bash
-go install github.com/chadit/CloudMCP/cmd/server@latest
-go install github.com/chadit/CloudMCP/cmd/cloud-mcp-setup@latest
-cloud-mcp-setup
+# Install CloudMCP server
+go install github.com/chadit/CloudMCP/cmd/cloud-mcp@latest
+
+# Add to Claude Code
+claude mcp add cloudmcp -- cloud-mcp
+
+# Test it works
+# Ask your AI assistant: "Check CloudMCP health status"
 ```
 
-This will:
+#### Option 2: Claude Desktop Integration
 
-- Install CloudMCP server
-- Automatically register with Claude Desktop, Claude Code, and VS Code
-- Create configuration templates
-- Provide setup guidance
-
-### Option 2: Manual Setup (Advanced)
-
-If you prefer manual control or automated setup doesn't work:
-
-1. **Install server only:**
+1. **Install the server:**
 
    ```bash
-   go install github.com/chadit/CloudMCP/cmd/server@latest
+   go install github.com/chadit/CloudMCP/cmd/cloud-mcp@latest
    ```
 
-2. **Configure your AI tool manually:**
-
-   **Claude Desktop** - Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
+2. **Configure Claude Desktop** - Edit `claude_desktop_config.json`:
 
    ```json
    {
      "mcpServers": {
-       "cloud-mcp": {
+       "cloudmcp": {
          "command": "cloud-mcp",
          "args": []
        }
@@ -115,34 +52,74 @@ If you prefer manual control or automated setup doesn't work:
    }
    ```
 
-   **Claude Code:**
+3. **Restart Claude Desktop**
+
+#### Option 3: VSCode MCP Support
+
+1. **Install the server:**
 
    ```bash
-   claude mcp add -s user cloud-mcp cloud-mcp
+   go install github.com/chadit/CloudMCP/cmd/cloud-mcp@latest
    ```
 
-   **VS Code** - Add to settings.json:
+2. **Install MCP Extension** from VS Code marketplace
 
-   ```json
-   {
-     "github.copilot.chat.mcpServers": {
-       "cloud-mcp": {
-         "command": "cloud-mcp",
-         "args": []
-       }
-     }
-   }
-   ```
+3. **The project already includes `.vscode/settings.json`** for automatic
+   configuration
 
-3. **Restart your AI tool**
+### Test It Works
 
-### Option 3: From Source (Developers)
+Ask your AI assistant:
+*"Check CloudMCP health status"*
+
+**That's it!** You now have a minimal MCP server foundation ready for
+extension.
+
+## 💡 Current Capabilities
+
+CloudMCP is currently a **minimal shell** providing foundation functionality:
+
+### Health and System Tools
+
+- *"Check CloudMCP health status"* - Server health and service discovery
+- *"Show server information"* - Get server details and uptime
+- *"What tools are available?"* - List available MCP tools
+
+### System Features
+
+- Health status monitoring with sub-microsecond response times
+- Service discovery and capability listing
+- Metrics collection via Prometheus endpoints
+- Secure configuration with optional TLS and authentication
+
+### Framework Ready
+
+The framework is ready for:
+
+- **Provider Registry**: Ready for cloud provider implementations
+- **Tool Interface**: Clean tool implementation pattern
+- **Metrics System**: Unified metrics with Prometheus backend
+- **Security**: Authentication, rate limiting, and TLS support
+
+**Architecture designed for extensibility** - add new providers by
+implementing the `CloudProvider` interface.
+
+## 📦 Detailed Installation
+
+### From Source (Developers)
+
+For development and customization:
 
 ```bash
 git clone https://github.com/chadit/CloudMCP.git
 cd CloudMCP
-go build -o bin/cloud-mcp cmd/server/main.go
-go build -o bin/cloud-mcp-setup cmd/cloud-mcp-setup/main.go
+go build -o bin/cloud-mcp cmd/cloud-mcp/main.go
+
+# Run locally for development
+go run cmd/cloud-mcp/main.go
+
+# Run tests
+go test ./...
 ```
 
 ## ⚙️ Configuration
@@ -159,75 +136,74 @@ CloudMCP automatically creates TOML configuration files on first run:
 
 ```toml
 [system]
-server_name = "Cloud MCP Server"
+server_name = "CloudMCP Shell"
 log_level = "info"
-default_account = "primary"
+enable_metrics = true
+metrics_port = 8080
 
-[account.primary]
-token = "your_linode_token_here"
-label = "Production"
+# Logging configuration
+log_max_size = 10      # MB
+log_max_backups = 5    # Number of files to keep
+log_max_age = 30       # Days to retain logs
 ```
 
-### Managing Accounts
+### Environment Variables
 
-**Through your AI assistant:**
+You can override configuration with environment variables:
 
-- *"Add account named 'staging' with token TOKEN and label 'Staging Environment'"*
-- *"List all my configured accounts"*
-- *"Switch to development account"*
-- *"Remove the old-staging account"*
+```bash
+export CLOUD_MCP_SERVER_NAME="My CloudMCP"
+export LOG_LEVEL="debug"
+export ENABLE_METRICS="true"
+export METRICS_PORT="8080"
+
+# Optional metrics security
+export METRICS_AUTH_USERNAME="admin"
+export METRICS_AUTH_PASSWORD="secure_password"
+export METRICS_TLS_ENABLED="false"
+```
 
 ## 🛠️ Troubleshooting
 
 ### CloudMCP not appearing in your AI tool?
 
-1. Verify installation: `which cloud-mcp`
-2. Check that config files were updated by cloud-mcp-setup
+1. Verify installation: `which cloud-mcp` (after go install)
+2. Check MCP configuration files (`.mcp.json` or Claude Desktop config)
 3. Restart your AI tool completely
 
-### "No accounts configured" error?
+### Health check not working?
 
-1. Add your token through your AI assistant: *"Add Linode account with token YOUR_TOKEN"*
-2. Verify: *"List my Linode accounts"*
+1. Test the server directly:
+   `echo '{"jsonrpc": "2.0", "method": "tools/list", "params": {}, "id": 1}' | cloud-mcp`
+2. Check logs in config directory
+3. Verify environment variables if using custom configuration
 
-### Commands not working?
+### Metrics server issues?
 
-1. Test connection: *"Get current account information"*
-2. Check your Linode token has proper permissions
-3. Verify token in Linode Cloud Manager
+1. Check if port 8080 is available: `lsof -i :8080`
+2. Test metrics endpoint: `curl http://localhost:8080/health`
+3. Check authentication if configured
 
-## 📚 Available Commands
+## 📚 Available Tools
 
-CloudMCP provides **100% coverage** of production-ready Linode API services:
+CloudMCP currently provides **minimal shell** functionality:
 
-### System Information
+### Health Monitoring
 
-- `cloudmcp_version` - Get version and build information
-- `cloudmcp_version_json` - Version info in JSON format
+- `health_check` - Server health status and service discovery
+  - Reports server status and uptime
+  - Lists available tools and capabilities  
+  - Provides service discovery information
+  - Sub-microsecond response times
 
-### Account Management
+### Future Extensions
 
-- `linode_account_get` - Current account information
-- `linode_account_switch` - Switch between accounts
-- `linode_account_list` - List configured accounts
+The framework is ready for:
 
-### Compute Operations
-
-- `linode_instances_list` - List all instances
-- `linode_instance_create` - Create new instances
-- `linode_instance_delete` - Delete instances
-- `linode_instance_boot/shutdown/reboot` - Control instance power
-
-### Storage Management
-
-- `linode_volumes_*` - Manage block storage volumes
-- `linode_images_*` - Manage custom images
-
-### Networking
-
-- `linode_ips_*` - Manage IP addresses
-
-**[→ See complete API coverage](LINODE_API_COVERAGE.md)**
+- **Cloud Provider Tools** - AWS, Azure, GCP, Linode integrations
+- **Infrastructure Tools** - Terraform, Kubernetes, Docker management
+- **Monitoring Tools** - Observability and alerting capabilities
+- **Security Tools** - Compliance and vulnerability scanning
 
 ## 🔧 Development
 
@@ -236,13 +212,18 @@ CloudMCP provides **100% coverage** of production-ready Linode API services:
 ```text
 CloudMCP/
 ├── cmd/
-│   ├── server/          # Main MCP server
-│   └── cloud-mcp-setup/ # Optional setup tool
+│   └── cloud-mcp/           # Main MCP server entry point
 ├── internal/
-│   ├── server/          # MCP server implementation
-│   ├── services/linode/ # Linode API integration
-│   └── config/          # Configuration management
-└── pkg/                 # Shared packages
+│   ├── server/              # MCP server implementation with metrics
+│   ├── tools/               # Health check tool implementation
+│   ├── config/              # Configuration management
+│   ├── registry/            # Provider registry framework
+│   └── providers/           # Provider implementations (ready for future)
+├── pkg/
+│   ├── logger/              # Flexible logging package
+│   ├── metrics/             # Unified metrics with Prometheus backend
+│   ├── types/               # Shared types
+│   └── interfaces/          # Core interfaces for extensibility
 ```
 
 ### Building and Testing
