@@ -120,6 +120,13 @@ validate_token_format() {
                 return 1
             fi
             ;;
+        "github")
+            # GitHub tokens: ghs_, ghp_, gho_, ghu_, etc. followed by alphanumeric/underscore
+            if ! [[ "$token_value" =~ ^gh[sphoru]_[a-zA-Z0-9_]+$ ]]; then
+                log_error "Token $token_name has invalid GitHub token format (redacted: $redacted_token)"
+                return 1
+            fi
+            ;;
         "base64")
             if ! [[ "$token_value" =~ ^[A-Za-z0-9+/]*={0,2}$ ]] || [[ $((length % 4)) -ne 0 ]]; then
                 log_error "Token $token_name has invalid base64 format (redacted: $redacted_token)"
@@ -147,7 +154,7 @@ validate_environment_tokens() {
         "LINODE_TOKEN:hex:32:128:false"
         "AWS_ACCESS_KEY_ID:alphanumeric:16:32:false"
         "AWS_SECRET_ACCESS_KEY:alphanumeric:32:64:false"
-        "GITHUB_TOKEN:alphanumeric:40:255:false"
+        "GITHUB_TOKEN:github:40:255:false"
         "TEST_TOKEN:hex:16:256:false"
     )
     
@@ -323,7 +330,7 @@ ENVIRONMENT VARIABLES:
     LINODE_TOKEN         - Linode API token (hex format, 32-128 chars)
     AWS_ACCESS_KEY_ID    - AWS access key (alphanumeric, 16-32 chars)
     AWS_SECRET_ACCESS_KEY - AWS secret key (alphanumeric, 32-64 chars)
-    GITHUB_TOKEN         - GitHub API token (alphanumeric, 40-255 chars)
+    GITHUB_TOKEN         - GitHub API token (ghs_/ghp_/etc format, 40-255 chars)
     TEST_TOKEN           - Generic test token (hex format, 16-256 chars)
 
 SECURITY FEATURES:

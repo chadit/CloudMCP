@@ -152,11 +152,20 @@ jobs:
           ./scripts/security-utils.sh install golangci-lint
           ./scripts/security-utils.sh install hadolint
           ./scripts/security-utils.sh install trivy
-          echo "$(./scripts/security-utils.sh get-path golangci-lint)" >> $GITHUB_PATH
+          
+          # Add tool directories to PATH
+          GOLANGCI_PATH=$(./scripts/security-utils.sh get-path golangci-lint)
+          echo "$(dirname "$GOLANGCI_PATH")" >> $GITHUB_PATH
+          
+          # Verify tools are accessible
+          ls -la "$(dirname "$GOLANGCI_PATH")"
+          "$GOLANGCI_PATH" --version
 
       - name: 🔍 Run golangci-lint
         run: |
-          golangci-lint run --enable-all --disable forbidigo,exhaustruct,depguard,gci,lll,cyclop,funlen,tenv --timeout=10m
+          # Use full path as fallback if PATH update didn't work
+          GOLANGCI_PATH=$(./scripts/security-utils.sh get-path golangci-lint)
+          "$GOLANGCI_PATH" run --enable-all --disable forbidigo,exhaustruct,depguard,gci,lll,cyclop,funlen,tenv --timeout=10m
 
       - name: 🔧 Check Formatting
         run: |
@@ -345,29 +354,35 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
-      - name: 🔐 Setup cosign
-        run: |
-          # cosign already installed via security-utils.sh
-          COSIGN_PATH=$(./scripts/security-utils.sh get-path cosign)
-          echo "Using verified cosign: $COSIGN_PATH"
-          ln -sf "$COSIGN_PATH" /usr/local/bin/cosign
-
       - name: 🔒 Install Verified Container Tools
         run: |
           # Install verified tools with checksum verification
           ./scripts/security-utils.sh install hadolint
           ./scripts/security-utils.sh install trivy
           ./scripts/security-utils.sh install cosign
+          
+          # Set up tool paths for easy access
+          COSIGN_PATH=$(./scripts/security-utils.sh get-path cosign)
+          HADOLINT_PATH=$(./scripts/security-utils.sh get-path hadolint) 
+          TRIVY_PATH=$(./scripts/security-utils.sh get-path trivy)
+          
+          # Export paths for subsequent steps
+          echo "COSIGN_PATH=$COSIGN_PATH" >> $GITHUB_ENV
+          echo "HADOLINT_PATH=$HADOLINT_PATH" >> $GITHUB_ENV
+          echo "TRIVY_PATH=$TRIVY_PATH" >> $GITHUB_ENV
 
       - name: 🔍 Dockerfile Lint with hadolint
         run: |
-          HADOLINT_PATH=$(./scripts/security-utils.sh get-path hadolint)
+          # Use environment variable set in previous step
+          echo "Using hadolint: $HADOLINT_PATH"
           
           # Lint Dockerfile
           "$HADOLINT_PATH" Dockerfile
           
-          # Also lint test Dockerfile
-          "$HADOLINT_PATH" Dockerfile.test
+          # Also lint test Dockerfile if it exists
+          if [ -f "Dockerfile.test" ]; then
+            "$HADOLINT_PATH" Dockerfile.test
+          fi
 
       - name: 🏗️ Build Multi-Architecture Docker Image
         env:
@@ -393,13 +408,14 @@ jobs:
         run: |
           echo "🔐 Signing container image with cosign (keyless)"
           
-          # Sign the container image
-          cosign sign \
+          # Sign the container image using verified cosign
+          echo "Using cosign: $COSIGN_PATH"
+          "$COSIGN_PATH" sign \
             --yes \
             cloudmcp:ci-${{ matrix.arch }}
           
           # Verify signature was created
-          cosign verify \
+          "$COSIGN_PATH" verify \
             --certificate-identity-regexp="https://github.com/chadit/CloudMCP" \
             --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
             cloudmcp:ci-${{ matrix.arch }} || echo "Signature verification skipped in CI"
@@ -409,9 +425,8 @@ jobs:
       - name: 🔒 Container Security Scan with Trivy
         if: matrix.arch == 'amd64'  # Run security scan only on amd64 for performance
         run: |
-          TRIVY_PATH=$(./scripts/security-utils.sh get-path trivy)
-          
           echo "🔒 Running comprehensive security scan..."
+          echo "Using trivy: $TRIVY_PATH"
           
           # Detailed vulnerability scan
           "$TRIVY_PATH" image \
