@@ -4,6 +4,19 @@ run:
   go: "1.24"
 
 linters-settings:
+  wrapcheck:
+    # Allow our custom error wrappers and common patterns
+    ignoreSigs:
+      - github.com/chadit/CloudMCP/pkg/types.NewToolError
+      - github.com/chadit/CloudMCP/pkg/types.NewServiceError
+      # Allow standard error creation patterns that are idiomatic in Go
+      - errors.New(
+      - fmt.Errorf(
+    # Ignore direct error creation in test files and these contexts
+    ignorePackageGlobs:
+      - "*.test"
+      - "test/*"
+      - "*_test.go"
 
 linters:
   enable-all: true

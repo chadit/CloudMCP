@@ -52,6 +52,8 @@ jobs:
           if [ -n "$LINODE_TEST_TOKEN" ]; then
             echo "Running integration tests..."
             go test -tags=integration -race ./internal/services/linode/...
+            echo "Running provider integration tests..."
+            go test -tags=integration -race ./internal/providers/linode/...
           else
             echo "Skipping integration tests (no LINODE_TEST_TOKEN)"
           fi
@@ -121,15 +123,29 @@ jobs:
         with:
           go-version: '1.23'
 
-      - name: Build server
+      - name: Build server (development)
         run: go build -v -o build/cloud-mcp cmd/server/main.go
 
+      - name: Build server (production)
+        run: go build -ldflags="-s -w" -trimpath -o build/cloud-mcp-prod cmd/server/main.go
+
       - name: Build setup tool
-        run: go build -v -o build/cloud-mcp-setup cmd/cloud-mcp-setup/main.go
+        run: go build -ldflags="-s -w" -trimpath -o build/cloud-mcp-setup cmd/cloud-mcp-setup/main.go
+
+      - name: Compare binary sizes
+        run: |
+          echo "=== Binary Size Comparison ==="
+          ls -lah build/cloud-mcp build/cloud-mcp-prod build/cloud-mcp-setup
+          echo ""
+          echo "Development build:"
+          file build/cloud-mcp
+          echo "Production build:"
+          file build/cloud-mcp-prod
 
       - name: Test binaries
         run: |
           ./build/cloud-mcp --help || echo "Server binary built successfully"
+          ./build/cloud-mcp-prod --help || echo "Production server binary built successfully"
           ./build/cloud-mcp-setup --help || echo "Setup binary built successfully"
 
       - name: Cross-compile check

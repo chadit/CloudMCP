@@ -19,6 +19,7 @@ go.work
 
 # Binary output directory
 bin/
+build/
 dist/
 
 # Project-specific binaries

@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	dirPermissions = 0o755 // Read/write/execute for owner, read/execute for group and others
+	dirPermissions = 0o750 // Read/write/execute for owner, read/execute for group only
 )
 
 // Windows: %APPDATA%\CloudMCP\.
