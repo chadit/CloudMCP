@@ -8,7 +8,7 @@ import (
 	"log/slog"
 	"os"
 
-	"gopkg.in/natefinch/lumberjack.v2"
+	lumberjack "gopkg.in/natefinch/lumberjack.v2"
 )
 
 type Logger interface {
