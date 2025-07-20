@@ -64,6 +64,9 @@ get_tool_config() {
         "hadolint-darwin-amd64")
             echo "v2.12.0:darwin:amd64:https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Darwin-x86_64:2a5b7afcab91645c39a7cebefcd835b865f7488e69be24567f433dfc3d41cd27"
             ;;
+        "hadolint-darwin-arm64")
+            echo "v2.12.0:darwin:arm64:https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Darwin-x86_64:2a5b7afcab91645c39a7cebefcd835b865f7488e69be24567f433dfc3d41cd27"
+            ;;
         "trivy-linux-amd64")
             echo "v0.48.3:linux:amd64:https://github.com/aquasecurity/trivy/releases/download/v0.48.3/trivy_0.48.3_Linux-64bit.tar.gz:61f6d5c0fb6ed451c8bab8b13acb5d701f1b532bd6b629f3163f8f57bb10e564"
             ;;
@@ -72,6 +75,9 @@ get_tool_config() {
             ;;
         "trivy-darwin-amd64")
             echo "v0.48.3:darwin:amd64:https://github.com/aquasecurity/trivy/releases/download/v0.48.3/trivy_0.48.3_macOS-64bit.tar.gz:4fc0d1f2ec55869ab4772bd321451023ada4589cc8f9114dae71c7656b2be725"
+            ;;
+        "trivy-darwin-arm64")
+            echo "v0.48.3:darwin:arm64:https://github.com/aquasecurity/trivy/releases/download/v0.48.3/trivy_0.48.3_macOS-ARM64.tar.gz:6553a995a97bd7f57c486b7bd38cc297aeeb1125c2eb647cff0866ad6eeef48d"
             ;;
         "cosign-linux-amd64")
             echo "v2.4.1:linux:amd64:https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign-linux-amd64:8b24b946dd5809c6bd93de08033bcf6bc0ed7d336b7785787c080f574b89249b"
@@ -97,9 +103,11 @@ list_available_tools() {
     echo "hadolint-linux-amd64"
     echo "hadolint-linux-arm64"
     echo "hadolint-darwin-amd64"
+    echo "hadolint-darwin-arm64"
     echo "trivy-linux-amd64"
     echo "trivy-linux-arm64"
     echo "trivy-darwin-amd64"
+    echo "trivy-darwin-arm64"
     echo "cosign-linux-amd64"
     echo "cosign-linux-arm64"
     echo "cosign-darwin-amd64"
@@ -269,14 +277,37 @@ install_tool() {
     if [[ "$url" == *.tar.gz ]]; then
         # Extract tar.gz
         log_info "Extracting archive..."
-        tar -xzf "$cache_file" -C "$tool_dir" --strip-components=1
         
-        # Find the actual binary (may be in subdirectories)
+        # Special handling for different tool archive structures
+        case "$tool_name" in
+            "trivy")
+                # Trivy archives have the binary directly in the root
+                tar -xzf "$cache_file" -C "$tool_dir"
+                ;;
+            *)
+                # Standard extraction with strip-components for other tools
+                tar -xzf "$cache_file" -C "$tool_dir" --strip-components=1
+                ;;
+        esac
+        
+        # Find the actual binary (may be in subdirectories or different names)
         local binary_path
-        binary_path=$(find "$tool_dir" -name "$tool_name" -type f -executable | head -1)
+        binary_path=$(find "$tool_dir" -name "$tool_name" -type f | head -1)
         
+        # If binary not found by exact name, try common variations
+        if [[ -z "$binary_path" ]]; then
+            binary_path=$(find "$tool_dir" -type f -executable | grep -E "${tool_name}(\\.exe)?$" | head -1)
+        fi
+        
+        # If found and different from expected location, move it
         if [[ -n "$binary_path" ]] && [[ "$binary_path" != "$tool_binary" ]]; then
+            log_info "Moving binary from $binary_path to $tool_binary"
             mv "$binary_path" "$tool_binary"
+        elif [[ -z "$binary_path" ]]; then
+            log_error "Binary not found after extraction for tool: $tool_name"
+            log_info "Contents of $tool_dir:"
+            ls -la "$tool_dir"
+            return 1
         fi
     else
         # Single binary file
