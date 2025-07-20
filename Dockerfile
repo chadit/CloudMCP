@@ -2,7 +2,7 @@
 # Optimized for small image size and security
 
 # Build stage
-FROM golang:1.23-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 # Install build dependencies
 RUN apk add --no-cache git ca-certificates tzdata
@@ -25,7 +25,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -trimpath \
     -a -installsuffix cgo \
     -o cloud-mcp \
-    cmd/server/main.go
+    cmd/cloud-mcp/main.go
 
 # Verify the binary
 RUN ./cloud-mcp --version || echo "Binary built successfully"
