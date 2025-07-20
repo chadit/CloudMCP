@@ -104,7 +104,7 @@ func TestJSONRPCMessageValidation(t *testing.T) {
 				"id": 1
 			}`,
 			expectValid: false,
-			errorMsg:    "missing or invalid jsonrpc field",
+			errorMsg:    "invalid JSON-RPC version",
 		},
 		{
 			name:        "InvalidWrongJSONRPCVersion",
@@ -115,7 +115,7 @@ func TestJSONRPCMessageValidation(t *testing.T) {
 				"id": 1
 			}`,
 			expectValid: false,
-			errorMsg:    "missing or invalid jsonrpc field",
+			errorMsg:    "invalid JSON-RPC version",
 		},
 		{
 			name:        "InvalidRequestMissingMethod",
@@ -317,14 +317,17 @@ func TestJSONRPCResponseValidation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			// Test indirectly through the JSON validation
-			// For direct response validation, we'll test through JSON marshaling
-			// Note: In a real implementation, you might want to expose this method for testing
-			// For now, we'll test indirectly through the JSON validation
 			responseJSON, err := json.Marshal(tt.response)
 			require.NoError(t, err, "Failed to marshal test response")
 
-			err = mcp.ValidateJSONRPCMessage(responseJSON)
+			// Use the appropriate validation function based on whether we need ID validation
+			if tt.expectedID != nil {
+				// Use ValidateJSONRPCResponse for tests that require ID validation
+				err = mcp.ValidateJSONRPCResponse(responseJSON, tt.expectedID)
+			} else {
+				// Use ValidateJSONRPCMessage for tests that don't require ID validation
+				err = mcp.ValidateJSONRPCMessage(responseJSON)
+			}
 
 			if tt.expectValid {
 				assert.NoError(t, err, "Response should be valid")

@@ -2,6 +2,7 @@ package security
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -112,14 +113,12 @@ func TestSecureIntegrationTokenValidation(t *testing.T) {
 		for _, recommendation := range expectedRecommendations {
 			found := false
 			for _, reportRec := range report.Recommendations {
-				if assert.Contains(t, reportRec, recommendation) {
+				if strings.Contains(reportRec, recommendation) {
 					found = true
 					break
 				}
 			}
-			if !found {
-				t.Logf("⚠️ Recommendation not found: %s", recommendation)
-			}
+			require.True(t, found, "Security recommendation should be present: %s", recommendation)
 		}
 	})
 }
