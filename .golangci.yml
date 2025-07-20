@@ -1,41 +1,44 @@
+version: "2"
+
 run:
   timeout: 5m
   modules-download-mode: readonly
   go: "1.24"
 
-linters-settings:
-  wrapcheck:
-    # Allow our custom error wrappers and common patterns
-    ignoreSigs:
-      - github.com/chadit/CloudMCP/pkg/types.NewToolError
-      - github.com/chadit/CloudMCP/pkg/types.NewServiceError
-      # Allow standard error creation patterns that are idiomatic in Go
-      - errors.New(
-      - fmt.Errorf(
-    # Ignore direct error creation in test files and these contexts
-    ignorePackageGlobs:
-      - "*.test"
-      - "test/*"
-      - "*_test.go"
-
 linters:
-  enable-all: true
+  default: all
   disable:
     - forbidigo
     - exhaustruct
     - depguard
-    - gci
     - lll
     - cyclop
     - funlen
-    - tenv
+  settings:
+    wrapcheck:
+      # Allow our custom error wrappers and common patterns
+      ignoreSigs:
+        - github.com/chadit/CloudMCP/pkg/types.NewToolError
+        - github.com/chadit/CloudMCP/pkg/types.NewServiceError
+        # Allow standard error creation patterns that are idiomatic in Go
+        - errors.New(
+        - fmt.Errorf(
+      # Ignore direct error creation in test files and these contexts
+      ignorePackageGlobs:
+        - "*.test"
+        - "test/*"
+        - "*_test.go"
+  exclusions:
+    rules:
+      # Exclude some linters from running on tests files
+      - path: _test\.go
+        linters:
+          - gosec
+          - dupl
+    max-issues-per-linter: 0
+    max-same-issues: 0
 
-issues:
-  exclude-rules:
-    # Exclude some linters from running on tests files
-    - path: _test\.go
-      linters:
-        - gosec
-        - dupl
-  max-issues-per-linter: 0
-  max-same-issues: 0
+formatters:
+  settings:
+    gci:
+      local-prefixes: github.com/chadit/CloudMCP
