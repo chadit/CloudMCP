@@ -1,0 +1,86 @@
+# CloudMCP Test Runner Dockerfile
+# Optimized container for running comprehensive CloudMCP container tests
+
+FROM golang:1.24-alpine AS test-builder
+
+# Install test dependencies
+RUN apk add --no-cache \
+    git \
+    ca-certificates \
+    tzdata \
+    curl \
+    wget \
+    bash \
+    docker-cli
+
+# Set working directory
+WORKDIR /app
+
+# Copy go mod files first for better caching
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download && go mod verify
+
+# Copy source code
+COPY . .
+
+# Build test binaries
+RUN go test -c -o bin/container-tests ./internal/testing/container/
+
+# Runtime stage for test execution
+FROM alpine:3.19
+
+# Install runtime dependencies for testing
+RUN apk --no-cache add \
+    ca-certificates \
+    tzdata \
+    curl \
+    wget \
+    bash \
+    jq \
+    docker-cli \
+    && adduser -D -s /bin/bash testuser
+
+# Install testing tools
+RUN wget -O /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64 && \
+    chmod +x /usr/local/bin/hadolint
+
+RUN curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.45.0
+
+# Copy timezone data and CA certificates
+COPY --from=test-builder /usr/share/zoneinfo /usr/share/zoneinfo
+COPY --from=test-builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+# Copy test binaries and scripts
+COPY --from=test-builder /app/bin/container-tests /usr/local/bin/
+COPY --from=test-builder /app/scripts/ /usr/local/bin/scripts/
+COPY --from=test-builder /app/internal/testing/container/ /app/testing/container/
+
+# Create necessary directories
+RUN mkdir -p /test-results /app/logs && \
+    chown -R testuser:testuser /test-results /app
+
+# Switch to non-root user
+USER testuser
+
+# Set working directory
+WORKDIR /app
+
+# Set environment variables
+ENV PATH="/usr/local/bin/scripts:${PATH}" \
+    TEST_RESULTS_DIR="/test-results" \
+    CONTAINER_TEST_MODE=true
+
+# Default command
+ENTRYPOINT ["/bin/bash"]
+CMD ["docker-test.sh", "--help"]
+
+# Metadata
+LABEL maintainer="CloudMCP Team" \
+      description="CloudMCP Container Test Runner" \
+      version="dev" \
+      org.opencontainers.image.title="CloudMCP Test Runner" \
+      org.opencontainers.image.description="Comprehensive testing container for CloudMCP validation" \
+      org.opencontainers.image.vendor="CloudMCP" \
+      org.opencontainers.image.licenses="MIT"
