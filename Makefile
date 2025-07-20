@@ -1,4 +1,4 @@
-.PHONY: help build run test test-race test-integration clean lint fmt install-tools
+.PHONY: help build run test test-race test-integration test-mcp test-mcp-verbose test-mcp-bench validate-mcp clean lint fmt install-tools
 
 # Default target
 help:
@@ -6,8 +6,9 @@ help:
 	@echo ""
 	@echo "Build Commands:"
 	@echo "  make build           - Build the cloud-mcp binary (development)"
-	@echo "  make build-prod      - Build optimized binary (production)"
-	@echo "  make build-all       - Build for multiple platforms"
+	@echo "  make build-prod      - Build security-hardened binary (production)"
+	@echo "  make build-secure    - Build with maximum security hardening"
+	@echo "  make build-all       - Build for multiple platforms (security-hardened)"
 	@echo "  make docker-build    - Build Docker image"
 	@echo "  make docker-run      - Run Docker container"
 	@echo "  make run             - Run the server (requires .env)"
@@ -17,9 +18,16 @@ help:
 	@echo "  make test-quick      - Run quick tests (fast packages only)"
 	@echo "  make test-unit       - Run unit tests only (alias for test)"
 	@echo "  make test-integration - Run integration tests only (mock-based)"
+	@echo "  make test-mcp        - Run MCP protocol compliance tests"
+	@echo "  make test-mcp-verbose - Run MCP tests with verbose output"
 	@echo "  make test-all        - Run all tests (unit + integration)"
 	@echo "  make test-race       - Run tests with race detector"
 	@echo "  make coverage        - Generate test coverage report"
+	@echo ""
+	@echo "Security Commands:"
+	@echo "  make sbom            - Generate Software Bill of Materials"
+	@echo "  make sbom-sign       - Generate and sign SBOM"
+	@echo "  make security-scan   - Run security vulnerability scan"
 	@echo ""
 	@echo "Development Tools:"
 	@echo "  make test-client     - Run interactive test client"
@@ -38,12 +46,47 @@ build:
 	@echo "Building cloud-mcp (development)..."
 	@go build -o bin/cloud-mcp cmd/cloud-mcp/main.go
 
-# Build optimized binary (production - smaller, faster)
+# Build optimized binary (production - smaller, faster, security-hardened)
 build-prod:
-	@echo "Building optimized cloud-mcp (production)..."
-	@go build -ldflags="-s -w" -trimpath -o bin/cloud-mcp cmd/cloud-mcp/main.go
-	@echo "Optimized build complete!"
+	@echo "Building security-hardened cloud-mcp (production)..."
+	@go build \
+		-ldflags="-s -w -buildid= -linkmode=external -extldflags=-static" \
+		-trimpath \
+		-buildmode=pie \
+		-tags=netgo,osusergo \
+		-o bin/cloud-mcp cmd/cloud-mcp/main.go
+	@echo "Security-hardened build complete!"
 	@ls -lah bin/cloud-mcp
+
+# Build with maximum security hardening (for security-critical deployments)
+build-secure:
+	@echo "Building maximum security-hardened cloud-mcp..."
+	@echo "Security flags applied:"
+	@echo "  -buildmode=pie       : Position Independent Executable (ASLR support)"
+	@echo "  -trimpath            : Remove file system paths from binary"
+	@echo "  -buildid=            : Remove build ID for reproducible builds"
+	@echo "  -linkmode=external   : Use external linker for better security"
+	@echo "  -extldflags=-static  : Static linking (no dynamic dependencies)"
+	@echo "  -tags=netgo,osusergo : Pure Go network and OS user implementations"
+	@echo "  -s -w                : Strip debug symbols and DWARF tables"
+	@CGO_ENABLED=1 go build \
+		-ldflags="-s -w -buildid= -linkmode=external -extldflags='-static -fPIE'" \
+		-trimpath \
+		-buildmode=pie \
+		-tags=netgo,osusergo \
+		-a \
+		-installsuffix=cgo \
+		-o bin/cloud-mcp cmd/cloud-mcp/main.go
+	@echo "Maximum security-hardened build complete!"
+	@echo "Binary analysis:"
+	@file bin/cloud-mcp
+	@ls -lah bin/cloud-mcp
+	@echo "\nSecurity verification:"
+	@if command -v checksec >/dev/null 2>&1; then \
+		checksec --file=bin/cloud-mcp; \
+	else \
+		echo "Install checksec for security verification: apt-get install checksec"; \
+	fi
 
 # Run server
 run: build
@@ -85,6 +128,27 @@ test-race-unit:
 	@echo "Running unit tests with race detector..."
 	@go test -race -v ./... -short
 
+# Run MCP protocol compliance tests
+test-mcp:
+	@echo "Running MCP protocol compliance tests..."
+	@go test -race ./internal/testing/mcp/...
+
+# Run MCP tests with verbose output
+test-mcp-verbose:
+	@echo "Running MCP protocol compliance tests (verbose)..."
+	@go test -race -v ./internal/testing/mcp/...
+
+# Run MCP tests with benchmarks
+test-mcp-bench:
+	@echo "Running MCP protocol compliance benchmarks..."
+	@go test -race -v -bench=. ./internal/testing/mcp/...
+
+# Validate MCP compliance (alias for test-mcp-verbose)
+validate-mcp:
+	@echo "Validating MCP protocol compliance..."
+	@go test -race -v ./internal/testing/mcp/...
+	@echo "✅ MCP protocol compliance validation completed"
+
 # Clean build artifacts
 clean:
 	@echo "Cleaning..."
@@ -111,16 +175,35 @@ install-tools:
 	@go install github.com/testcontainers/testcontainers-go@latest
 	@echo "Tools installed successfully"
 
-# Build for multiple platforms (optimized)
+# Build for multiple platforms (security-hardened)
 .PHONY: build-all
 build-all:
-	@echo "Building for multiple platforms (optimized)..."
+	@echo "Building for multiple platforms (security-hardened)..."
 	@mkdir -p dist
-	@GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o dist/cloud-mcp-linux-amd64 cmd/cloud-mcp/main.go
-	@GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o dist/cloud-mcp-darwin-amd64 cmd/cloud-mcp/main.go
-	@GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -trimpath -o dist/cloud-mcp-darwin-arm64 cmd/cloud-mcp/main.go
-	@GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o dist/cloud-mcp-windows-amd64.exe cmd/cloud-mcp/main.go
-	@echo "Build complete. Optimized binaries in dist/"
+	# Linux builds with full security hardening
+	@GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build \
+		-ldflags="-s -w -buildid= -linkmode=external -extldflags=-static" \
+		-trimpath -buildmode=pie -tags=netgo,osusergo \
+		-o dist/cloud-mcp-linux-amd64 cmd/cloud-mcp/main.go
+	@GOOS=linux GOARCH=arm64 CGO_ENABLED=1 go build \
+		-ldflags="-s -w -buildid= -linkmode=external -extldflags=-static" \
+		-trimpath -buildmode=pie -tags=netgo,osusergo \
+		-o dist/cloud-mcp-linux-arm64 cmd/cloud-mcp/main.go
+	# macOS builds (PIE default, limited static linking)
+	@GOOS=darwin GOARCH=amd64 go build \
+		-ldflags="-s -w -buildid=" \
+		-trimpath -tags=netgo,osusergo \
+		-o dist/cloud-mcp-darwin-amd64 cmd/cloud-mcp/main.go
+	@GOOS=darwin GOARCH=arm64 go build \
+		-ldflags="-s -w -buildid=" \
+		-trimpath -tags=netgo,osusergo \
+		-o dist/cloud-mcp-darwin-arm64 cmd/cloud-mcp/main.go
+	# Windows builds with available security features
+	@GOOS=windows GOARCH=amd64 go build \
+		-ldflags="-s -w -buildid=" \
+		-trimpath -tags=netgo,osusergo \
+		-o dist/cloud-mcp-windows-amd64.exe cmd/cloud-mcp/main.go
+	@echo "Build complete. Security-hardened binaries in dist/"
 	@ls -lah dist/
 
 # Run with environment file
@@ -219,3 +302,28 @@ analyze: build-prod
 	@echo "=== Large Dependencies ==="
 	@echo "Top 10 largest modules by disk usage:"
 	@go mod download -json | jq -r '.Path + " " + .Dir' | head -10 2>/dev/null || echo "  (Install jq for detailed analysis)"
+
+# Generate Software Bill of Materials (SBOM)
+.PHONY: sbom
+sbom:
+	@echo "Generating Software Bill of Materials..."
+	@./scripts/generate-sbom.sh --format both --verbose
+	@echo "SBOM generated in build/sbom/"
+
+# Generate and sign SBOM
+.PHONY: sbom-sign
+sbom-sign:
+	@echo "Generating and signing Software Bill of Materials..."
+	@./scripts/generate-sbom.sh --format both --sign --scan --verbose
+	@echo "Signed SBOM generated in build/sbom/"
+
+# Run security vulnerability scan
+.PHONY: security-scan
+security-scan:
+	@echo "Running security vulnerability scan..."
+	@if command -v grype >/dev/null 2>&1; then \
+		grype . --output table; \
+		grype . --output json --file build/vulnerabilities.json; \
+	else \
+		echo "Install grype for vulnerability scanning: curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh"; \
+	fi

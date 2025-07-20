@@ -1,5 +1,9 @@
 name: Auto Release
 
+# Default permissions: read-only for security
+permissions:
+  contents: read
+
 on:
   push:
     branches:
@@ -12,23 +16,37 @@ on:
 jobs:
   auto-release:
     runs-on: ubuntu-latest
+    timeout-minutes: 30  # Prevent resource consumption attacks
+    outputs:
+      slsa_subjects: ${{ steps.slsa_subjects.outputs.slsa_subjects }}
     permissions:
-      contents: write
+      contents: write      # Required to create releases and push tags
+      id-token: write     # Required for cosign keyless signing
+      packages: write     # Required for container registry access
+      actions: write      # Required to upload artifacts
     
     # Only run if the commit message doesn't contain [skip release]
     if: "!contains(github.event.head_commit.message, '[skip release]')"
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
         with:
-          go-version: '1.23'
+          go-version: '1.24' # Use latest stable for releases
+
+      - name: 🔒 Install Verified Security Tools
+        run: |
+          # Install verified security tools with checksum verification
+          ./scripts/security-utils.sh install cosign
+          COSIGN_PATH=$(./scripts/security-utils.sh get-path cosign)
+          echo "Using verified cosign: $COSIGN_PATH"
+          ln -sf "$COSIGN_PATH" /usr/local/bin/cosign
 
       - name: Configure Git
         run: |
@@ -138,12 +156,138 @@ jobs:
           go mod tidy
           go test ./...
 
-      - name: Build and test
+      - name: Build and test (Security-Hardened)
         if: steps.check_release.outputs.needs_release == 'true'
         run: |
-          # Quick build test
-          go build -o /tmp/cloud-mcp cmd/server/main.go
-          go build -o /tmp/cloud-mcp-setup cmd/cloud-mcp-setup/main.go
+          # Quick security-hardened build test
+          make build-secure
+          # Verify the binary was created and is executable
+          test -x bin/cloud-mcp
+          echo "Security-hardened build test completed successfully"
+
+      - name: Build Security-Hardened Release Binaries
+        if: steps.check_release.outputs.needs_release == 'true'
+        run: |
+          NEW_VERSION="${{ steps.next_version.outputs.new_version }}"
+          BUILD_DATE=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          GIT_COMMIT=$(git rev-parse HEAD)
+          GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          
+          # Security-hardened build flags with version info
+          BASE_LDFLAGS="-s -w -buildid= \
+                        -X 'github.com/chadit/CloudMCP/internal/version.Version=$NEW_VERSION' \
+                        -X 'github.com/chadit/CloudMCP/internal/version.BuildDate=$BUILD_DATE' \
+                        -X 'github.com/chadit/CloudMCP/internal/version.GitCommit=$GIT_COMMIT' \
+                        -X 'github.com/chadit/CloudMCP/internal/version.GitBranch=$GIT_BRANCH'"
+          
+          # Create build directory
+          mkdir -p build
+          
+          echo "Building security-hardened release binaries with version $NEW_VERSION..."
+          
+          # Linux builds with full security hardening
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build \
+            -ldflags="$BASE_LDFLAGS -linkmode=external -extldflags=-static" \
+            -trimpath -buildmode=pie -tags=netgo,osusergo \
+            -o build/cloud-mcp-linux-amd64 cmd/cloud-mcp/main.go
+            
+          GOOS=linux GOARCH=arm64 CGO_ENABLED=1 go build \
+            -ldflags="$BASE_LDFLAGS -linkmode=external -extldflags=-static" \
+            -trimpath -buildmode=pie -tags=netgo,osusergo \
+            -o build/cloud-mcp-linux-arm64 cmd/cloud-mcp/main.go
+            
+          # macOS builds (PIE default, limited static linking)
+          GOOS=darwin GOARCH=amd64 go build \
+            -ldflags="$BASE_LDFLAGS" \
+            -trimpath -tags=netgo,osusergo \
+            -o build/cloud-mcp-darwin-amd64 cmd/cloud-mcp/main.go
+            
+          GOOS=darwin GOARCH=arm64 go build \
+            -ldflags="$BASE_LDFLAGS" \
+            -trimpath -tags=netgo,osusergo \
+            -o build/cloud-mcp-darwin-arm64 cmd/cloud-mcp/main.go
+            
+          # Windows builds with available security features
+          GOOS=windows GOARCH=amd64 go build \
+            -ldflags="$BASE_LDFLAGS" \
+            -trimpath -tags=netgo,osusergo \
+            -o build/cloud-mcp-windows-amd64.exe cmd/cloud-mcp/main.go
+          
+          # List built files
+          ls -la build/
+
+      - name: Generate checksums
+        if: steps.check_release.outputs.needs_release == 'true'
+        run: |
+          cd build/
+          
+          # Generate SHA256 checksums for all binaries
+          sha256sum cloud-mcp-* > checksums.txt
+          
+          # Display checksums
+          echo "Generated checksums:"
+          cat checksums.txt
+
+      - name: 📜 Generate SBOM (Software Bill of Materials)
+        if: steps.check_release.outputs.needs_release == 'true'
+        run: |
+          # Install syft for SBOM generation
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+          
+          # Generate SBOM with vulnerability scanning and signing
+          ./scripts/generate-sbom.sh \
+            --format both \
+            --version "${{ steps.next_version.outputs.new_version }}" \
+            --sign \
+            --scan \
+            --verbose
+          
+          echo "SBOM generation completed"
+
+      - name: Sign artifacts with cosign
+        if: steps.check_release.outputs.needs_release == 'true'
+        env:
+          COSIGN_YES: true
+        run: |
+          echo "🔐 Signing artifacts with cosign (keyless)"
+          
+          cd build/
+          
+          # Sign all binaries and checksums
+          for file in cloud-mcp-* checksums.txt; do
+            if [ -f "$file" ]; then
+              echo "Signing: $file"
+              cosign sign-blob \
+                --yes \
+                --bundle "$file.cosign.bundle" \
+                "$file"
+            fi
+          done
+          
+          # List signed artifacts
+          echo "Signed artifacts:"
+          ls -la *.cosign.bundle
+
+      - name: Generate subject hash for SLSA
+        if: steps.check_release.outputs.needs_release == 'true'
+        id: slsa_subjects
+        run: |
+          cd build/
+          
+          # Generate base64-encoded hash for SLSA provenance
+          HASHES=""
+          for file in cloud-mcp-*; do
+            if [ -f "$file" ]; then
+              HASH=$(sha256sum "$file" | cut -d' ' -f1)
+              if [ -z "$HASHES" ]; then
+                HASHES="${file}:sha256:${HASH}"
+              else
+                HASHES="${HASHES},${file}:sha256:${HASH}"
+              fi
+            fi
+          done
+          
+          echo "slsa_subjects=$(echo -n "$HASHES" | base64 -w 0)" >> $GITHUB_OUTPUT
 
       - name: Commit version update
         if: steps.check_release.outputs.needs_release == 'true'
@@ -188,8 +332,9 @@ jobs:
           echo "## Installation" >> release_notes.md
           echo "" >> release_notes.md
           echo '```bash' >> release_notes.md
-          echo "go install github.com/chadit/CloudMCP/cmd/server@$NEW_TAG" >> release_notes.md
-          echo "go install github.com/chadit/CloudMCP/cmd/cloud-mcp-setup@$NEW_TAG" >> release_notes.md
+          echo "go install github.com/chadit/CloudMCP/cmd/cloud-mcp@$NEW_TAG" >> release_notes.md
+          # Note: Setup tool installation will be added when implemented
+          # echo "go install github.com/chadit/CloudMCP/cmd/cloud-mcp-setup@$NEW_TAG" >> release_notes.md
           echo '```' >> release_notes.md
           
           # Set output for release creation
@@ -201,12 +346,44 @@ jobs:
 
       - name: Create GitHub Release
         if: steps.check_release.outputs.needs_release == 'true'
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
         with:
           tag_name: ${{ steps.next_version.outputs.new_tag }}
           name: Release ${{ steps.next_version.outputs.new_tag }}
-          body: ${{ steps.release_notes.outputs.release_notes }}
+          body: |
+            ${{ steps.release_notes.outputs.release_notes }}
+            
+            ## Security Verification
+            
+            All artifacts in this release are cryptographically signed with cosign for supply chain security.
+            
+            ### Verify signatures:
+            ```bash
+            # Install cosign
+            go install github.com/sigstore/cosign/v2/cmd/cosign@latest
+            
+            # Verify binary signature (example for linux-amd64)
+            cosign verify-blob \
+              --bundle cloud-mcp-linux-amd64.cosign.bundle \
+              --certificate-identity-regexp="https://github.com/chadit/CloudMCP" \
+              --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
+              cloud-mcp-linux-amd64
+              
+            # Verify checksums
+            cosign verify-blob \
+              --bundle checksums.txt.cosign.bundle \
+              --certificate-identity-regexp="https://github.com/chadit/CloudMCP" \
+              --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
+              checksums.txt
+            ```
+            
+            **SLSA Level 3 Compliance**: This release includes SLSA provenance for build integrity verification.
           prerelease: false
+          files: |
+            build/cloud-mcp-*
+            build/checksums.txt
+            build/*.cosign.bundle
+            build/sbom/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -217,9 +394,25 @@ jobs:
           echo "✅ Auto-release $NEW_TAG created successfully!"
           echo ""
           echo "Users can now install with:"
-          echo "go install github.com/chadit/CloudMCP/cmd/server@$NEW_TAG"
-          echo "go install github.com/chadit/CloudMCP/cmd/cloud-mcp-setup@$NEW_TAG"
+          echo "go install github.com/chadit/CloudMCP/cmd/cloud-mcp@$NEW_TAG"
+          # Note: Setup tool installation will be added when implemented
+          # echo "go install github.com/chadit/CloudMCP/cmd/cloud-mcp-setup@$NEW_TAG"
           echo ""
           echo "Or latest:"
-          echo "go install github.com/chadit/CloudMCP/cmd/server@latest"
-          echo "go install github.com/chadit/CloudMCP/cmd/cloud-mcp-setup@latest"
+          echo "go install github.com/chadit/CloudMCP/cmd/cloud-mcp@latest"
+          # Note: Setup tool installation will be added when implemented
+          # echo "go install github.com/chadit/CloudMCP/cmd/cloud-mcp-setup@latest"
+
+  # SLSA provenance generation for supply chain security
+  provenance:
+    needs: auto-release
+    if: needs.auto-release.outputs.slsa_subjects != ''
+    permissions:
+      actions: read
+      id-token: write
+      contents: write
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    with:
+      base64-subjects: "${{ needs.auto-release.outputs.slsa_subjects }}"
+      provenance-name: "slsa-provenance.intoto.jsonl"
+      upload-assets: true
