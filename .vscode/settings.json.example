@@ -1,0 +1,14 @@
+{
+  "mcp.servers": {
+    "cloudmcp": {
+      "command": "cloud-mcp",
+      "args": [],
+      "env": {
+        "CLOUD_MCP_SERVER_NAME": "CloudMCP Shell",
+        "LOG_LEVEL": "debug",
+        "ENABLE_METRICS": "true",
+        "METRICS_PORT": "8080"
+      }
+    }
+  }
+}

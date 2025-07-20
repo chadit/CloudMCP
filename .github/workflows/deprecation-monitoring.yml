@@ -1,0 +1,151 @@
+name: Deprecation Monitoring
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run weekly on Mondays at 9 AM UTC to catch new deprecations in dependencies
+    - cron: '0 9 * * 1'
+
+jobs:
+  deprecation-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+        
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+          
+    - name: Install golangci-lint
+      run: |
+        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.55.2
+        echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+        
+    - name: Check for deprecation warnings
+      id: deprecation-check
+      run: |
+        echo "Scanning for deprecation warnings..."
+        
+        # Run staticcheck to find SA1019 (deprecated) warnings
+        golangci-lint run --enable=staticcheck --disable-all --out-format=line-number 2>&1 | \
+        grep -E "SA1019|deprecated" > deprecations.txt || true
+        
+        # Count deprecations
+        DEPRECATION_COUNT=$(wc -l < deprecations.txt || echo "0")
+        echo "deprecation_count=$DEPRECATION_COUNT" >> $GITHUB_OUTPUT
+        
+        # Create summary
+        if [ "$DEPRECATION_COUNT" -gt 0 ]; then
+          echo "## 🚨 Deprecation Warnings Found" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Found $DEPRECATION_COUNT deprecation warning(s):" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          cat deprecations.txt >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Please review and update deprecated API usage according to the [Deprecation Migration Plan](DEPRECATION_MIGRATION_PLAN.md)." >> $GITHUB_STEP_SUMMARY
+        else
+          echo "## ✅ No Deprecation Warnings" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All code is using current, non-deprecated APIs. Great job! 🎉" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+    - name: Upload deprecation report
+      if: steps.deprecation-check.outputs.deprecation_count > 0
+      uses: actions/upload-artifact@v4
+      with:
+        name: deprecation-report-${{ github.sha }}
+        path: deprecations.txt
+        retention-days: 30
+        
+    - name: Comment on PR with deprecation status
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const deprecationCount = ${{ steps.deprecation-check.outputs.deprecation_count }};
+          
+          let comment = '';
+          if (deprecationCount > 0) {
+            const deprecations = fs.readFileSync('deprecations.txt', 'utf8');
+            comment = `## 🚨 Deprecation Warnings Detected
+          
+          This PR introduces or contains **${deprecationCount}** deprecation warning(s):
+          
+          \`\`\`
+          ${deprecations}
+          \`\`\`
+          
+          Please review and update deprecated API usage according to the [Deprecation Migration Plan](DEPRECATION_MIGRATION_PLAN.md).
+          
+          **Action Required:** Fix deprecations before merging to maintain code quality.`;
+          } else {
+            comment = `## ✅ No Deprecation Warnings
+          
+          Great! This PR doesn't introduce any new deprecation warnings. All APIs are current and supported.`;
+          }
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+          
+    - name: Fail on new deprecations in PR
+      if: github.event_name == 'pull_request' && steps.deprecation-check.outputs.deprecation_count > 0
+      run: |
+        echo "::error::Found ${{ steps.deprecation-check.outputs.deprecation_count }} deprecation warning(s) in this PR"
+        echo "Please fix deprecated API usage before merging"
+        exit 1
+        
+    - name: Weekly deprecation summary
+      if: github.event_name == 'schedule'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const deprecationCount = ${{ steps.deprecation-check.outputs.deprecation_count }};
+          
+          if (deprecationCount > 0) {
+            const title = `Weekly Deprecation Report: ${deprecationCount} warning(s) found`;
+            const body = `## 📊 Weekly Deprecation Monitoring Report
+          
+          **Date:** ${new Date().toISOString().split('T')[0]}
+          **Status:** ${deprecationCount} deprecation warning(s) detected
+          
+          Please review the [latest workflow run](${context.payload.repository.html_url}/actions/runs/${context.runId}) for details.
+          
+          **Next Steps:**
+          1. Review deprecated API usage
+          2. Plan migration according to [Deprecation Migration Plan](DEPRECATION_MIGRATION_PLAN.md)
+          3. Update dependencies if needed
+          4. Test replacements in staging environment
+          
+          **Auto-generated by:** [Deprecation Monitoring Workflow](.github/workflows/deprecation-monitoring.yml)`;
+          
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['maintenance', 'deprecation', 'technical-debt']
+            });
+          }
