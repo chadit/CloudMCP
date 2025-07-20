@@ -168,8 +168,8 @@ func TestInfo_JSONStructure(t *testing.T) {
 func TestConstants(t *testing.T) {
 	t.Parallel()
 	// Test that constants have expected values.
-	require.Equal(t, "1.0.0", version.Version, "version.Version constant should match expected value")
-	require.Equal(t, "1.0", version.APIVersion, "version.APIVersion constant should match expected value")
+	require.Equal(t, "0.1.0", version.Version, "version.Version constant should match expected value")
+	require.Equal(t, "0.1.0", version.APIVersion, "version.APIVersion constant should match expected value")
 	require.Equal(t, "", version.BuildDate, "version.BuildDate should be empty by default")
 
 	// Test that variables have expected default values.
