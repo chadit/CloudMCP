@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"sort"
 	"sync"
 	"time"
 
@@ -254,13 +255,7 @@ func (b *prometheusBackend) extractLabelNames(tags map[string]string) []string {
 	}
 
 	// Sort to ensure consistent ordering.
-	for i := range len(labelNames) - 1 {
-		for j := range len(labelNames) - i - 1 {
-			if labelNames[i] > labelNames[i+j+1] {
-				labelNames[i], labelNames[i+j+1] = labelNames[i+j+1], labelNames[i]
-			}
-		}
-	}
+	sort.Strings(labelNames)
 
 	return labelNames
 }
