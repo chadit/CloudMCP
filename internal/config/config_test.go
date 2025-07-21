@@ -11,7 +11,7 @@ import (
 
 func TestLoad_DefaultValues(t *testing.T) {
 	t.Parallel()
-	
+
 	// Clear environment variables to test defaults
 	originalServerName := os.Getenv("CLOUD_MCP_SERVER_NAME")
 	originalLogLevel := os.Getenv("LOG_LEVEL")
@@ -19,7 +19,7 @@ func TestLoad_DefaultValues(t *testing.T) {
 		_ = os.Setenv("CLOUD_MCP_SERVER_NAME", originalServerName)
 		_ = os.Setenv("LOG_LEVEL", originalLogLevel)
 	}()
-	
+
 	_ = os.Unsetenv("CLOUD_MCP_SERVER_NAME")
 	_ = os.Unsetenv("LOG_LEVEL")
 
@@ -35,7 +35,7 @@ func TestLoad_DefaultValues(t *testing.T) {
 
 func TestLoad_EnvironmentVariables(t *testing.T) {
 	t.Parallel()
-	
+
 	// Save original environment variables
 	originalServerName := os.Getenv("CLOUD_MCP_SERVER_NAME")
 	originalLogLevel := os.Getenv("LOG_LEVEL")
@@ -60,7 +60,7 @@ func TestLoad_EnvironmentVariables(t *testing.T) {
 
 func TestLoad_PartialEnvironmentOverride(t *testing.T) {
 	t.Parallel()
-	
+
 	// Save original environment variables
 	originalServerName := os.Getenv("CLOUD_MCP_SERVER_NAME")
 	originalLogLevel := os.Getenv("LOG_LEVEL")
@@ -99,7 +99,7 @@ func TestConfig_BasicValidation(t *testing.T) {
 
 func TestLoad_EmptyEnvironmentValues(t *testing.T) {
 	t.Parallel()
-	
+
 	// Save original environment variables
 	originalServerName := os.Getenv("CLOUD_MCP_SERVER_NAME")
 	originalLogLevel := os.Getenv("LOG_LEVEL")
