@@ -135,7 +135,10 @@ func TestMigrationController_Creation(t *testing.T) {
 
 	// Verify global configuration defaults
 	status := mc.GetMigrationStatus()
-	globalConfig := status["global_config"].(GlobalMigrationConfig)
+	globalConfigInterface, ok := status["global_config"]
+	require.True(t, ok, "global_config should exist in migration status")
+	globalConfig, ok := globalConfigInterface.(GlobalMigrationConfig)
+	require.True(t, ok, "global_config should be of type GlobalMigrationConfig")
 	assert.True(t, globalConfig.MigrationEnabled, "Global migration should be enabled")
 	assert.Equal(t, 0, globalConfig.DefaultPercentage, "Default percentage should be 0")
 	assert.Equal(t, 100, globalConfig.MaxPercentage, "Max percentage should be 100")
@@ -350,7 +353,10 @@ func TestMigrationController_GlobalRollback(t *testing.T) {
 
 	// Verify rollback status
 	status := mc.GetMigrationStatus()
-	globalConfig := status["global_config"].(GlobalMigrationConfig)
+	globalConfigInterface, ok := status["global_config"]
+	require.True(t, ok, "global_config should exist in migration status")
+	globalConfig, ok := globalConfigInterface.(GlobalMigrationConfig)
+	require.True(t, ok, "global_config should be of type GlobalMigrationConfig")
 	assert.True(t, globalConfig.RollbackMode, "Rollback mode should be enabled")
 
 	// Disable rollback
@@ -364,7 +370,10 @@ func TestMigrationController_GlobalRollback(t *testing.T) {
 
 	// Verify rollback status is cleared
 	status = mc.GetMigrationStatus()
-	globalConfig = status["global_config"].(GlobalMigrationConfig)
+	globalConfigInterface, ok = status["global_config"]
+	require.True(t, ok, "global_config should exist in migration status")
+	globalConfig, ok = globalConfigInterface.(GlobalMigrationConfig)
+	require.True(t, ok, "global_config should be of type GlobalMigrationConfig")
 	assert.False(t, globalConfig.RollbackMode, "Rollback mode should be disabled")
 }
 
