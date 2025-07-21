@@ -265,18 +265,19 @@ jobs:
           GOARCH: ${{ matrix.platform.goarch }}
           CGO_ENABLED: ${{ matrix.platform.cgo }}
         run: |
-          # Security-hardened build flags  
+          # Security-hardened build flags
           LDFLAGS="-s -w"
-          BUILD_FLAGS="-ldflags='$LDFLAGS' -trimpath -tags=netgo,osusergo"
           
           # Add platform-specific security flags
           if [[ "$GOOS" == "linux" && "${{ matrix.platform.cgo }}" == "1" ]]; then
             # Static linking for Linux with CGO (no PIE due to conflict)
             LDFLAGS="$LDFLAGS -linkmode=external -extldflags=-static"
-            BUILD_FLAGS="-ldflags='$LDFLAGS' -trimpath -tags=netgo,osusergo"
+            BUILD_MODE=""  # No PIE for static linking
           elif [[ "$GOOS" != "windows" ]]; then
-            # PIE for non-Windows platforms (when not doing static linking)
-            BUILD_FLAGS="$BUILD_FLAGS -buildmode=pie"
+            # PIE for non-Windows platforms  
+            BUILD_MODE="-buildmode=pie"
+          else
+            BUILD_MODE=""  # No PIE for Windows
           fi
           
           # Set output binary name
@@ -286,13 +287,15 @@ jobs:
           fi
           
           echo "Building $BINARY_NAME for $GOOS/$GOARCH with CGO_ENABLED=$CGO_ENABLED"
-          echo "Build flags: $BUILD_FLAGS"
+          echo "LDFLAGS: $LDFLAGS"
+          echo "BUILD_MODE: $BUILD_MODE"
           
           # Create dist directory
           mkdir -p dist
           
-          # Build the binary
-          go build $BUILD_FLAGS -o "dist/${BINARY_NAME}-${GOOS}-${GOARCH}" ./cmd/cloud-mcp/main.go
+          # Build the binary with explicit flags
+          go build -ldflags="$LDFLAGS" -trimpath -tags=netgo,osusergo $BUILD_MODE \
+            -o "dist/${BINARY_NAME}-${GOOS}-${GOARCH}" ./cmd/cloud-mcp/main.go
           
           # Verify the binary was created
           ls -la "dist/${BINARY_NAME}-${GOOS}-${GOARCH}"
