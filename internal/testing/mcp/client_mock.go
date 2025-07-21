@@ -454,8 +454,14 @@ func CreateConnectedClient(mcpServer interface{}) (*MockMCPClient, error) {
 	go func() {
 		defer func() {
 			// Close pipes when server stops
-			serverReader.Close()
-			serverWriter.Close()
+			if err := serverReader.Close(); err != nil {
+				// Log error in test context, but don't fail the test
+				return
+			}
+			if err := serverWriter.Close(); err != nil {
+				// Log error in test context, but don't fail the test
+				return
+			}
 		}()
 
 		// Use reflection or type assertion to get the underlying MCP server
@@ -595,7 +601,10 @@ func processMethod(request JSONRPCRequest, mcpServer interface{}) JSONRPCRespons
 		// Parse the tool call request
 		var toolRequest ToolsCallRequest
 		if paramsData, err := json.Marshal(request.Params); err == nil {
-			json.Unmarshal(paramsData, &toolRequest)
+			if err := json.Unmarshal(paramsData, &toolRequest); err != nil {
+				// Handle unmarshal error but continue with empty request
+				toolRequest = ToolsCallRequest{}
+			}
 		}
 		
 		if toolRequest.Name == "health_check" {
