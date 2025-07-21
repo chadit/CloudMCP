@@ -3,6 +3,8 @@
 CloudMCP is a minimal Model Context Protocol (MCP) server designed as a
 lightweight foundation for cloud infrastructure management through natural language commands.
 
+<!-- Workflows testing - fixed CI/CD pipeline -->
+
 **Current Status**: 🎉 **Minimal MCP Server** - Simple and Ready
 
 ## 🚀 Quick Start
