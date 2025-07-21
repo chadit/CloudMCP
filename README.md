@@ -1,9 +1,13 @@
 # CloudMCP
 
+<!-- GitHub Actions Status Badges -->
+[![Phase 1: Fast Feedback](https://github.com/chadit/CloudMCP/actions/workflows/phase1-fast-feedback.yml/badge.svg)](https://github.com/chadit/CloudMCP/actions/workflows/phase1-fast-feedback.yml)
+[![Phase 2: Full Testing](https://github.com/chadit/CloudMCP/actions/workflows/phase2-full-testing.yml/badge.svg)](https://github.com/chadit/CloudMCP/actions/workflows/phase2-full-testing.yml)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/chadit/CloudMCP?logo=go)](https://github.com/chadit/CloudMCP/blob/main/go.mod)
+[![Release](https://img.shields.io/github/v/release/chadit/CloudMCP?logo=github)](https://github.com/chadit/CloudMCP/releases)
+
 CloudMCP is a minimal Model Context Protocol (MCP) server designed as a
 lightweight foundation for cloud infrastructure management through natural language commands.
-
-<!-- Workflows testing - fixed CI/CD pipeline -->
 
 **Current Status**: 🎉 **Minimal MCP Server** - Simple and Ready
 
@@ -152,6 +156,26 @@ export LOG_LEVEL="info"  # debug, info, warn, error
 **Default values:**
 - Server Name: "CloudMCP Minimal"
 - Log Level: "info"
+
+## 🔄 CI/CD Status
+
+CloudMCP uses a **two-phase CI/CD system** for optimal development velocity:
+
+### Phase 1: Fast Feedback (~1 minute) ⚡
+- **Static Analysis**: staticcheck, gosec, golangci-lint
+- **Code Quality**: Go formatting, module verification
+- **Quick Build**: Basic compilation test
+- **Purpose**: Rapid developer feedback
+
+### Phase 2: Full Testing (~2 minutes) 🧪
+**Triggered automatically when Phase 1 passes**
+- **Cross-Platform Builds**: Linux, Darwin, Windows (5 platforms)
+- **Comprehensive Tests**: Unit, integration, race condition detection
+- **Security Analysis**: Container scanning, vulnerability detection, SBOM generation
+- **Test Matrix**: Go 1.22 and 1.23 compatibility
+- **Container Testing**: Docker build and functionality verification
+
+**Build Artifacts**: All platforms automatically built and available for download
 
 ## 🛠️ Troubleshooting
 
