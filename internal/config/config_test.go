@@ -2,7 +2,6 @@ package config_test
 
 import (
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -10,99 +9,115 @@ import (
 	"github.com/chadit/CloudMCP/internal/config"
 )
 
-func TestLoad_DefaultConfig(t *testing.T) {
+func TestLoad_DefaultValues(t *testing.T) {
 	t.Parallel()
-	// Since we can't easily mock GetConfigPath, we'll test the load functionality.
-	// by creating a config manager directly with a test path.
-	tempDir := t.TempDir()
-	testConfigPath := filepath.Join(tempDir, "cloud-mcp.toml")
+	
+	// Clear environment variables to test defaults
+	originalServerName := os.Getenv("CLOUD_MCP_SERVER_NAME")
+	originalLogLevel := os.Getenv("LOG_LEVEL")
+	defer func() {
+		os.Setenv("CLOUD_MCP_SERVER_NAME", originalServerName)
+		os.Setenv("LOG_LEVEL", originalLogLevel)
+	}()
+	
+	os.Unsetenv("CLOUD_MCP_SERVER_NAME")
+	os.Unsetenv("LOG_LEVEL")
 
-	// Test creating a default TOML config.
-	defaultConfig := config.CreateDefaultTOMLConfig()
-	require.NotNil(t, defaultConfig, "Default config should not be nil")
-
-	// Save it to test path.
-	err := config.SaveTOMLConfig(defaultConfig, testConfigPath)
-	require.NoError(t, err, "Should save default config without error")
-
-	// Load it back.
-	loadedConfig, err := config.LoadTOMLConfig(testConfigPath)
+	// Load config with default values
+	cfg, err := config.Load()
 	require.NoError(t, err, "Should load config without error")
-	require.NotNil(t, loadedConfig, "Loaded config should not be nil")
+	require.NotNil(t, cfg, "Config should not be nil")
 
-	// Convert to legacy format for testing.
-	legacyConfig := loadedConfig.ToLegacyConfig()
-	require.NotNil(t, legacyConfig, "Legacy config should not be nil")
-
-	// Verify default values.
-	require.Equal(t, "CloudMCP Minimal Shell", legacyConfig.ServerName, "Default server name should be set")
-	require.Equal(t, "info", legacyConfig.LogLevel, "Default log level should be info")
-	require.True(t, legacyConfig.EnableMetrics, "Metrics should be enabled by default")
-	require.Equal(t, 8080, legacyConfig.MetricsPort, "Default metrics port should be set")
-
-	// Verify config file was created.
-	require.FileExists(t, testConfigPath, "Config file should be created")
+	// Verify default values
+	require.Equal(t, "CloudMCP Minimal", cfg.ServerName, "Default server name should be set")
+	require.Equal(t, "info", cfg.LogLevel, "Default log level should be info")
 }
 
-func TestLoad_ExistingConfig(t *testing.T) {
+func TestLoad_EnvironmentVariables(t *testing.T) {
 	t.Parallel()
-	// Create a temporary directory for testing.
-	tempDir := t.TempDir()
+	
+	// Save original environment variables
+	originalServerName := os.Getenv("CLOUD_MCP_SERVER_NAME")
+	originalLogLevel := os.Getenv("LOG_LEVEL")
+	defer func() {
+		os.Setenv("CLOUD_MCP_SERVER_NAME", originalServerName)
+		os.Setenv("LOG_LEVEL", originalLogLevel)
+	}()
 
-	// Create a test TOML config.
-	testConfigPath := filepath.Join(tempDir, "cloud-mcp.toml")
-	testTOMLContent := `[system]
-server_name = "Test Server"
-log_level = "debug"
-enable_metrics = false
-metrics_port = 9090
-`
+	// Set test environment variables
+	os.Setenv("CLOUD_MCP_SERVER_NAME", "Test Server")
+	os.Setenv("LOG_LEVEL", "debug")
 
-	err := os.WriteFile(testConfigPath, []byte(testTOMLContent), 0o600)
-	require.NoError(t, err, "Should write test config file")
+	// Load config
+	cfg, err := config.Load()
+	require.NoError(t, err, "Should load config without error")
+	require.NotNil(t, cfg, "Config should not be nil")
 
-	// Load existing config directly.
-	loadedConfig, err := config.LoadTOMLConfig(testConfigPath)
-	require.NoError(t, err, "LoadTOMLConfig should load existing config without error")
-	require.NotNil(t, loadedConfig, "Config should not be nil")
+	// Verify environment values are used
+	require.Equal(t, "Test Server", cfg.ServerName, "Server name should be loaded from environment")
+	require.Equal(t, "debug", cfg.LogLevel, "Log level should be loaded from environment")
+}
 
-	// Convert to legacy format for testing.
-	config := loadedConfig.ToLegacyConfig()
-	require.NotNil(t, config, "Legacy config should not be nil")
+func TestLoad_PartialEnvironmentOverride(t *testing.T) {
+	t.Parallel()
+	
+	// Save original environment variables
+	originalServerName := os.Getenv("CLOUD_MCP_SERVER_NAME")
+	originalLogLevel := os.Getenv("LOG_LEVEL")
+	defer func() {
+		os.Setenv("CLOUD_MCP_SERVER_NAME", originalServerName)
+		os.Setenv("LOG_LEVEL", originalLogLevel)
+	}()
 
-	// Verify loaded values.
-	require.Equal(t, "Test Server", config.ServerName, "Server name should be loaded from file")
-	require.Equal(t, "debug", config.LogLevel, "Log level should be loaded from file")
-	require.False(t, config.EnableMetrics, "Metrics should be disabled as configured")
-	require.Equal(t, 9090, config.MetricsPort, "Metrics port should be loaded from file")
+	// Set only server name, leave log level as default
+	os.Setenv("CLOUD_MCP_SERVER_NAME", "Custom Server")
+	os.Unsetenv("LOG_LEVEL")
+
+	// Load config
+	cfg, err := config.Load()
+	require.NoError(t, err, "Should load config without error")
+	require.NotNil(t, cfg, "Config should not be nil")
+
+	// Verify mixed values (environment + default)
+	require.Equal(t, "Custom Server", cfg.ServerName, "Server name should be from environment")
+	require.Equal(t, "info", cfg.LogLevel, "Log level should use default value")
 }
 
 func TestConfig_BasicValidation(t *testing.T) {
 	t.Parallel()
 
 	cfg := &config.Config{
-		ServerName:    "Test Server",
-		LogLevel:      "info",
-		EnableMetrics: true,
-		MetricsPort:   8080,
+		ServerName: "Test Server",
+		LogLevel:   "info",
 	}
 
-	// Basic validation - just ensure config structure is valid.
+	// Basic validation - ensure config structure is valid
 	require.NotNil(t, cfg, "Config should not be nil")
 	require.NotEmpty(t, cfg.ServerName, "Server name should not be empty")
 	require.NotEmpty(t, cfg.LogLevel, "Log level should not be empty")
 }
 
-func TestConfig_Constants(t *testing.T) {
+func TestLoad_EmptyEnvironmentValues(t *testing.T) {
 	t.Parallel()
-	// Test that the default metrics port constant has expected value.
-	// Note: defaultMetricsPort is not exported, so we test the behavior instead.
-	cfg := config.CreateDefaultTOMLConfig()
-	require.Equal(t, 8080, cfg.System.MetricsPort, "Default metrics port should be 8080")
-}
+	
+	// Save original environment variables
+	originalServerName := os.Getenv("CLOUD_MCP_SERVER_NAME")
+	originalLogLevel := os.Getenv("LOG_LEVEL")
+	defer func() {
+		os.Setenv("CLOUD_MCP_SERVER_NAME", originalServerName)
+		os.Setenv("LOG_LEVEL", originalLogLevel)
+	}()
 
-func TestConfig_Errors(t *testing.T) {
-	t.Parallel()
-	require.Error(t, config.ErrDefaultAccountNotFound, "config.ErrDefaultAccountNotFound should be defined")
-	require.Contains(t, config.ErrDefaultAccountNotFound.Error(), "default account not found", "Error message should be descriptive")
+	// Set empty environment variables (should use defaults)
+	os.Setenv("CLOUD_MCP_SERVER_NAME", "")
+	os.Setenv("LOG_LEVEL", "")
+
+	// Load config
+	cfg, err := config.Load()
+	require.NoError(t, err, "Should load config without error")
+	require.NotNil(t, cfg, "Config should not be nil")
+
+	// Verify defaults are used when env vars are empty
+	require.Equal(t, "CloudMCP Minimal", cfg.ServerName, "Should use default when env var is empty")
+	require.Equal(t, "info", cfg.LogLevel, "Should use default when env var is empty")
 }
