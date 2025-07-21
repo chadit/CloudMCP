@@ -181,7 +181,14 @@ func (c *MockMCPClient) SendToolsCall(ctx context.Context, toolName string, argu
 
 	// Convert to mcp.CallToolResult using the same method as the real health tool
 	if len(simpleResult.Content) > 0 && simpleResult.Content[0]["type"] == "text" {
-		textContent := simpleResult.Content[0]["text"].(string)
+		textContentInterface, ok := simpleResult.Content[0]["text"]
+		if !ok {
+			return mcp.NewToolResultError("Missing text content in response"), nil
+		}
+		textContent, ok := textContentInterface.(string)
+		if !ok {
+			return mcp.NewToolResultError("Invalid text content type in response"), nil
+		}
 		return mcp.NewToolResultText(textContent), nil
 	}
 
