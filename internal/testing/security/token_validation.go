@@ -196,7 +196,9 @@ func constantTimeValidateLength(token string, minLen, maxLen int) bool {
 	if length <= maxLen {
 		maxValid = 1
 	}
+	// #nosec G115 -- Converting 0/1 validation flags to int32 is safe and intentional for constant-time comparison
 	minCheck := subtle.ConstantTimeEq(int32(minValid), 1)
+	// #nosec G115 -- Converting 0/1 validation flags to int32 is safe and intentional for constant-time comparison
 	maxCheck := subtle.ConstantTimeEq(int32(maxValid), 1)
 	return minCheck == 1 && maxCheck == 1
 }
