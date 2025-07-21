@@ -1,268 +1,303 @@
-name: Monthly Dependency Review
+name: Dependency Review
 
-# Default permissions: read-only for security
+# Security: Minimal permissions by default
 permissions:
   contents: read
 
 on:
+  # Monthly review on first Monday
   schedule:
-    # Run on the first Monday of each month at 10 AM UTC
-    - cron: '0 10 1-7 * 1'
+    - cron: '0 9 1-7 * 1'  # 9 AM UTC on first Monday of each month
+  
+  # Manual trigger
   workflow_dispatch:
-    # Allow manual triggering for testing
+  
+  # On dependency changes
+  pull_request:
+    paths:
+      - 'go.mod'
+      - 'go.sum'
+
+# Prevent concurrent runs
+concurrency:
+  group: dependency-review
+  cancel-in-progress: false
 
 jobs:
-  dependency-review:
+  dependency-analysis:
+    name: Dependency Analysis
     runs-on: ubuntu-latest
-    timeout-minutes: 20  # Prevent resource consumption attacks
+    timeout-minutes: 15
     permissions:
-      contents: read        # Required to checkout code
-      actions: write       # Required to upload artifacts
-      issues: write        # Required to create issues
+      contents: read
+      issues: write  # For creating issues
+      pull-requests: write  # For PR comments
+      actions: write  # For artifacts
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-      
-    - name: Set up Go
-      uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
-      with:
-        go-version: '1.24' # Use latest stable for dependency analysis
-        
-    - name: Cache Go modules
-      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Go
+        uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed # v5.1.0
+        with:
+          go-version: '1.24'
+          cache: true
+
+      - name: Analyze current dependencies
+        id: analyze
+        run: |
+          echo "Analyzing Go module dependencies..."
           
-    - name: Analyze current dependencies
-      id: current-deps
-      run: |
-        echo "Analyzing current dependencies..."
-        
-        # Get current dependency list
-        go list -m all > current-deps.txt
-        
-        # Count direct dependencies
-        DIRECT_DEPS=$(go list -m -json all | jq -r 'select(.Main != true) | select(.Indirect != true) | .Path' | wc -l)
-        echo "direct_deps=$DIRECT_DEPS" >> $GITHUB_OUTPUT
-        
-        # Count total dependencies
-        TOTAL_DEPS=$(go list -m all | grep -v "$(go list -m)" | wc -l)
-        echo "total_deps=$TOTAL_DEPS" >> $GITHUB_OUTPUT
-        
-        echo "Direct dependencies: $DIRECT_DEPS"
-        echo "Total dependencies: $TOTAL_DEPS"
-        
-    - name: Check for available updates
-      id: updates
-      run: |
-        echo "Checking for available updates..."
-        
-        # Check for updates (but don't apply them)
-        go list -u -m all > available-updates.txt
-        
-        # Find packages with updates available
-        UPDATES_AVAILABLE=$(go list -u -m all | grep -E "\\[.*\\]" | wc -l || echo "0")
-        echo "updates_available=$UPDATES_AVAILABLE" >> $GITHUB_OUTPUT
-        
-        echo "Updates available: $UPDATES_AVAILABLE"
-        
-        if [ "$UPDATES_AVAILABLE" -gt 0 ]; then
-          echo "Updates found:"
-          go list -u -m all | grep -E "\\[.*\\]"
-        fi
-        
-    - name: Check for security vulnerabilities
-      id: vulns
-      run: |
-        echo "Checking for security vulnerabilities..."
-        
-        # Install govulncheck if not available
-        go install golang.org/x/vuln/cmd/govulncheck@latest
-        
-        # Run vulnerability scan
-        govulncheck ./... > vulnerability-report.txt 2>&1 || true
-        
-        # Check if vulnerabilities were found
-        if grep -q "Vulnerability #" vulnerability-report.txt; then
-          VULNS_FOUND="true"
-          VULN_COUNT=$(grep -c "Vulnerability #" vulnerability-report.txt || echo "0")
-        else
-          VULNS_FOUND="false"
-          VULN_COUNT=0
-        fi
-        
-        echo "vulns_found=$VULNS_FOUND" >> $GITHUB_OUTPUT
-        echo "vuln_count=$VULN_COUNT" >> $GITHUB_OUTPUT
-        
-        echo "Vulnerabilities found: $VULNS_FOUND"
-        echo "Vulnerability count: $VULN_COUNT"
-        
-    - name: Generate dependency report
-      run: |
-        echo "Generating comprehensive dependency report..."
-        
-        cat > dependency-report.md << 'EOF'
-        # Monthly Dependency Review Report
-        
-        **Date:** $(date '+%Y-%m-%d')
-        **Repository:** ${{ github.repository }}
-        **Workflow Run:** [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-        
-        ## Summary
-        
-        - **Direct Dependencies:** ${{ steps.current-deps.outputs.direct_deps }}
-        - **Total Dependencies:** ${{ steps.current-deps.outputs.total_deps }}
-        - **Updates Available:** ${{ steps.updates.outputs.updates_available }}
-        - **Security Vulnerabilities:** ${{ steps.vulns.outputs.vuln_count }}
-        
-        ## Current Dependencies
-        
-        \`\`\`
-        $(cat current-deps.txt)
-        \`\`\`
-        
-        ## Available Updates
-        
-        EOF
-        
-        if [ "${{ steps.updates.outputs.updates_available }}" -gt 0 ]; then
-          echo "\`\`\`" >> dependency-report.md
-          go list -u -m all | grep -E "\\[.*\\]" >> dependency-report.md
-          echo "\`\`\`" >> dependency-report.md
-        else
-          echo "No updates available. All dependencies are current! ✅" >> dependency-report.md
-        fi
-        
-        echo "" >> dependency-report.md
-        echo "## Security Vulnerabilities" >> dependency-report.md
-        echo "" >> dependency-report.md
-        
-        if [ "${{ steps.vulns.outputs.vulns_found }}" = "true" ]; then
-          echo "⚠️ **${{ steps.vulns.outputs.vuln_count }} vulnerabilities found:**" >> dependency-report.md
+          # Get dependency counts
+          total_deps=$(go list -m all | grep -v "^$(go list -m)" | wc -l)
+          direct_deps=$(go list -m -json all | jq -r 'select(.Main != true) | select(.Indirect != true) | .Path' | wc -l 2>/dev/null || echo "0")
+          
+          echo "total-deps=$total_deps" >> $GITHUB_OUTPUT
+          echo "direct-deps=$direct_deps" >> $GITHUB_OUTPUT
+          
+          # Save current dependencies
+          go list -m all > current-dependencies.txt
+          
+          echo "Dependencies: $direct_deps direct, $total_deps total"
+
+      - name: Check for updates
+        id: updates
+        run: |
+          echo "Checking for available updates..."
+          
+          # Check for available updates
+          go list -u -m all > available-updates.txt
+          
+          # Count packages with updates
+          updates_count=$(go list -u -m all | grep -E "\\[.*\\]" | wc -l || echo "0")
+          echo "updates-count=$updates_count" >> $GITHUB_OUTPUT
+          
+          echo "Updates available: $updates_count"
+          
+          if [[ "$updates_count" -gt 0 ]]; then
+            echo "Packages with updates:"
+            go list -u -m all | grep -E "\\[.*\\]" | head -10
+          fi
+
+      - name: Security vulnerability scan
+        id: security
+        run: |
+          echo "Scanning for security vulnerabilities..."
+          
+          # Install and run govulncheck
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          
+          # Run vulnerability check
+          if govulncheck -json ./... > vulnerability-report.json 2>&1; then
+            vuln_count=0
+          else
+            # Check for actual vulnerabilities vs other errors
+            vuln_count=$(grep -c '"OSV":' vulnerability-report.json 2>/dev/null || echo "0")
+          fi
+          
+          echo "vuln-count=$vuln_count" >> $GITHUB_OUTPUT
+          echo "Vulnerabilities found: $vuln_count"
+          
+          # Generate human-readable report
+          if [[ "$vuln_count" -gt 0 ]]; then
+            echo "Vulnerability details:"
+            govulncheck ./... | head -20
+          fi
+
+      - name: Generate dependency report
+        run: |
+          cat > dependency-report.md << 'EOF'
+          # Dependency Review Report
+          
+          **Date:** $(date -u +%Y-%m-%d)  
+          **Repository:** ${{ github.repository }}  
+          **Trigger:** ${{ github.event_name }}
+          
+          ## Summary
+          
+          - **Direct Dependencies:** ${{ steps.analyze.outputs.direct-deps }}
+          - **Total Dependencies:** ${{ steps.analyze.outputs.total-deps }}
+          - **Updates Available:** ${{ steps.updates.outputs.updates-count }}
+          - **Security Vulnerabilities:** ${{ steps.security.outputs.vuln-count }}
+          
+          ## Status
+          
+          EOF
+          
+          # Add status indicators
+          if [[ "${{ steps.security.outputs.vuln-count }}" -gt 0 ]]; then
+            echo "🚨 **HIGH PRIORITY**: Security vulnerabilities found" >> dependency-report.md
+          elif [[ "${{ steps.updates.outputs.updates-count }}" -gt 10 ]]; then
+            echo "⚠️ **MEDIUM PRIORITY**: Many updates available" >> dependency-report.md
+          else
+            echo "✅ **LOW PRIORITY**: Dependencies in good shape" >> dependency-report.md
+          fi
+          
           echo "" >> dependency-report.md
-          echo "\`\`\`" >> dependency-report.md
-          cat vulnerability-report.txt >> dependency-report.md
-          echo "\`\`\`" >> dependency-report.md
-        else
-          echo "No security vulnerabilities detected! ✅" >> dependency-report.md
-        fi
-        
-        cat >> dependency-report.md << 'EOF'
-        
-        ## Recommendations
-        
-        ### High Priority Actions
-        
-        EOF
-        
-        if [ "${{ steps.vulns.outputs.vulns_found }}" = "true" ]; then
-          echo "- 🚨 **Address security vulnerabilities immediately**" >> dependency-report.md
-          echo "- Review and test vulnerability fixes in staging environment" >> dependency-report.md
-          echo "- Update affected dependencies to patched versions" >> dependency-report.md
-        fi
-        
-        if [ "${{ steps.updates.outputs.updates_available }}" -gt 0 ]; then
-          echo "- 📋 Review available dependency updates" >> dependency-report.md
-          echo "- Plan testing for major version updates" >> dependency-report.md
-          echo "- Consider updating to latest patch/minor versions" >> dependency-report.md
-        fi
-        
-        cat >> dependency-report.md << 'EOF'
-        
-        ### Standard Maintenance
-        
-        - Review deprecation warnings in updated dependencies
-        - Test compatibility with latest Go version
-        - Update CI/CD workflows if needed
-        - Document any breaking changes
-        
-        ### Next Month's Focus
-        
-        - Monitor new releases of critical dependencies
-        - Plan migrations for any deprecation deadlines
-        - Consider dependency reduction opportunities
-        - Review license compatibility for new dependencies
-        
-        ## Action Items
-        
-        - [ ] Review security vulnerabilities (if any)
-        - [ ] Test dependency updates in staging
-        - [ ] Create update PRs for approved changes
-        - [ ] Update documentation for breaking changes
-        - [ ] Schedule follow-up review in 4 weeks
-        
-        ---
-        
-        *Auto-generated by:* [Monthly Dependency Review Workflow](.github/workflows/dependency-review.yml)
-        *Next Review:* $(date -d "+1 month" '+%Y-%m-%d')
-        EOF
-        
-    - name: Upload dependency reports
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-      with:
-        name: dependency-review-${{ github.run_number }}
-        path: |
-          dependency-report.md
-          current-deps.txt
-          available-updates.txt
-          vulnerability-report.txt
-        retention-days: 90
-        
-    - name: Create monthly review issue
-      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-      with:
-        script: |
-          const fs = require('fs');
-          const report = fs.readFileSync('dependency-report.md', 'utf8');
           
-          const vulnerabilities = ${{ steps.vulns.outputs.vulns_found }};
-          const vulnCount = ${{ steps.vulns.outputs.vuln_count }};
-          const updatesAvailable = ${{ steps.updates.outputs.updates_available }};
+          # Add sections based on findings
+          if [[ "${{ steps.security.outputs.vuln-count }}" -gt 0 ]]; then
+            cat >> dependency-report.md << 'EOF'
+            ## 🚨 Security Vulnerabilities
+            
+            **Action Required**: Review and update vulnerable dependencies immediately.
+            
+            ```
+            EOF
+            head -20 vulnerability-report.json >> dependency-report.md || echo "See vulnerability-report.json for details" >> dependency-report.md
+            echo '```' >> dependency-report.md
+            echo "" >> dependency-report.md
+          fi
           
-          // Determine priority based on findings
-          let priority = 'low';
-          let labels = ['maintenance', 'dependencies'];
+          if [[ "${{ steps.updates.outputs.updates-count }}" -gt 0 ]]; then
+            cat >> dependency-report.md << 'EOF'
+            ## 📦 Available Updates
+            
+            EOF
+            if [[ "${{ steps.updates.outputs.updates-count }}" -le 10 ]]; then
+              echo '```' >> dependency-report.md
+              go list -u -m all | grep -E "\\[.*\\]" >> dependency-report.md
+              echo '```' >> dependency-report.md
+            else
+              echo "$(( ${{ steps.updates.outputs.updates-count }} )) updates available. Top 10:" >> dependency-report.md
+              echo '```' >> dependency-report.md
+              go list -u -m all | grep -E "\\[.*\\]" | head -10 >> dependency-report.md
+              echo '```' >> dependency-report.md
+            fi
+            echo "" >> dependency-report.md
+          fi
           
-          if (vulnerabilities) {
-            priority = 'high';
-            labels.push('security', 'vulnerability');
-          } else if (updatesAvailable > 5) {
-            priority = 'medium';
-            labels.push('updates');
-          }
+          cat >> dependency-report.md << 'EOF'
+          ## 📋 Action Items
           
-          // Create title with summary
-          let title = `Monthly Dependency Review - ${new Date().toISOString().split('T')[0]}`;
-          if (vulnerabilities) {
-            title += ` ⚠️ ${vulnCount} vulnerabilities`;
-          }
-          if (updatesAvailable > 0) {
-            title += ` 📋 ${updatesAvailable} updates`;
-          }
+          EOF
           
-          // Create the issue
-          await github.rest.issues.create({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            title: title,
-            body: report,
-            labels: labels
-          });
+          # Generate action items based on findings
+          if [[ "${{ steps.security.outputs.vuln-count }}" -gt 0 ]]; then
+            echo "- [ ] **URGENT**: Address security vulnerabilities" >> dependency-report.md
+            echo "- [ ] Update affected dependencies to patched versions" >> dependency-report.md
+            echo "- [ ] Test updated dependencies in staging" >> dependency-report.md
+          fi
           
-          // Set workflow summary
-          core.summary
-            .addHeading('Monthly Dependency Review Complete')
-            .addTable([
-              ['Metric', 'Value'],
-              ['Direct Dependencies', '${{ steps.current-deps.outputs.direct_deps }}'],
-              ['Total Dependencies', '${{ steps.current-deps.outputs.total_deps }}'],
-              ['Updates Available', '${{ steps.updates.outputs.updates_available }}'],
-              ['Vulnerabilities Found', '${{ steps.vulns.outputs.vuln_count }}']
-            ])
-            .write();
+          if [[ "${{ steps.updates.outputs.updates-count }}" -gt 0 ]]; then
+            echo "- [ ] Review available dependency updates" >> dependency-report.md
+            echo "- [ ] Test non-breaking updates" >> dependency-report.md
+            echo "- [ ] Plan for major version updates if needed" >> dependency-report.md
+          fi
+          
+          cat >> dependency-report.md << 'EOF'
+          - [ ] Review new dependencies for license compatibility
+          - [ ] Update CI/CD if dependency changes require it
+          - [ ] Schedule next review in 4 weeks
+          
+          ## Resources
+          
+          - [Go Vulnerability Database](https://vuln.go.dev/)
+          - [Dependency Update Guidelines](docs/DEPENDENCY_UPDATES.md)
+          - [Security Policy](SECURITY.md)
+          
+          ---
+          *Generated by [Dependency Review Workflow](.github/workflows/dependency-review.yml)*
+          EOF
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: dependency-review-${{ github.run_id }}
+          path: |
+            dependency-report.md
+            current-dependencies.txt
+            available-updates.txt
+            vulnerability-report.json
+          retention-days: 90
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('dependency-report.md', 'utf8');
+            
+            const vulnCount = ${{ steps.security.outputs.vuln-count }};
+            const updatesCount = ${{ steps.updates.outputs.updates-count }};
+            
+            let icon = '✅';
+            let status = 'GOOD';
+            
+            if (vulnCount > 0) {
+              icon = '🚨';
+              status = 'SECURITY ISSUES FOUND';
+            } else if (updatesCount > 10) {
+              icon = '⚠️';
+              status = 'MANY UPDATES AVAILABLE';
+            }
+            
+            const comment = `## ${icon} Dependency Review: ${status}
+            
+            This PR modifies dependencies. Here's the analysis:
+            
+            ${report}
+            
+            **Recommendation**: ${vulnCount > 0 ? 'Address security vulnerabilities before merging.' : 'Dependencies look good for merge.'}`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: Create monthly issue
+        if: github.event_name == 'schedule'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('dependency-report.md', 'utf8');
+            
+            const vulnCount = ${{ steps.security.outputs.vuln-count }};
+            const updatesCount = ${{ steps.updates.outputs.updates-count }};
+            
+            let priority = 'low';
+            let labels = ['maintenance', 'dependencies'];
+            let title = `Monthly Dependency Review - ${new Date().toISOString().split('T')[0]}`;
+            
+            if (vulnCount > 0) {
+              priority = 'high';
+              labels.push('security', 'vulnerability');
+              title += ` 🚨 ${vulnCount} vulnerabilities`;
+            } else if (updatesCount > 10) {
+              priority = 'medium';
+              labels.push('updates');
+              title += ` ⚠️ ${updatesCount} updates`;
+            } else {
+              title += ' ✅ healthy';
+            }
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: report,
+              labels: labels
+            });
+            
+            core.summary
+              .addHeading('Monthly Dependency Review')
+              .addTable([
+                ['Metric', 'Value', 'Status'],
+                ['Direct Dependencies', '${{ steps.analyze.outputs.direct-deps }}', '📊'],
+                ['Total Dependencies', '${{ steps.analyze.outputs.total-deps }}', '📊'],
+                ['Available Updates', '${{ steps.updates.outputs.updates-count }}', updatesCount > 10 ? '⚠️' : '✅'],
+                ['Security Vulnerabilities', '${{ steps.security.outputs.vuln-count }}', vulnCount > 0 ? '🚨' : '✅']
+              ])
+              .write();
+
+      - name: Fail on security vulnerabilities
+        if: steps.security.outputs.vuln-count > 0 && github.event_name == 'pull_request'
+        run: |
+          echo "::error::Found ${{ steps.security.outputs.vuln-count }} security vulnerabilities"
+          echo "Please address security vulnerabilities before merging"
+          exit 1
