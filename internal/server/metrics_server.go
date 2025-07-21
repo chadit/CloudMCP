@@ -598,29 +598,19 @@ func (s *MetricsServer) performHealthCheck(ctx context.Context) *HealthStatus {
 		Timestamp: time.Now().UTC(),
 	}
 
-	// Check if metrics provider is enabled and healthy.
-	if !s.provider.IsEnabled() {
-		health.Status = HealthStatusDegraded
-		health.Message = "Metrics collection is disabled"
-
-		return health
-	}
-
-	// Try to record a test metric to verify provider functionality.
-	select {
-	case <-ctx.Done():
-		health.Status = HealthStatusUnhealthy
-		health.Message = "Health check timeout"
-
-		return health
-	default:
-		// Quick health check - just verify provider responds.
+	// For minimal shell mode, just check if metrics provider is available
+	// No complex checks needed for basic health verification
+	if s.provider.IsEnabled() {
+		// Basic health check - metrics are enabled and provider is working
 		s.provider.IncrementCounter("health_check", map[string]string{
 			"component": "metrics_server",
 		})
 
 		health.Status = HealthStatusHealthy
 		health.Message = "All systems operational"
+	} else {
+		health.Status = HealthStatusDegraded
+		health.Message = "Metrics collection is disabled"
 	}
 
 	return health
