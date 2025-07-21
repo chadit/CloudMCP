@@ -183,7 +183,6 @@ func TestJSONRPCMessageValidation(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt // Capture range variable
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -313,7 +312,6 @@ func TestJSONRPCResponseValidation(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt // Capture range variable
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -354,7 +352,6 @@ func TestJSONRPCErrorCodes(t *testing.T) {
 	}
 
 	for code, description := range standardErrorCodes {
-		code, description := code, description // Capture range variables
 		t.Run(description, func(t *testing.T) {
 			t.Parallel()
 
@@ -427,7 +424,6 @@ func TestJSONRPCBatchRequests(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt // Capture range variable
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 

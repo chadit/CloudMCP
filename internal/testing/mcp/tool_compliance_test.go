@@ -45,7 +45,6 @@ func TestToolInterfaceCompliance(t *testing.T) {
 	}
 
 	for _, tool := range testTools {
-		tool := tool // Capture range variable
 		t.Run("Tool_"+tool.Name(), func(t *testing.T) {
 			t.Parallel()
 
@@ -344,7 +343,6 @@ func TestToolInputValidation(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt // Capture range variable
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
