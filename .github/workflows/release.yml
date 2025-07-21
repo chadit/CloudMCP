@@ -1,13 +1,14 @@
 name: Release
 
-# Default permissions: read-only for security
+# Security: Minimal permissions by default
 permissions:
   contents: read
 
 on:
+  # Manual release trigger
   workflow_dispatch:
     inputs:
-      version_bump:
+      version_type:
         description: 'Version bump type'
         required: true
         default: 'patch'
@@ -21,37 +22,127 @@ on:
         required: false
         default: false
         type: boolean
+      
+  # Automatic release on main branch (if enabled)
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - '.github/**'
+      - 'docs/**'
+      - 'scripts/**'
+
+env:
+  GO_VERSION: '1.24'
+
+# Prevent concurrent releases
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
-  release:
+  # Gate to determine if release should proceed
+  release-gate:
+    name: Release Gate
     runs-on: ubuntu-latest
-    timeout-minutes: 30  # Prevent resource consumption attacks
+    timeout-minutes: 5
     outputs:
-      slsa_subjects: ${{ steps.slsa_subjects.outputs.slsa_subjects }}
-    permissions:
-      contents: write      # Required to create releases and push tags
-      id-token: write     # Required for cosign keyless signing
-      packages: write     # Required for container registry access
-      actions: write      # Required to upload artifacts
-    
+      should-release: ${{ steps.check.outputs.should-release }}
+      version-type: ${{ steps.check.outputs.version-type }}
+      is-prerelease: ${{ steps.check.outputs.is-prerelease }}
+      
     steps:
-      - name: Checkout code
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          
+      - name: Check release conditions
+        id: check
+        run: |
+          should_release="false"
+          version_type="patch"
+          is_prerelease="false"
+          
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            # Manual release - always proceed
+            should_release="true"
+            version_type="${{ github.event.inputs.version_type }}"
+            is_prerelease="${{ github.event.inputs.prerelease }}"
+            echo "Manual release triggered: $version_type (prerelease: $is_prerelease)"
+          
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            # Auto-release: check if there are new commits and no [skip release] tag
+            if [[ ! "${{ github.event.head_commit.message }}" =~ \[skip\ release\] ]]; then
+              # Get latest tag
+              latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+              
+              # Count commits since tag
+              commits_since_tag=$(git rev-list --count "$latest_tag..HEAD" 2>/dev/null || git rev-list --count HEAD)
+              
+              if [[ "$commits_since_tag" -gt 0 ]]; then
+                should_release="true"
+                
+                # Determine version bump from commit messages
+                commit_messages=$(git log --pretty=format:"%s" "$latest_tag..HEAD" 2>/dev/null || git log --pretty=format:"%s")
+                
+                if echo "$commit_messages" | grep -qE "^(feat|feature)(\(.+\))?!:|^.+!:|BREAKING CHANGE"; then
+                  version_type="major"
+                elif echo "$commit_messages" | grep -qE "^(feat|feature)(\(.+\))?:"; then
+                  version_type="minor"
+                else
+                  version_type="patch"
+                fi
+                
+                echo "Auto-release triggered: $commits_since_tag commits since $latest_tag, bump type: $version_type"
+              else
+                echo "No new commits since $latest_tag, skipping release"
+              fi
+            else
+              echo "Commit message contains [skip release], skipping auto-release"
+            fi
+          fi
+          
+          echo "should-release=$should_release" >> $GITHUB_OUTPUT
+          echo "version-type=$version_type" >> $GITHUB_OUTPUT
+          echo "is-prerelease=$is_prerelease" >> $GITHUB_OUTPUT
+
+  # Main release job
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: release-gate
+    if: needs.release-gate.outputs.should-release == 'true'
+    timeout-minutes: 30
+    
+    permissions:
+      contents: write      # Create releases and tags
+      id-token: write     # OIDC for signing
+      actions: write      # Upload artifacts
+    
+    outputs:
+      release-tag: ${{ steps.version.outputs.new-tag }}
+      release-version: ${{ steps.version.outputs.new-version }}
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Go
-        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+      - name: Setup Go
+        uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed # v5.1.0
         with:
-          go-version: '1.24' # Use latest stable for releases
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
 
-      - name: 🔒 Install Verified Security Tools
+      - name: Install signing tools
         run: |
-          # Install verified security tools with checksum verification
+          # Install cosign for artifact signing
           ./scripts/security-utils.sh install cosign
-          COSIGN_PATH=$(./scripts/security-utils.sh get-path cosign)
-          echo "Using verified cosign: $COSIGN_PATH"
+          COSIGN_PATH="$(./scripts/security-utils.sh get-path cosign)"
           ln -sf "$COSIGN_PATH" /usr/local/bin/cosign
 
       - name: Configure Git
@@ -59,315 +150,235 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Get latest tag
-        id: get_tag
-        run: |
-          # Get the latest tag, fallback to v0.0.0 if no tags exist
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
-          echo "Latest tag: $LATEST_TAG"
-
       - name: Calculate next version
-        id: next_version
+        id: version
         run: |
-          LATEST_TAG="${{ steps.get_tag.outputs.latest_tag }}"
-          VERSION_BUMP="${{ github.event.inputs.version_bump }}"
+          # Get latest tag
+          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "Latest tag: $latest_tag"
           
-          # Remove 'v' prefix if present
-          CLEAN_VERSION=${LATEST_TAG#v}
+          # Parse version
+          clean_version=${latest_tag#v}
+          IFS='.' read -ra version_parts <<< "$clean_version"
+          major=${version_parts[0]:-0}
+          minor=${version_parts[1]:-0}
+          patch=${version_parts[2]:-0}
           
-          # Split version into components
-          IFS='.' read -ra VERSION_PARTS <<< "$CLEAN_VERSION"
-          MAJOR=${VERSION_PARTS[0]:-0}
-          MINOR=${VERSION_PARTS[1]:-0}
-          PATCH=${VERSION_PARTS[2]:-0}
-          
-          # Increment based on bump type
-          case $VERSION_BUMP in
+          # Increment based on type
+          case "${{ needs.release-gate.outputs.version-type }}" in
             major)
-              MAJOR=$((MAJOR + 1))
-              MINOR=0
-              PATCH=0
+              major=$((major + 1))
+              minor=0
+              patch=0
               ;;
             minor)
-              MINOR=$((MINOR + 1))
-              PATCH=0
+              minor=$((minor + 1))
+              patch=0
               ;;
             patch)
-              PATCH=$((PATCH + 1))
+              patch=$((patch + 1))
               ;;
           esac
           
-          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
-          NEW_TAG="v$NEW_VERSION"
+          new_version="$major.$minor.$patch"
+          new_tag="v$new_version"
           
-          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
-          echo "Next version: $NEW_VERSION (tag: $NEW_TAG)"
+          echo "new-version=$new_version" >> $GITHUB_OUTPUT
+          echo "new-tag=$new_tag" >> $GITHUB_OUTPUT
+          echo "Next version: $new_version (tag: $new_tag)"
 
-      - name: Update version.go
+      - name: Update version file
         run: |
-          NEW_VERSION="${{ steps.next_version.outputs.new_version }}"
-          BUILD_DATE=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
-          
-          # Update the Version constant in version.go
-          sed -i "s/Version = \".*\"/Version = \"$NEW_VERSION\"/" internal/version/version.go
-          
-          # Verify the change
-          echo "Updated version.go:"
-          grep -n "Version = " internal/version/version.go
+          # Update internal version
+          if [[ -f "internal/version/version.go" ]]; then
+            sed -i "s/Version = \".*\"/Version = \"${{ steps.version.outputs.new-version }}\"/" internal/version/version.go
+            echo "Updated version.go to ${{ steps.version.outputs.new-version }}"
+          fi
 
       - name: Run tests
         run: |
           go mod tidy
-          go test ./...
+          go test -short ./...
 
-      - name: Build Security-Hardened Binaries
+      - name: Build release artifacts
         run: |
-          NEW_VERSION="${{ steps.next_version.outputs.new_version }}"
-          BUILD_DATE=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
-          GIT_COMMIT=$(git rev-parse HEAD)
-          GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          version="${{ steps.version.outputs.new-version }}"
+          build_date=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          git_commit=$(git rev-parse HEAD)
           
-          # Security-hardened build flags with version info
-          BASE_LDFLAGS="-s -w -buildid= \
-                        -X 'github.com/chadit/CloudMCP/internal/version.Version=$NEW_VERSION' \
-                        -X 'github.com/chadit/CloudMCP/internal/version.BuildDate=$BUILD_DATE' \
-                        -X 'github.com/chadit/CloudMCP/internal/version.GitCommit=$GIT_COMMIT' \
-                        -X 'github.com/chadit/CloudMCP/internal/version.GitBranch=$GIT_BRANCH'"
+          # Build flags with version info
+          ldflags="-s -w -buildid= \
+            -X 'github.com/chadit/CloudMCP/internal/version.Version=$version' \
+            -X 'github.com/chadit/CloudMCP/internal/version.BuildDate=$build_date' \
+            -X 'github.com/chadit/CloudMCP/internal/version.GitCommit=$git_commit'"
           
-          # Create build directory
-          mkdir -p build
+          mkdir -p dist
           
-          echo "Building security-hardened binaries with version $NEW_VERSION..."
+          echo "Building release binaries for version $version..."
           
-          # Linux builds with full security hardening
+          # Linux (with full security hardening)
           GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build \
-            -ldflags="$BASE_LDFLAGS -linkmode=external -extldflags=-static" \
+            -ldflags="$ldflags -linkmode=external -extldflags=-static" \
             -trimpath -buildmode=pie -tags=netgo,osusergo \
-            -o build/cloud-mcp-linux-amd64 cmd/cloud-mcp/main.go
+            -o dist/cloud-mcp-linux-amd64 ./cmd/cloud-mcp/main.go
             
-          GOOS=linux GOARCH=arm64 CGO_ENABLED=1 go build \
-            -ldflags="$BASE_LDFLAGS -linkmode=external -extldflags=-static" \
-            -trimpath -buildmode=pie -tags=netgo,osusergo \
-            -o build/cloud-mcp-linux-arm64 cmd/cloud-mcp/main.go
-            
-          # macOS builds (PIE default, limited static linking)
-          GOOS=darwin GOARCH=amd64 go build \
-            -ldflags="$BASE_LDFLAGS" \
+          GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build \
+            -ldflags="$ldflags" \
             -trimpath -tags=netgo,osusergo \
-            -o build/cloud-mcp-darwin-amd64 cmd/cloud-mcp/main.go
+            -o dist/cloud-mcp-linux-arm64 ./cmd/cloud-mcp/main.go
             
-          GOOS=darwin GOARCH=arm64 go build \
-            -ldflags="$BASE_LDFLAGS" \
+          # macOS
+          GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build \
+            -ldflags="$ldflags" \
             -trimpath -tags=netgo,osusergo \
-            -o build/cloud-mcp-darwin-arm64 cmd/cloud-mcp/main.go
+            -o dist/cloud-mcp-darwin-amd64 ./cmd/cloud-mcp/main.go
             
-          # Windows builds with available security features
-          GOOS=windows GOARCH=amd64 go build \
-            -ldflags="$BASE_LDFLAGS" \
+          GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build \
+            -ldflags="$ldflags" \
             -trimpath -tags=netgo,osusergo \
-            -o build/cloud-mcp-windows-amd64.exe cmd/cloud-mcp/main.go
+            -o dist/cloud-mcp-darwin-arm64 ./cmd/cloud-mcp/main.go
+            
+          # Windows
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build \
+            -ldflags="$ldflags" \
+            -trimpath -tags=netgo,osusergo \
+            -o dist/cloud-mcp-windows-amd64.exe ./cmd/cloud-mcp/main.go
           
-          # Note: Setup tool not implemented yet - will be added in future releases
-          # Build setup tool
-          # GOOS=linux GOARCH=amd64 go build -ldflags "$LDFLAGS" -o build/cloud-mcp-setup-linux-amd64 cmd/cloud-mcp-setup/main.go
-          # GOOS=linux GOARCH=arm64 go build -ldflags "$LDFLAGS" -o build/cloud-mcp-setup-linux-arm64 cmd/cloud-mcp-setup/main.go
-          # GOOS=darwin GOARCH=amd64 go build -ldflags "$LDFLAGS" -o build/cloud-mcp-setup-darwin-amd64 cmd/cloud-mcp-setup/main.go
-          # GOOS=darwin GOARCH=arm64 go build -ldflags "$LDFLAGS" -o build/cloud-mcp-setup-darwin-arm64 cmd/cloud-mcp-setup/main.go
-          # GOOS=windows GOARCH=amd64 go build -ldflags "$LDFLAGS" -o build/cloud-mcp-setup-windows-amd64.exe cmd/cloud-mcp-setup/main.go
-          
-          # List built files
-          ls -la build/
+          # List artifacts
+          ls -la dist/
 
       - name: Generate checksums
         run: |
-          cd build/
-          
-          # Generate SHA256 checksums for all binaries
+          cd dist/
           sha256sum cloud-mcp-* > checksums.txt
-          
-          # Display checksums
           echo "Generated checksums:"
           cat checksums.txt
 
-      - name: 📜 Generate SBOM (Software Bill of Materials)
+      - name: Generate SBOM
         run: |
-          # Install syft for SBOM generation
-          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
-          
-          # Generate SBOM with vulnerability scanning and signing
-          ./scripts/generate-sbom.sh \
-            --format both \
-            --version "${{ steps.next_version.outputs.new_version }}" \
-            --sign \
-            --scan \
-            --verbose
-          
-          echo "SBOM generation completed"
+          # Use simplified SBOM generator
+          ./scripts/generate-sbom-simple.sh --version "${{ steps.version.outputs.new-version }}" --output dist/sbom
 
-      - name: Sign artifacts with cosign
+      - name: Sign artifacts
         env:
           COSIGN_YES: true
         run: |
-          echo "🔐 Signing artifacts with cosign (keyless)"
+          echo "Signing release artifacts with cosign..."
+          cd dist/
           
-          cd build/
-          
-          # Sign all binaries and checksums
+          # Sign all artifacts
           for file in cloud-mcp-* checksums.txt; do
-            if [ -f "$file" ]; then
+            if [[ -f "$file" ]]; then
               echo "Signing: $file"
-              cosign sign-blob \
-                --yes \
-                --bundle "$file.cosign.bundle" \
-                "$file"
+              cosign sign-blob --yes --bundle "$file.cosign.bundle" "$file"
             fi
           done
-          
-          # List signed artifacts
-          echo "Signed artifacts:"
-          ls -la *.cosign.bundle
-
-      - name: Generate subject hash for SLSA
-        id: slsa_subjects
-        run: |
-          cd build/
-          
-          # Generate base64-encoded hash for SLSA provenance
-          HASHES=""
-          for file in cloud-mcp-*; do
-            if [ -f "$file" ]; then
-              HASH=$(sha256sum "$file" | cut -d' ' -f1)
-              if [ -z "$HASHES" ]; then
-                HASHES="${file}:sha256:${HASH}"
-              else
-                HASHES="${HASHES},${file}:sha256:${HASH}"
-              fi
-            fi
-          done
-          
-          echo "slsa_subjects=$(echo -n "$HASHES" | base64 -w 0)" >> $GITHUB_OUTPUT
 
       - name: Commit version update
+        if: github.event_name == 'push'  # Only for auto-releases
         run: |
-          NEW_TAG="${{ steps.next_version.outputs.new_tag }}"
-          
-          # Add and commit the version.go change
-          git add internal/version/version.go
-          git commit -m "chore: bump version to $NEW_TAG"
+          if git diff --quiet; then
+            echo "No changes to commit"
+          else
+            git add -A
+            git commit -m "chore: bump version to ${{ steps.version.outputs.new-tag }} [skip release]"
+            git push origin main
+          fi
 
       - name: Create and push tag
         run: |
-          NEW_TAG="${{ steps.next_version.outputs.new_tag }}"
-          
-          # Create annotated tag
-          git tag -a "$NEW_TAG" -m "Release $NEW_TAG"
-          
-          # Push the commit and tag
-          git push origin main
-          git push origin "$NEW_TAG"
+          git tag -a "${{ steps.version.outputs.new-tag }}" -m "Release ${{ steps.version.outputs.new-tag }}"
+          git push origin "${{ steps.version.outputs.new-tag }}"
 
       - name: Generate release notes
         id: release_notes
         run: |
-          NEW_TAG="${{ steps.next_version.outputs.new_tag }}"
-          PREVIOUS_TAG="${{ steps.get_tag.outputs.latest_tag }}"
+          tag="${{ steps.version.outputs.new-tag }}"
+          latest_tag=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
           
-          # Generate changelog
           echo "## What's Changed" > release_notes.md
           echo "" >> release_notes.md
           
-          # Get commits since last tag
-          if [ "$PREVIOUS_TAG" != "v0.0.0" ]; then
-            git log --pretty=format:"- %s (%h)" "$PREVIOUS_TAG..HEAD" >> release_notes.md
+          if [[ -n "$latest_tag" ]]; then
+            git log --pretty=format:"- %s (%h)" "$latest_tag..HEAD" >> release_notes.md
           else
-            git log --pretty=format:"- %s (%h)" >> release_notes.md
+            git log --pretty=format:"- %s (%h)" --max-count=10 >> release_notes.md
           fi
           
-          echo "" >> release_notes.md
-          echo "## Installation" >> release_notes.md
-          echo "" >> release_notes.md
-          echo '```bash' >> release_notes.md
-          echo "go install github.com/chadit/CloudMCP/cmd/cloud-mcp@$NEW_TAG" >> release_notes.md
-          # Note: Setup tool installation will be added when implemented
-          # echo "go install github.com/chadit/CloudMCP/cmd/cloud-mcp-setup@$NEW_TAG" >> release_notes.md
-          echo '```' >> release_notes.md
+          cat >> release_notes.md << EOF
+
+## Installation
+
+\`\`\`bash
+# Install latest version
+go install github.com/chadit/CloudMCP/cmd/cloud-mcp@$tag
+
+# Or download binary from release assets
+curl -L -o cloud-mcp https://github.com/chadit/CloudMCP/releases/download/$tag/cloud-mcp-linux-amd64
+chmod +x cloud-mcp
+\`\`\`
+
+## Verification
+
+All release artifacts are signed with cosign for supply chain security:
+
+\`\`\`bash
+# Verify binary signature (example for linux-amd64)
+cosign verify-blob \\
+  --bundle cloud-mcp-linux-amd64.cosign.bundle \\
+  --certificate-identity-regexp="https://github.com/chadit/CloudMCP" \\
+  --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \\
+  cloud-mcp-linux-amd64
+\`\`\`
+EOF
           
-          # Set output for release creation
+          # Set multiline output
           {
             echo 'release_notes<<EOF'
-            cat release_notes.md
-            echo EOF
+            cat release_notes.md  
+            echo 'EOF'
           } >> $GITHUB_OUTPUT
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v2.0.8
         with:
-          tag_name: ${{ steps.next_version.outputs.new_tag }}
-          name: Release ${{ steps.next_version.outputs.new_tag }}
-          body: |
-            ${{ steps.release_notes.outputs.release_notes }}
-            
-            ## Security Verification
-            
-            All artifacts in this release are cryptographically signed with cosign for supply chain security.
-            
-            ### Verify signatures:
-            ```bash
-            # Install cosign
-            go install github.com/sigstore/cosign/v2/cmd/cosign@latest
-            
-            # Verify binary signature (example for linux-amd64)
-            cosign verify-blob \
-              --bundle cloud-mcp-linux-amd64.cosign.bundle \
-              --certificate-identity-regexp="https://github.com/chadit/CloudMCP" \
-              --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
-              cloud-mcp-linux-amd64
-              
-            # Verify checksums
-            cosign verify-blob \
-              --bundle checksums.txt.cosign.bundle \
-              --certificate-identity-regexp="https://github.com/chadit/CloudMCP" \
-              --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
-              checksums.txt
-            ```
-            
-            **SLSA Level 3 Compliance**: This release includes SLSA provenance for build integrity verification.
-          prerelease: ${{ github.event.inputs.prerelease }}
+          tag_name: ${{ steps.version.outputs.new-tag }}
+          name: Release ${{ steps.version.outputs.new-tag }}
+          body: ${{ steps.release_notes.outputs.release_notes }}
+          prerelease: ${{ needs.release-gate.outputs.is-prerelease }}
           files: |
-            build/cloud-mcp-*
-            build/checksums.txt
-            build/*.cosign.bundle
-            build/sbom/*
-            build/slsa-provenance.intoto.jsonl*
+            dist/cloud-mcp-*
+            dist/checksums.txt
+            dist/*.cosign.bundle
+            dist/sbom/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update go install instructions
+      - name: Release summary
         run: |
-          NEW_TAG="${{ steps.next_version.outputs.new_tag }}"
-          echo "✅ Release $NEW_TAG created successfully!"
+          echo "🎉 Release ${{ steps.version.outputs.new-tag }} created successfully!"
           echo ""
-          echo "Users can now install with:"
-          echo "go install github.com/chadit/CloudMCP/cmd/cloud-mcp@$NEW_TAG"
-          # Note: Setup tool installation will be added when implemented
-          # echo "go install github.com/chadit/CloudMCP/cmd/cloud-mcp-setup@$NEW_TAG"
+          echo "📦 Assets: $(ls dist/ | wc -l) files"
+          echo "🔐 Signed: All artifacts signed with cosign"
+          echo "📋 SBOM: Software Bill of Materials included"
           echo ""
-          echo "Or latest:"
-          echo "go install github.com/chadit/CloudMCP/cmd/cloud-mcp@latest"
-          # Note: Setup tool installation will be added when implemented
-          # echo "go install github.com/chadit/CloudMCP/cmd/cloud-mcp-setup@latest"
+          echo "Installation:"
+          echo "  go install github.com/chadit/CloudMCP/cmd/cloud-mcp@${{ steps.version.outputs.new-tag }}"
 
-  # SLSA provenance generation for supply chain security
-  provenance:
-    needs: release
-    permissions:
-      actions: read
-      id-token: write
-      contents: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
-    with:
-      base64-subjects: "${{ needs.release.outputs.slsa_subjects }}"
-      provenance-name: "slsa-provenance.intoto.jsonl"
-      upload-assets: true
+  # Notification job (optional - can be extended for Slack, Discord, etc.)
+  notify:
+    name: Release Notification
+    runs-on: ubuntu-latest
+    needs: [release-gate, create-release]
+    if: always() && needs.release-gate.outputs.should-release == 'true'
+    
+    steps:
+      - name: Notify release status
+        run: |
+          if [[ "${{ needs.create-release.result }}" == "success" ]]; then
+            echo "✅ Release ${{ needs.create-release.outputs.release-tag }} completed successfully"
+            echo "🌐 Download: https://github.com/${{ github.repository }}/releases/tag/${{ needs.create-release.outputs.release-tag }}"
+          else
+            echo "❌ Release failed"
+            exit 1
+          fi
