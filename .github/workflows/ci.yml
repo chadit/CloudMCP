@@ -224,8 +224,14 @@ jobs:
           echo "📈 Total coverage: $total_coverage"
 
       - name: 🔒 Run Security-Specific Tests
+        env:
+          # Enable CGO for race detector (override global CGO_ENABLED=0)
+          CGO_ENABLED: '1'
         run: |
           echo "🔒 Running security token validation tests..."
+          echo "Test configuration:"
+          echo "  - Race detector: enabled"
+          echo "  - CGO_ENABLED: $CGO_ENABLED (required for race detector)"
           go test -v -race ./internal/testing/security/...
 
       - name: 📊 Upload Coverage Reports
@@ -382,8 +388,14 @@ jobs:
           ./scripts/validate-test-tokens.sh validate
 
       - name: 🧪 Run MCP Protocol Tests
+        env:
+          # Enable CGO for race detector (override global CGO_ENABLED=0)
+          CGO_ENABLED: '1'
         run: |
           echo "🧪 Running MCP protocol compliance tests..."
+          echo "Test configuration:"
+          echo "  - Race detector: enabled"
+          echo "  - CGO_ENABLED: $CGO_ENABLED (required for race detector)"
           go test -v -race ./internal/testing/mcp/...
 
       - name: 🔗 Run Integration Tests
