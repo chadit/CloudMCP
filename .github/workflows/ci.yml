@@ -105,8 +105,9 @@ jobs:
 
       - name: 🔒 Security Scan
         run: |
-          go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
-          gosec ./...
+          ./scripts/security-utils.sh install gosec
+          GOSEC_PATH=$(./scripts/security-utils.sh get-path gosec)
+          "$GOSEC_PATH" ./...
 
   # Container Build & Test
   container:
