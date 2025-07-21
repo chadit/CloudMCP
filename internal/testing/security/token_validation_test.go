@@ -1,7 +1,6 @@
 package security
 
 import (
-	"errors"
 	"os"
 	"strings"
 	"testing"
@@ -360,7 +359,7 @@ func TestLogSecureTokenValidation(t *testing.T) {
 			tokenName: "BAD_TOKEN",
 			result: TokenValidationResult{
 				Valid:    false,
-				Error:    errors.New("token format invalid"),
+				Error:    ErrTokenFormatInvalid,
 				Redacted: "xyz****123",
 			},
 			expectLog: func(t *testing.T, logMsg string) {
