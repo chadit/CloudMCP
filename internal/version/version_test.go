@@ -55,12 +55,12 @@ func TestGet_Features(t *testing.T) {
 
 	info := version.Get()
 
-	// Test that required features are present.
+	// Test that minimal MCP server features are present.
 	expectedFeatures := map[string]string{
-		"health_check": "enabled",
-		"metrics":      "prometheus",
-		"logging":      "structured",
-		"protocol":     "mcp",
+		"tools":    "hello,version",
+		"logging":  "basic",
+		"protocol": "mcp",
+		"mode":     "minimal",
 	}
 
 	for key, expectedValue := range expectedFeatures {
@@ -94,7 +94,7 @@ func TestInfo_BuildInfo(t *testing.T) {
 	info := version.Get()
 	buildInfo := info.BuildInfo()
 
-	// Test that build info contains all expected components.
+	// Test that build info contains all expected components for minimal server.
 	require.Contains(t, buildInfo, "CloudMCP Build Information", "Should contain header")
 	require.Contains(t, buildInfo, "Version: "+info.Version, "Should contain version")
 	require.Contains(t, buildInfo, "MCP Protocol: "+info.APIVersion, "Should contain MCP protocol version")
@@ -103,11 +103,11 @@ func TestInfo_BuildInfo(t *testing.T) {
 	require.Contains(t, buildInfo, "Git Branch: "+info.GitBranch, "Should contain git branch")
 	require.Contains(t, buildInfo, "Go Version: "+info.GoVersion, "Should contain Go version")
 	require.Contains(t, buildInfo, "Platform: "+info.Platform, "Should contain platform")
-	require.Contains(t, buildInfo, "Health Check: enabled", "Should contain health check status")
+	require.Contains(t, buildInfo, "Mode: minimal", "Should contain minimal mode")
 	require.Contains(t, buildInfo, "Features:", "Should contain features section")
-	require.Contains(t, buildInfo, "Health Check", "Should mention health check feature")
-	require.Contains(t, buildInfo, "Metrics", "Should mention metrics feature")
-	require.Contains(t, buildInfo, "Structured Logging", "Should mention logging feature")
+	require.Contains(t, buildInfo, "Hello Tool", "Should mention hello tool feature")
+	require.Contains(t, buildInfo, "Version Tool", "Should mention version tool feature")
+	require.Contains(t, buildInfo, "Basic Logging", "Should mention basic logging feature")
 }
 
 func TestInfo_JSONSerialization(t *testing.T) {
@@ -232,11 +232,11 @@ func TestGet_Consistency(t *testing.T) {
 	info2 := version.Get()
 
 	require.Equal(t, info1.Version, info2.Version, "version.Version should be consistent")
-	require.Equal(t, info1.APIVersion, info2.APIVersion, "version.APIVersion should be consistent")
+	require.Equal(t, info1.APIVersion, info2.APIVersion, "version.APIVersion should match after JSON round-trip")
 	require.Equal(t, info1.BuildDate, info2.BuildDate, "version.BuildDate should be consistent")
 	require.Equal(t, info1.GitCommit, info2.GitCommit, "version.GitCommit should be consistent")
 	require.Equal(t, info1.GitBranch, info2.GitBranch, "version.GitBranch should be consistent")
-	require.Equal(t, info1.GoVersion, info2.GoVersion, "Goversion.Version should be consistent")
+	require.Equal(t, info1.GoVersion, info2.GoVersion, "GoVersion should be consistent")
 	require.Equal(t, info1.Platform, info2.Platform, "Platform should be consistent")
 	require.Equal(t, info1.Features, info2.Features, "Features should be consistent")
 }
