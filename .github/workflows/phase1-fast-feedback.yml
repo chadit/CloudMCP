@@ -1,0 +1,177 @@
+name: 'Phase 1: Fast Feedback'
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+# Security: Minimal permissions, only what's needed
+permissions:
+  contents: read
+
+env:
+  GO_VERSION: '1.24'
+  CGO_ENABLED: 0
+
+# Fail fast - cancel in-progress runs when new commit is pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  fast-checks:
+    name: Fast Quality Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          # Fetch only the specific commit for speed
+          fetch-depth: 1
+    
+      - name: Setup Go
+        uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed # v5.1.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          # Automatically cache Go modules and build cache
+          cache: true
+          cache-dependency-path: |
+            go.sum
+            go.mod
+
+      - name: Download dependencies
+        run: |
+          go mod download
+          go mod verify
+
+      - name: Install security tools
+        run: |
+          # Install verified security tools with checksum verification
+          ./scripts/security-utils.sh install golangci-lint
+          echo "$(dirname "$(./scripts/security-utils.sh get-path golangci-lint)")" >> $GITHUB_PATH
+
+      - name: Run static analysis (staticcheck)
+        run: |
+          # Run staticcheck first - fastest static analyzer
+          go install honnef.co/go/tools/cmd/staticcheck@latest
+          staticcheck ./...
+
+      - name: Run security scan (gosec)
+        run: |
+          # Quick security scan before full linting
+          go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
+          gosec -quiet -fmt json -out gosec-report.json ./...
+          # Show summary but don't fail on findings - full linting will catch them
+          gosec -quiet ./... || true
+
+      - name: Run comprehensive linting
+        run: |
+          # Get the installed golangci-lint path and run comprehensive checks
+          GOLANGCI_LINT_PATH="$(./scripts/security-utils.sh get-path golangci-lint)"
+          
+          # Run with comprehensive ruleset (exclude only truly problematic linters)
+          "$GOLANGCI_LINT_PATH" run \
+            --timeout=5m \
+            --max-issues-per-linter=0 \
+            --max-same-issues=0
+
+      - name: Check Go formatting
+        run: |
+          # Ensure code is properly formatted
+          if [ "$(gofmt -l . | wc -l)" -gt 0 ]; then
+            echo "The following files are not properly formatted:"
+            gofmt -l .
+            exit 1
+          fi
+
+      - name: Verify Go modules
+        run: |
+          # Ensure go.mod and go.sum are clean and correct
+          go mod tidy
+          if ! git diff --exit-code go.mod go.sum; then
+            echo "go.mod or go.sum needs to be updated. Please run 'go mod tidy'"
+            exit 1
+          fi
+
+      - name: Basic build test
+        run: |
+          # Quick build test to ensure code compiles
+          go build -o /tmp/cloud-mcp ./cmd/cloud-mcp/main.go
+          # Verify the binary was created
+          test -x /tmp/cloud-mcp
+
+      - name: Upload security scan results
+        if: always()
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: security-scan-results-${{ github.run_id }}
+          path: gosec-report.json
+          retention-days: 30
+
+  # Job summary for pull requests
+  fast-feedback-summary:
+    name: Fast Feedback Summary
+    runs-on: ubuntu-latest
+    needs: fast-checks
+    if: always() && github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
+    
+    steps:
+      - name: Add PR comment
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const success = '${{ needs.fast-checks.result }}' === 'success';
+            const icon = success ? '✅' : '❌';
+            const status = success ? 'PASSED' : 'FAILED';
+            
+            const comment = `## ${icon} Phase 1: Fast Feedback ${status}
+            
+            **Quick Quality Checks:** ${status}
+            
+            ${success ? 
+              '🎉 All fast feedback checks passed! Ready for full testing.' : 
+              '⚠️ Fast feedback checks failed. Please fix the issues before full testing runs.'
+            }
+            
+            **Checks performed:**
+            - ✓ Static analysis (staticcheck)  
+            - ✓ Security scan (gosec)
+            - ✓ Comprehensive linting (golangci-lint)
+            - ✓ Go formatting verification
+            - ✓ Go modules verification  
+            - ✓ Basic build test
+            
+            ${success ? '' : '📝 **Next steps:** Fix the failing checks above, then push to trigger Phase 2 testing.'}
+            `;
+            
+            // Find existing comment and update or create new one
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const existingComment = comments.find(comment => 
+              comment.body.includes('Phase 1: Fast Feedback')
+            );
+            
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: comment
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+            }
