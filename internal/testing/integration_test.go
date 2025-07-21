@@ -2,10 +2,8 @@
 package testing
 
 import (
-	"context"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/chadit/CloudMCP/internal/config"
 	"github.com/chadit/CloudMCP/internal/server"
@@ -18,14 +16,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestServerIntegration(t *testing.T) {
-	// Use test context with timeout
-	ctx := context.Background()
-	if testing.Testing() {
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, 30*time.Second)
-		defer cancel()
-	}
-
 	// Create minimal test configuration
 	cfg := &config.Config{
 		ServerName: "CloudMCP-IntegrationTest",
