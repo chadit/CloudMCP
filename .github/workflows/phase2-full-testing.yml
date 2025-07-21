@@ -219,6 +219,7 @@ jobs:
         uses: github/codeql-action/upload-sarif@4f3212b61783c3c68e8309a0f18a699764811cda # v3.27.1
         with:
           sarif_file: trivy-results.sarif
+        continue-on-error: true  # Allow workflow to succeed even if code scanning is disabled
 
       - name: Upload security artifacts
         if: always()
