@@ -231,7 +231,9 @@ func benchmarkHealthToolMemory(b *testing.B, healthTool *tools.HealthCheckTool) 
 	runtime.ReadMemStats(&m2)
 
 	// Calculate memory metrics
+	// #nosec G115 -- Converting b.N (benchmark iterations) to uint64 is safe in this context
 	allocsPerOp := (m2.TotalAlloc - m1.TotalAlloc) / uint64(b.N)
+	// #nosec G115 -- Converting b.N (benchmark iterations) to uint64 is safe in this context
 	mallocsPerOp := (m2.Mallocs - m1.Mallocs) / uint64(b.N)
 
 	b.Logf("Memory metrics: %d bytes/op, %d mallocs/op", allocsPerOp, mallocsPerOp)

@@ -24,8 +24,8 @@ dist/
 
 # Project-specific binaries
 cloud-mcp-setup
-server
-main
+/server
+/main
 
 # Environment files
 .env
@@ -80,8 +80,5 @@ lint_output.txt
 
 # Security tools cache and installation directories
 .security-cache/
-.tools/client
-
-# Security tools cache and installation directories
 .tools/
 client
