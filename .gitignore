@@ -80,4 +80,4 @@ lint_output.txt
 
 # Security tools cache and installation directories
 .security-cache/
-.tools/
+.tools/client
