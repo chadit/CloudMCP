@@ -266,12 +266,14 @@ jobs:
           CGO_ENABLED: ${{ matrix.platform.cgo }}
         run: |
           # Security-hardened build flags
-          BUILD_FLAGS="-ldflags='-s -w -buildid=' -trimpath -tags=netgo,osusergo"
+          LDFLAGS="-s -w -buildid="
+          BUILD_FLAGS="-ldflags='$LDFLAGS' -trimpath -tags=netgo,osusergo"
           
           # Add platform-specific security flags
           if [[ "$GOOS" == "linux" && "${{ matrix.platform.cgo }}" == "1" ]]; then
             # Static linking for Linux with CGO (no PIE due to conflict)
-            BUILD_FLAGS="$BUILD_FLAGS -linkmode=external -extldflags=-static"
+            LDFLAGS="$LDFLAGS -linkmode=external -extldflags=-static"
+            BUILD_FLAGS="-ldflags='$LDFLAGS' -trimpath -tags=netgo,osusergo"
           elif [[ "$GOOS" != "windows" ]]; then
             # PIE for non-Windows platforms (when not doing static linking)
             BUILD_FLAGS="$BUILD_FLAGS -buildmode=pie"
