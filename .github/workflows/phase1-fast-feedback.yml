@@ -62,7 +62,7 @@ jobs:
       - name: Run security scan (gosec)
         run: |
           # Quick security scan before full linting
-          go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
+          go install github.com/securecodewarrior/gosec/cmd/gosec@latest
           gosec -quiet -fmt json -out gosec-report.json ./...
           # Show summary but don't fail on findings - full linting will catch them
           gosec -quiet ./... || true
