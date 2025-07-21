@@ -1,10 +1,9 @@
 # CloudMCP
 
-CloudMCP is a minimal Model Context Protocol (MCP) server shell designed as a
-foundation for cloud infrastructure management through natural language commands.
+CloudMCP is a minimal Model Context Protocol (MCP) server designed as a
+lightweight foundation for cloud infrastructure management through natural language commands.
 
-**Current Status**: 🎉 **Minimal Shell Architecture** - Clean Foundation
-Ready for Extension
+**Current Status**: 🎉 **Minimal MCP Server** - Simple and Ready
 
 ## 🚀 Quick Start
 
@@ -28,7 +27,7 @@ go install github.com/chadit/CloudMCP/cmd/cloud-mcp@latest
 claude mcp add cloudmcp -- cloud-mcp
 
 # Test it works
-# Ask your AI assistant: "Check CloudMCP health status"
+# Ask your AI assistant: "Hello CloudMCP" or "What version are you?"
 ```
 
 #### Option 2: Claude Desktop Integration
@@ -70,41 +69,57 @@ claude mcp add cloudmcp -- cloud-mcp
 ### Test It Works
 
 Ask your AI assistant:
-*"Check CloudMCP health status"*
+- *"Hello CloudMCP"*
+- *"What version are you?"*
 
 **That's it!** You now have a minimal MCP server foundation ready for
 extension.
 
 ## 💡 Current Capabilities
 
-CloudMCP is currently a **minimal shell** providing foundation functionality:
+CloudMCP is currently a **minimal MCP server** with two simple tools:
 
-### Health and System Tools
+### Available Tools
 
-- *"Check CloudMCP health status"* - Server health and service discovery
-- *"Show server information"* - Get server details and uptime
-- *"What tools are available?"* - List available MCP tools
+#### `hello` - Friendly Greeting
+Say hello to CloudMCP and get a friendly response.
 
-### System Features
+**Examples:**
+- *"Hello CloudMCP"* → "Hello, World! CloudMCP server is running and ready to help."
+- *"Say hello to Alice"* → "Hello, Alice! CloudMCP server is running and ready to help."
 
-- Health status monitoring with sub-microsecond response times
-- Service discovery and capability listing
-- Metrics collection via Prometheus endpoints
-- Secure configuration with optional TLS and authentication
+#### `version` - Version Information  
+Get detailed version and build information about the CloudMCP server.
+
+**Example:**
+*"What version are you?"* returns:
+```json
+{
+  "version": "0.1.0",
+  "api_version": "0.1.0", 
+  "build_date": "unknown",
+  "git_commit": "dev",
+  "git_branch": "main",
+  "go_version": "go1.24.2",
+  "platform": "darwin/arm64",
+  "features": {
+    "tools": "hello,version",
+    "logging": "basic", 
+    "protocol": "mcp",
+    "mode": "minimal"
+  }
+}
+```
 
 ### Framework Ready
 
-The framework is ready for:
+This minimal foundation is ready for extension with:
 
-- **Provider Registry**: Ready for cloud provider implementations
-- **Tool Interface**: Clean tool implementation pattern
-- **Metrics System**: Unified metrics with Prometheus backend
-- **Security**: Authentication, rate limiting, and TLS support
+- **Cloud Provider Tools** - AWS, Linode, GCP, Azure integrations
+- **Infrastructure Tools** - Terraform, Kubernetes, Docker management
+- **Custom Tools** - Any functionality you need via MCP protocol
 
-**Architecture designed for extensibility** - add new providers by
-implementing the `CloudProvider` interface.
-
-## 📦 Detailed Installation
+## 📦 Installation from Source
 
 ### From Source (Developers)
 
@@ -118,50 +133,23 @@ go build -o bin/cloud-mcp cmd/cloud-mcp/main.go
 # Run locally for development
 go run cmd/cloud-mcp/main.go
 
-# Run tests
+# Run tests (when available)
 go test ./...
 ```
 
 ## ⚙️ Configuration
 
-CloudMCP automatically creates TOML configuration files on first run:
-
-**Config locations:**
-
-- **Linux**: `~/.config/cloudmcp/config.toml`
-- **macOS**: `~/Library/Application Support/CloudMCP/config.toml`
-- **Windows**: `%APPDATA%\CloudMCP\config.toml`
-
-**Basic configuration:**
-
-```toml
-[system]
-server_name = "CloudMCP Shell"
-log_level = "info"
-enable_metrics = true
-metrics_port = 8080
-
-# Logging configuration
-log_max_size = 10      # MB
-log_max_backups = 5    # Number of files to keep
-log_max_age = 30       # Days to retain logs
-```
-
-### Environment Variables
-
-You can override configuration with environment variables:
+CloudMCP uses simple environment variable configuration:
 
 ```bash
-export CLOUD_MCP_SERVER_NAME="My CloudMCP"
-export LOG_LEVEL="debug"
-export ENABLE_METRICS="true"
-export METRICS_PORT="8080"
-
-# Optional metrics security
-export METRICS_AUTH_USERNAME="admin"
-export METRICS_AUTH_PASSWORD="secure_password"
-export METRICS_TLS_ENABLED="false"
+# Optional customization
+export CLOUD_MCP_SERVER_NAME="My CloudMCP Server"
+export LOG_LEVEL="info"  # debug, info, warn, error
 ```
+
+**Default values:**
+- Server Name: "CloudMCP Minimal"
+- Log Level: "info"
 
 ## 🛠️ Troubleshooting
 
@@ -171,39 +159,48 @@ export METRICS_TLS_ENABLED="false"
 2. Check MCP configuration files (`.mcp.json` or Claude Desktop config)
 3. Restart your AI tool completely
 
-### Health check not working?
+### Tools not working?
 
 1. Test the server directly:
-   `echo '{"jsonrpc": "2.0", "method": "tools/list", "params": {}, "id": 1}' | cloud-mcp`
-2. Check logs in config directory
-3. Verify environment variables if using custom configuration
+   ```bash
+   echo '{"jsonrpc": "2.0", "method": "tools/list", "params": {}, "id": 1}' | cloud-mcp
+   ```
+2. Check server logs for error messages
+3. Verify CloudMCP is properly configured in your MCP client
 
-### Metrics server issues?
+## 📚 Available Tools Reference
 
-1. Check if port 8080 is available: `lsof -i :8080`
-2. Test metrics endpoint: `curl http://localhost:8080/health`
-3. Check authentication if configured
+### hello Tool
 
-## 📚 Available Tools
+**Purpose**: Responds with a friendly greeting message
 
-CloudMCP currently provides **minimal shell** functionality:
+**Parameters**: 
+- `name` (optional string): Name to include in greeting
 
-### Health Monitoring
+**Examples**:
+```
+User: "Hello CloudMCP"
+Response: "Hello, World! CloudMCP server is running and ready to help."
 
-- `health_check` - Server health status and service discovery
-  - Reports server status and uptime
-  - Lists available tools and capabilities  
-  - Provides service discovery information
-  - Sub-microsecond response times
+User: "Say hello to John"  
+Response: "Hello, John! CloudMCP server is running and ready to help."
+```
 
-### Future Extensions
+### version Tool
 
-The framework is ready for:
+**Purpose**: Returns detailed version and build information
 
-- **Cloud Provider Tools** - AWS, Azure, GCP, Linode integrations
-- **Infrastructure Tools** - Terraform, Kubernetes, Docker management
-- **Monitoring Tools** - Observability and alerting capabilities
-- **Security Tools** - Compliance and vulnerability scanning
+**Parameters**: None
+
+**Response**: JSON object containing:
+- `version`: Semantic version
+- `api_version`: MCP API version
+- `build_date`: When the binary was built
+- `git_commit`: Git commit hash
+- `git_branch`: Git branch
+- `go_version`: Go compiler version
+- `platform`: Operating system and architecture
+- `features`: Available feature set
 
 ## 🔧 Development
 
@@ -214,32 +211,25 @@ CloudMCP/
 ├── cmd/
 │   └── cloud-mcp/           # Main MCP server entry point
 ├── internal/
-│   ├── server/              # MCP server implementation with metrics
-│   ├── tools/               # Health check tool implementation
-│   ├── config/              # Configuration management
-│   ├── registry/            # Provider registry framework
-│   └── providers/           # Provider implementations (ready for future)
-├── pkg/
-│   ├── logger/              # Flexible logging package
-│   ├── metrics/             # Unified metrics with Prometheus backend
-│   ├── types/               # Shared types
-│   └── interfaces/          # Core interfaces for extensibility
+│   ├── server/              # Minimal MCP server implementation
+│   ├── tools/               # Hello and version tools
+│   ├── config/              # Environment-based configuration
+│   └── version/             # Version information
+└── pkg/
+    └── interfaces/          # Tool interface definitions
 ```
 
 ### Building and Testing
 
 ```bash
-# Run tests
-go test ./...
+# Build
+go build -o bin/cloud-mcp cmd/cloud-mcp/main.go
 
 # Format code
 gofumpt -w .
 
 # Run linters
 golangci-lint run
-
-# Build
-go build -o bin/cloud-mcp cmd/server/main.go
 ```
 
 ### Testing Without AI Tools
@@ -257,59 +247,21 @@ mcp-inspector ./bin/cloud-mcp
 echo '{"jsonrpc": "2.0", "method": "tools/list", "params": {}, "id": 1}' | ./bin/cloud-mcp
 ```
 
-## 📋 Advanced Configuration
+## 🏗️ Architecture
 
-<!-- markdownlint-disable MD033 -->
-<details>
-<summary>Click to expand detailed configuration options</summary>
-<!-- markdownlint-enable MD033 -->
+CloudMCP follows a **minimal MCP server** architecture:
 
-### Full TOML Configuration
+- **Pure MCP Protocol**: Communicates via stdin/stdout only
+- **No HTTP Server**: No web endpoints, metrics, or complex infrastructure  
+- **Simple Tools**: Clean tool interface for easy extension
+- **Environment Config**: Simple configuration via environment variables
+- **Standard Logging**: Uses Go's standard log package
 
-```toml
-[system]
-server_name = "Cloud MCP Server"
-log_level = "info"                # debug, info, warn, error
-enable_metrics = true
-metrics_port = 8080
-default_account = "primary"
-
-# Logging configuration
-log_max_size = 10      # MB
-log_max_backups = 5    # Number of files to keep
-log_max_age = 30       # Days to retain logs
-
-[account.primary]
-token = "your_production_token_here"
-label = "Production"
-
-[account.development]
-token = "your_dev_token_here"
-label = "Development"
-```
-
-### Log File Locations
-
-- **Linux**: `~/.local/share/CloudMCP/cloudmcp.log`
-- **macOS**: `~/Library/Application Support/CloudMCP/logs/cloudmcp.log`
-- **Windows**: `%APPDATA%\CloudMCP\logs\cloudmcp.log`
-
-### Monitoring
-
-When metrics are enabled, Prometheus metrics are available at `http://localhost:8080/metrics`:
-
-- `cloudmcp_tool_requests_total` - Tool request metrics
-- `cloudmcp_linode_api_requests_total` - API request metrics
-
-</details>
-
-## 🔒 Security
-
-- API tokens are never logged or returned in responses
-- All sensitive data is sanitized in error messages
-- TOML-based configuration keeps secrets secure
-- Rate limiting protects against API abuse
-- Request validation prevents malformed inputs
+This design makes CloudMCP:
+- **Lightweight**: Minimal resource usage
+- **Simple**: Easy to understand and extend
+- **Focused**: Pure MCP protocol implementation
+- **Extensible**: Ready for cloud provider tools
 
 ## 🤝 Contributing
 
@@ -327,10 +279,8 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ## 🙏 Acknowledgments
 
 - [MCP SDK for Go](https://github.com/mark3labs/mcp-go) - MCP protocol implementation
-- [Linode API](https://www.linode.com/api/v4) - Cloud infrastructure API
 
 ## 📞 Support
 
 - **Issues**: [GitHub Issues](https://github.com/chadit/CloudMCP/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/chadit/CloudMCP/discussions)
-- **API Reference**: [LINODE_API_COVERAGE.md](LINODE_API_COVERAGE.md)
