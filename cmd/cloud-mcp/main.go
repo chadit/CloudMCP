@@ -15,11 +15,16 @@ import (
 )
 
 func main() {
+	exitCode := run()
+	os.Exit(exitCode)
+}
+
+func run() int {
 	// Load minimal configuration
 	cfg, err := config.Load()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to load configuration: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
 
 	// Log startup information
@@ -47,13 +52,14 @@ func main() {
 	srv, err := server.New(cfg)
 	if err != nil {
 		log.Printf("Failed to create server: %v", err)
-		os.Exit(1)
+		return 1
 	}
 
 	if err := srv.Start(ctx); err != nil {
 		log.Printf("Server error: %v", err)
-		os.Exit(1)
+		return 1
 	}
 
 	log.Printf("Server shutdown complete")
+	return 0
 }

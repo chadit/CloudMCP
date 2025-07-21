@@ -16,12 +16,12 @@ func TestLoad_DefaultValues(t *testing.T) {
 	originalServerName := os.Getenv("CLOUD_MCP_SERVER_NAME")
 	originalLogLevel := os.Getenv("LOG_LEVEL")
 	defer func() {
-		os.Setenv("CLOUD_MCP_SERVER_NAME", originalServerName)
-		os.Setenv("LOG_LEVEL", originalLogLevel)
+		_ = os.Setenv("CLOUD_MCP_SERVER_NAME", originalServerName)
+		_ = os.Setenv("LOG_LEVEL", originalLogLevel)
 	}()
 	
-	os.Unsetenv("CLOUD_MCP_SERVER_NAME")
-	os.Unsetenv("LOG_LEVEL")
+	_ = os.Unsetenv("CLOUD_MCP_SERVER_NAME")
+	_ = os.Unsetenv("LOG_LEVEL")
 
 	// Load config with default values
 	cfg, err := config.Load()
@@ -40,13 +40,13 @@ func TestLoad_EnvironmentVariables(t *testing.T) {
 	originalServerName := os.Getenv("CLOUD_MCP_SERVER_NAME")
 	originalLogLevel := os.Getenv("LOG_LEVEL")
 	defer func() {
-		os.Setenv("CLOUD_MCP_SERVER_NAME", originalServerName)
-		os.Setenv("LOG_LEVEL", originalLogLevel)
+		_ = os.Setenv("CLOUD_MCP_SERVER_NAME", originalServerName)
+		_ = os.Setenv("LOG_LEVEL", originalLogLevel)
 	}()
 
 	// Set test environment variables
-	os.Setenv("CLOUD_MCP_SERVER_NAME", "Test Server")
-	os.Setenv("LOG_LEVEL", "debug")
+	_ = os.Setenv("CLOUD_MCP_SERVER_NAME", "Test Server")
+	_ = os.Setenv("LOG_LEVEL", "debug")
 
 	// Load config
 	cfg, err := config.Load()
@@ -65,13 +65,13 @@ func TestLoad_PartialEnvironmentOverride(t *testing.T) {
 	originalServerName := os.Getenv("CLOUD_MCP_SERVER_NAME")
 	originalLogLevel := os.Getenv("LOG_LEVEL")
 	defer func() {
-		os.Setenv("CLOUD_MCP_SERVER_NAME", originalServerName)
-		os.Setenv("LOG_LEVEL", originalLogLevel)
+		_ = os.Setenv("CLOUD_MCP_SERVER_NAME", originalServerName)
+		_ = os.Setenv("LOG_LEVEL", originalLogLevel)
 	}()
 
 	// Set only server name, leave log level as default
-	os.Setenv("CLOUD_MCP_SERVER_NAME", "Custom Server")
-	os.Unsetenv("LOG_LEVEL")
+	_ = os.Setenv("CLOUD_MCP_SERVER_NAME", "Custom Server")
+	_ = os.Unsetenv("LOG_LEVEL")
 
 	// Load config
 	cfg, err := config.Load()
@@ -104,13 +104,13 @@ func TestLoad_EmptyEnvironmentValues(t *testing.T) {
 	originalServerName := os.Getenv("CLOUD_MCP_SERVER_NAME")
 	originalLogLevel := os.Getenv("LOG_LEVEL")
 	defer func() {
-		os.Setenv("CLOUD_MCP_SERVER_NAME", originalServerName)
-		os.Setenv("LOG_LEVEL", originalLogLevel)
+		_ = os.Setenv("CLOUD_MCP_SERVER_NAME", originalServerName)
+		_ = os.Setenv("LOG_LEVEL", originalLogLevel)
 	}()
 
 	// Set empty environment variables (should use defaults)
-	os.Setenv("CLOUD_MCP_SERVER_NAME", "")
-	os.Setenv("LOG_LEVEL", "")
+	_ = os.Setenv("CLOUD_MCP_SERVER_NAME", "")
+	_ = os.Setenv("LOG_LEVEL", "")
 
 	// Load config
 	cfg, err := config.Load()
