@@ -267,65 +267,138 @@ func NewMetricsServer(
 	return server, nil
 }
 
-// securityMiddleware applies security measures to all HTTP requests.
-func (s *MetricsServer) securityMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
-		// Add security headers.
-		if s.config.EnableSecurityHeaders {
-			s.addSecurityHeaders(responseWriter)
-		}
+// Start starts the metrics HTTP server in a non-blocking way.
+func (s *MetricsServer) Start() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
-		// Rate limiting.
-		if s.config.EnableRateLimit && s.rateLimiter != nil {
-			if !s.rateLimiter.Allow() {
-				s.logger.Warn("Rate limit exceeded", "remote_addr", request.RemoteAddr, "path", request.URL.Path)
-				http.Error(responseWriter, "Rate limit exceeded", http.StatusTooManyRequests)
-
-				return
-			}
-		}
-
-		// Basic authentication (only for sensitive endpoints).
-		if s.requiresAuth(request.URL.Path) && s.isAuthEnabled() {
-			if !s.authenticateRequest(request) {
-				responseWriter.Header().Set("WWW-Authenticate", `Basic realm="CloudMCP Metrics"`)
-				http.Error(responseWriter, "Unauthorized", http.StatusUnauthorized)
-
-				return
-			}
-		}
-
-		// Continue to next handler.
-		next.ServeHTTP(responseWriter, request)
-	})
-}
-
-// addSecurityHeaders adds security headers to the response.
-func (s *MetricsServer) addSecurityHeaders(responseWriter http.ResponseWriter) {
-	responseWriter.Header().Set("X-Content-Type-Options", "nosniff")
-	responseWriter.Header().Set("X-Frame-Options", "DENY")
-	responseWriter.Header().Set("X-XSS-Protection", "1; mode=block")
-	responseWriter.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
-	responseWriter.Header().Set("Content-Security-Policy", "default-src 'self'")
-	responseWriter.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
-}
-
-// requiresAuth determines if an endpoint requires authentication.
-func (s *MetricsServer) requiresAuth(path string) bool {
-	// Require auth for metrics endpoint, but not for health checks.
-	switch path {
-	case "/metrics":
-		return true
-	case "/provider/health":
-		return true
-	default:
-		return false
+	if s.running {
+		return ErrServerAlreadyRunning
 	}
+
+	s.logger.Info("Starting metrics server", "port", s.config.Port)
+
+	// Create listener to handle port 0 (OS-assigned port).
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", s.config.Port))
+	if err != nil {
+		return fmt.Errorf("failed to create listener: %w", err)
+	}
+
+	s.listener = listener
+
+	// Update config with actual port if port 0 was used.
+	if s.config.Port == 0 {
+		if addr, ok := listener.Addr().(*net.TCPAddr); ok {
+			s.config.Port = addr.Port
+		}
+	}
+
+	// Start HTTP server in a goroutine.
+	go func() {
+		var err error
+
+		if s.config.EnableTLS {
+			// Start HTTPS server.
+			if s.config.TLSCertFile == "" || s.config.TLSKeyFile == "" {
+				s.logger.Error("TLS enabled but certificate or key file not specified")
+
+				return
+			}
+
+			err = s.httpServer.ServeTLS(listener, s.config.TLSCertFile, s.config.TLSKeyFile)
+		} else {
+			// Start HTTP server.
+			err = s.httpServer.Serve(listener)
+		}
+
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			s.logger.Error("Metrics server error", "error", err)
+		}
+	}()
+
+	s.running = true
+
+	protocol := "HTTP"
+
+	if s.config.EnableTLS {
+		protocol = "HTTPS"
+	}
+
+	s.logger.Info("Metrics server started successfully",
+		"protocol", protocol,
+		"port", s.config.Port,
+		"tls_enabled", s.config.EnableTLS,
+		"auth_enabled", s.isAuthEnabled(),
+		"rate_limit_enabled", s.config.EnableRateLimit,
+	)
+
+	return nil
 }
 
-// isAuthEnabled checks if basic authentication is configured.
-func (s *MetricsServer) isAuthEnabled() bool {
-	return s.config.BasicAuthUsername != "" && s.config.BasicAuthPassword != ""
+// Stop gracefully stops the metrics HTTP server.
+func (s *MetricsServer) Stop(ctx context.Context) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if !s.running {
+		return ErrServerNotRunning
+	}
+
+	s.logger.Info("Stopping metrics server")
+
+	// Create shutdown context with timeout.
+	shutdownCtx, cancel := context.WithTimeout(ctx, s.config.ShutdownTimeout)
+	defer cancel()
+
+	// Attempt graceful shutdown.
+	if err := s.httpServer.Shutdown(shutdownCtx); err != nil {
+		s.logger.Error("Failed to shutdown metrics server gracefully", "error", err)
+
+		// Force close if graceful shutdown fails.
+		if closeErr := s.httpServer.Close(); closeErr != nil {
+			s.logger.Error("Failed to force close metrics server", "error", closeErr)
+		}
+
+		// Also close the listener.
+		if s.listener != nil {
+			if closeErr := s.listener.Close(); closeErr != nil {
+				s.logger.Error("Failed to close listener", "error", closeErr)
+			}
+		}
+
+		s.running = false
+
+		return fmt.Errorf("metrics server shutdown: %w", err)
+	}
+
+	s.running = false
+	s.logger.Info("Metrics server stopped successfully")
+
+	return nil
+}
+
+// IsRunning returns whether the metrics server is currently running.
+func (s *MetricsServer) IsRunning() bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	return s.running
+}
+
+// Port returns the port the metrics server is configured to listen on.
+func (s *MetricsServer) Port() int {
+	return s.config.Port
+}
+
+// URL returns the base URL for the metrics server.
+func (s *MetricsServer) URL() string {
+	protocol := "http"
+
+	if s.config.EnableTLS {
+		protocol = "https"
+	}
+
+	return fmt.Sprintf("%s://localhost:%d", protocol, s.config.Port)
 }
 
 // authenticateRequest performs basic authentication.
@@ -699,136 +772,63 @@ func (s *MetricsServer) countHealthyProviders(providers map[string]ProviderHealt
 	return count
 }
 
-// Start starts the metrics HTTP server in a non-blocking way.
-func (s *MetricsServer) Start() error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if s.running {
-		return ErrServerAlreadyRunning
-	}
-
-	s.logger.Info("Starting metrics server", "port", s.config.Port)
-
-	// Create listener to handle port 0 (OS-assigned port).
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", s.config.Port))
-	if err != nil {
-		return fmt.Errorf("failed to create listener: %w", err)
-	}
-
-	s.listener = listener
-
-	// Update config with actual port if port 0 was used.
-	if s.config.Port == 0 {
-		if addr, ok := listener.Addr().(*net.TCPAddr); ok {
-			s.config.Port = addr.Port
+// securityMiddleware applies security measures to all HTTP requests.
+func (s *MetricsServer) securityMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
+		// Add security headers.
+		if s.config.EnableSecurityHeaders {
+			s.addSecurityHeaders(responseWriter)
 		}
-	}
 
-	// Start HTTP server in a goroutine.
-	go func() {
-		var err error
-
-		if s.config.EnableTLS {
-			// Start HTTPS server.
-			if s.config.TLSCertFile == "" || s.config.TLSKeyFile == "" {
-				s.logger.Error("TLS enabled but certificate or key file not specified")
+		// Rate limiting.
+		if s.config.EnableRateLimit && s.rateLimiter != nil {
+			if !s.rateLimiter.Allow() {
+				s.logger.Warn("Rate limit exceeded", "remote_addr", request.RemoteAddr, "path", request.URL.Path)
+				http.Error(responseWriter, "Rate limit exceeded", http.StatusTooManyRequests)
 
 				return
 			}
-
-			err = s.httpServer.ServeTLS(listener, s.config.TLSCertFile, s.config.TLSKeyFile)
-		} else {
-			// Start HTTP server.
-			err = s.httpServer.Serve(listener)
 		}
 
-		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			s.logger.Error("Metrics server error", "error", err)
-		}
-	}()
+		// Basic authentication (only for sensitive endpoints).
+		if s.requiresAuth(request.URL.Path) && s.isAuthEnabled() {
+			if !s.authenticateRequest(request) {
+				responseWriter.Header().Set("WWW-Authenticate", `Basic realm="CloudMCP Metrics"`)
+				http.Error(responseWriter, "Unauthorized", http.StatusUnauthorized)
 
-	s.running = true
-
-	protocol := "HTTP"
-
-	if s.config.EnableTLS {
-		protocol = "HTTPS"
-	}
-
-	s.logger.Info("Metrics server started successfully",
-		"protocol", protocol,
-		"port", s.config.Port,
-		"tls_enabled", s.config.EnableTLS,
-		"auth_enabled", s.isAuthEnabled(),
-		"rate_limit_enabled", s.config.EnableRateLimit,
-	)
-
-	return nil
-}
-
-// Stop gracefully stops the metrics HTTP server.
-func (s *MetricsServer) Stop(ctx context.Context) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if !s.running {
-		return ErrServerNotRunning
-	}
-
-	s.logger.Info("Stopping metrics server")
-
-	// Create shutdown context with timeout.
-	shutdownCtx, cancel := context.WithTimeout(ctx, s.config.ShutdownTimeout)
-	defer cancel()
-
-	// Attempt graceful shutdown.
-	if err := s.httpServer.Shutdown(shutdownCtx); err != nil {
-		s.logger.Error("Failed to shutdown metrics server gracefully", "error", err)
-
-		// Force close if graceful shutdown fails.
-		if closeErr := s.httpServer.Close(); closeErr != nil {
-			s.logger.Error("Failed to force close metrics server", "error", closeErr)
-		}
-
-		// Also close the listener.
-		if s.listener != nil {
-			if closeErr := s.listener.Close(); closeErr != nil {
-				s.logger.Error("Failed to close listener", "error", closeErr)
+				return
 			}
 		}
 
-		s.running = false
+		// Continue to next handler.
+		next.ServeHTTP(responseWriter, request)
+	})
+}
 
-		return fmt.Errorf("metrics server shutdown: %w", err)
+// addSecurityHeaders adds security headers to the response.
+func (s *MetricsServer) addSecurityHeaders(responseWriter http.ResponseWriter) {
+	responseWriter.Header().Set("X-Content-Type-Options", "nosniff")
+	responseWriter.Header().Set("X-Frame-Options", "DENY")
+	responseWriter.Header().Set("X-XSS-Protection", "1; mode=block")
+	responseWriter.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+	responseWriter.Header().Set("Content-Security-Policy", "default-src 'self'")
+	responseWriter.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+}
+
+// requiresAuth determines if an endpoint requires authentication.
+func (s *MetricsServer) requiresAuth(path string) bool {
+	// Require auth for metrics endpoint, but not for health checks.
+	switch path {
+	case "/metrics":
+		return true
+	case "/provider/health":
+		return true
+	default:
+		return false
 	}
-
-	s.running = false
-	s.logger.Info("Metrics server stopped successfully")
-
-	return nil
 }
 
-// IsRunning returns whether the metrics server is currently running.
-func (s *MetricsServer) IsRunning() bool {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	return s.running
-}
-
-// Port returns the port the metrics server is configured to listen on.
-func (s *MetricsServer) Port() int {
-	return s.config.Port
-}
-
-// URL returns the base URL for the metrics server.
-func (s *MetricsServer) URL() string {
-	protocol := "http"
-
-	if s.config.EnableTLS {
-		protocol = "https"
-	}
-
-	return fmt.Sprintf("%s://localhost:%d", protocol, s.config.Port)
+// isAuthEnabled checks if basic authentication is configured.
+func (s *MetricsServer) isAuthEnabled() bool {
+	return s.config.BasicAuthUsername != "" && s.config.BasicAuthPassword != ""
 }
