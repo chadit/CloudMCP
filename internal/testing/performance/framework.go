@@ -26,18 +26,18 @@ func NewBenchmarkConfig(name string) *BenchmarkConfig {
 func (c *BenchmarkConfig) RunBenchmark(b *testing.B, fn func()) {
 	b.ResetTimer()
 	start := time.Now()
-	
+
 	for i := 0; i < b.N; i++ {
 		fn()
-		
+
 		// Check if we've exceeded max duration
 		if time.Since(start) > c.MaxDuration {
 			break
 		}
 	}
-	
+
 	b.StopTimer()
-	
+
 	// Report if we didn't meet minimum ops
 	if b.N < c.MinOps {
 		b.Logf("Warning: Only completed %d operations (expected minimum %d)", b.N, c.MinOps)
