@@ -1,6 +1,7 @@
-// Package interfaces defines core interfaces for CloudMCP.
-// Provides minimal foundation for tool management and future extensibility.
-package interfaces
+// Package contracts defines core interfaces for CloudMCP tool integration.
+// This package provides the Tool interface contract that all MCP tools must implement,
+// enabling a pluggable architecture for cloud provider extensions.
+package contracts
 
 import (
 	"context"
