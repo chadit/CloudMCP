@@ -1,11 +1,10 @@
-// Package main provides the CloudMCP server application entry point.
-// This binary starts the CloudMCP server in minimal shell mode, offering
-// a basic health check tool through the Model Context Protocol (MCP).
+// Package main provides the CloudMCP minimal server application entry point.
 package main
 
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -13,74 +12,48 @@ import (
 	"github.com/chadit/CloudMCP/internal/config"
 	"github.com/chadit/CloudMCP/internal/server"
 	"github.com/chadit/CloudMCP/internal/version"
-	"github.com/chadit/CloudMCP/pkg/logger"
-)
-
-const (
-	defaultLogMaxSize    = 10 // 10MB
-	defaultLogMaxBackups = 5  // Keep 5 files
-	defaultLogMaxAge     = 30 // 30 days
 )
 
 func main() {
+	// Load minimal configuration
 	cfg, err := config.Load()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to load configuration: %v\n", err)
 		os.Exit(1)
 	}
 
-	// Set up enhanced logging with rotation.
-	logConfig := logger.LogConfig{
-		Level:      cfg.LogLevel,
-		FilePath:   config.GetLogPath(),
-		MaxSize:    defaultLogMaxSize,    // 10MB
-		MaxBackups: defaultLogMaxBackups, // Keep 5 files
-		MaxAge:     defaultLogMaxAge,     // 30 days
-	}
-
-	// Ensure log directory exists.
-	if err := config.EnsureLogDir(); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to create log directory: %v\n", err)
-		// Fall back to stderr logging.
-		logConfig.FilePath = ""
-	}
-
-	log := logger.NewWithConfig(logConfig)
+	// Log startup information
 	versionInfo := version.Get()
-	log.Info("Starting CloudMCP Server",
-		"version", versionInfo.Version,
-		"server_name", cfg.ServerName,
-		"log_level", cfg.LogLevel,
-		"log_file", logConfig.FilePath,
-		"api_version", versionInfo.APIVersion,
-		"platform", versionInfo.Platform,
-		"git_commit", versionInfo.GitCommit,
-	)
+	log.Printf("Starting CloudMCP Minimal Server")
+	log.Printf("Version: %s", versionInfo.Version)
+	log.Printf("Server: %s", cfg.ServerName)
+	log.Printf("Platform: %s", versionInfo.Platform)
+	log.Printf("Git Commit: %s", versionInfo.GitCommit)
 
+	// Create context with cancellation support
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	// Handle shutdown signals
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
-
 	go func() {
 		<-sigChan
-		log.Info("Shutdown signal received")
+		log.Printf("Shutdown signal received")
 		cancel()
 	}()
 
-	srv, err := server.New(cfg, log)
+	// Create and start minimal server
+	srv, err := server.New(cfg)
 	if err != nil {
-		log.Error("Failed to create server", "error", err)
-
-		return
+		log.Printf("Failed to create server: %v", err)
+		os.Exit(1)
 	}
 
 	if err := srv.Start(ctx); err != nil {
-		log.Error("Server error", "error", err)
-
-		return
+		log.Printf("Server error: %v", err)
+		os.Exit(1)
 	}
 
-	log.Info("Server shutdown complete")
+	log.Printf("Server shutdown complete")
 }

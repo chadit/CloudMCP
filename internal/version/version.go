@@ -56,10 +56,10 @@ func Get() Info {
 		GoVersion:  runtime.Version(),
 		Platform:   fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
 		Features: map[string]string{
-			"health_check": "enabled",
-			"metrics":      "prometheus",
-			"logging":      "structured",
-			"protocol":     "mcp",
+			"tools":    "hello,version",
+			"logging":  "basic",
+			"protocol": "mcp",
+			"mode":     "minimal",
 		},
 	}
 }
@@ -80,8 +80,8 @@ func (i Info) BuildInfo() string {
   Git Branch: %s
   Go Version: %s
   Platform: %s
-  Health Check: %s
-  Features: Health Check, Metrics, Structured Logging`,
+  Mode: %s
+  Features: Hello Tool, Version Tool, Basic Logging`,
 		i.Version, i.APIVersion, i.BuildDate, i.GitCommit,
-		i.GitBranch, i.GoVersion, i.Platform, i.Features["health_check"])
+		i.GitBranch, i.GoVersion, i.Platform, i.Features["mode"])
 }
