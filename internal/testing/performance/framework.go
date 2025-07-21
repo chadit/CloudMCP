@@ -275,7 +275,7 @@ func (f *PerformanceTestFramework) measureLatencies(ctx context.Context, testFun
 	for i := 0; i < sampleCount; i++ {
 		select {
 		case <-testCtx.Done():
-			break
+			return latencies, errors
 		default:
 		}
 		
@@ -476,9 +476,3 @@ func (f *PerformanceTestFramework) IsRunning() bool {
 	return f.running
 }
 
-// setRunning updates the running state of the framework.
-func (f *PerformanceTestFramework) setRunning(running bool) {
-	f.runningMutex.Lock()
-	defer f.runningMutex.Unlock()
-	f.running = running
-}
