@@ -12,14 +12,14 @@ import (
 
 	"github.com/chadit/CloudMCP/internal/config"
 	"github.com/chadit/CloudMCP/internal/tools"
-	"github.com/chadit/CloudMCP/pkg/interfaces"
+	"github.com/chadit/CloudMCP/pkg/contracts"
 )
 
 // Server represents a minimal CloudMCP server with simple tools.
 type Server struct {
 	config *config.Config
 	mcp    *server.MCPServer
-	tools  []interfaces.Tool
+	tools  []contracts.Tool
 }
 
 // Static errors for err113 compliance.
@@ -45,7 +45,7 @@ func New(cfg *config.Config) (*Server, error) {
 	s := &Server{
 		config: cfg,
 		mcp:    mcpServer,
-		tools:  make([]interfaces.Tool, 0),
+		tools:  make([]contracts.Tool, 0),
 	}
 
 	// Register simple tools
@@ -56,7 +56,7 @@ func New(cfg *config.Config) (*Server, error) {
 	return s, nil
 }
 
-// toolWrapper wraps mcp.Tool to implement our interfaces.Tool for compatibility.
+// toolWrapper wraps mcp.Tool to implement our contracts.Tool for compatibility.
 type toolWrapper struct {
 	tool mcp.Tool
 }
