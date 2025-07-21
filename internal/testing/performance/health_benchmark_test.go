@@ -37,7 +37,7 @@ func BenchmarkHealthCheck(b *testing.B) {
 
 func BenchmarkConfigLoad(b *testing.B) {
 	benchConfig := NewBenchmarkConfig("ConfigLoad")
-	
+
 	benchConfig.RunBenchmark(b, func() {
 		// Test configuration loading performance
 		cfg, err := config.Load()
