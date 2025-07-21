@@ -92,11 +92,16 @@ jobs:
           go mod download
           go mod verify
 
-      - name: 🔍 Run golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: latest
-          args: --timeout=5m
+      - name: 🔒 Install golangci-lint v2
+        run: |
+          ./scripts/security-utils.sh install golangci-lint
+          GOLANGCI_PATH=$(./scripts/security-utils.sh get-path golangci-lint)
+          echo "$(dirname "$GOLANGCI_PATH")" >> $GITHUB_PATH
+
+      - name: 🔍 Run golangci-lint v2
+        run: |
+          GOLANGCI_PATH=$(./scripts/security-utils.sh get-path golangci-lint)
+          "$GOLANGCI_PATH" run --timeout=5m
 
       - name: 🔒 Security Scan
         run: |
@@ -131,16 +136,12 @@ jobs:
       - name: 🔒 Security Scan
         if: matrix.platform == 'linux/amd64'
         run: |
-          # Install trivy
-          sudo apt-get update
-          sudo apt-get install wget apt-transport-https gnupg lsb-release
-          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
-          sudo apt-get update
-          sudo apt-get install trivy
+          # Install trivy using our security script
+          ./scripts/security-utils.sh install trivy
+          TRIVY_PATH=$(./scripts/security-utils.sh get-path trivy)
           
           # Scan container
-          trivy image --exit-code 0 --severity HIGH,CRITICAL cloudmcp:ci
+          "$TRIVY_PATH" image --exit-code 0 --severity HIGH,CRITICAL cloudmcp:ci
 
       - name: 🧪 Test Container
         if: matrix.platform == 'linux/amd64'
