@@ -100,6 +100,90 @@ func New(cfg *config.Config, log logger.Logger) (*Server, error) {
 	return serverInstance, nil
 }
 
+// NewForTesting creates a new server instance for testing with isolated metrics registries.
+func NewForTesting(cfg *config.Config, log logger.Logger) (*Server, error) {
+	if cfg == nil {
+		return nil, ErrConfigNil
+	}
+
+	if log == nil {
+		return nil, ErrLoggerNil
+	}
+
+	mcpServer := server.NewMCPServer(cfg.ServerName, "test-version")
+
+	// Initialize test metrics provider.
+	testMetricsProvider, err := metrics.NewProvider(&metrics.ProviderConfig{
+		Enabled:   cfg.EnableMetrics,
+		Namespace: "cloudmcp_test",
+		Subsystem: "server",
+		Backend:   metrics.BackendPrometheus,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create test metrics provider: %w", err)
+	}
+
+	// Create MCP adapter and health tool for testing
+	mcpAdapter := registry.NewMCPServerAdapter(mcpServer)
+	healthTool := tools.NewHealthCheckTool(cfg.ServerName)
+
+	serverInstance := &Server{
+		config:          cfg,
+		logger:          log,
+		mcp:             mcpServer,
+		healthTool:      healthTool,
+		mcpAdapter:      mcpAdapter,
+		metricsProvider: testMetricsProvider,
+	}
+
+	// Register health tool for testing.
+	if err := serverInstance.registerHealthTool(); err != nil {
+		return nil, fmt.Errorf("failed to register health tool: %w", err)
+	}
+
+	return serverInstance, nil
+}
+
+// Start starts the CloudMCP server with minimal shell configuration.
+func (s *Server) Start(ctx context.Context) error {
+	s.logger.Info("Starting CloudMCP server", "mode", "minimal_shell")
+
+	if err := s.setupMinimalShell(ctx); err != nil {
+		return err
+	}
+
+	s.logger.Info("Starting MCP protocol server")
+
+	// Create a channel to signal when stdio server is done.
+	errCh := make(chan error, 1)
+
+	// Run ServeStdio in a goroutine.
+	go func() {
+		errCh <- server.ServeStdio(s.mcp)
+	}()
+
+	// Log server startup completion.
+	s.logger.Info("CloudMCP server started successfully",
+		"mode", "minimal_shell",
+		"tools_registered", s.mcpAdapter.GetToolCount(),
+		"metrics_enabled", s.metricsServer != nil,
+	)
+
+	// Wait for either context cancellation or server error.
+	select {
+	case <-ctx.Done():
+		s.logger.Info("Context cancelled, shutting down")
+
+		return fmt.Errorf("context cancelled: %w", ctx.Err())
+	case err := <-errCh:
+		if err != nil {
+			return fmt.Errorf("MCP server error: %w", err)
+		}
+
+		return nil
+	}
+}
+
 // registerHealthTool registers the health check tool with the MCP server.
 func (s *Server) registerHealthTool() error {
 	s.logger.Info("Registering health check tool")
@@ -176,89 +260,6 @@ func (s *Server) setupMetricsServer() error {
 	)
 
 	return nil
-}
-
-// NewForTesting creates a new server instance for testing with isolated metrics registries.
-func NewForTesting(cfg *config.Config, log logger.Logger) (*Server, error) {
-	if cfg == nil {
-		return nil, ErrConfigNil
-	}
-
-	if log == nil {
-		return nil, ErrLoggerNil
-	}
-
-	mcpServer := server.NewMCPServer(cfg.ServerName, "test-version")
-
-	// Initialize test metrics provider.
-	testMetricsProvider, err := metrics.NewProvider(&metrics.ProviderConfig{
-		Enabled:   cfg.EnableMetrics,
-		Namespace: "cloudmcp_test",
-		Subsystem: "server",
-		Backend:   metrics.BackendPrometheus,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to create test metrics provider: %w", err)
-	}
-
-	// Create MCP adapter and health tool for testing
-	mcpAdapter := registry.NewMCPServerAdapter(mcpServer)
-	healthTool := tools.NewHealthCheckTool(cfg.ServerName)
-
-	serverInstance := &Server{
-		config:          cfg,
-		logger:          log,
-		mcp:             mcpServer,
-		healthTool:      healthTool,
-		mcpAdapter:      mcpAdapter,
-		metricsProvider: testMetricsProvider,
-	}
-
-	// Register health tool for testing.
-	if err := serverInstance.registerHealthTool(); err != nil {
-		return nil, fmt.Errorf("failed to register health tool: %w", err)
-	}
-
-	return serverInstance, nil
-}
-
-func (s *Server) Start(ctx context.Context) error {
-	s.logger.Info("Starting CloudMCP server", "mode", "minimal_shell")
-
-	if err := s.setupMinimalShell(ctx); err != nil {
-		return err
-	}
-
-	s.logger.Info("Starting MCP protocol server")
-
-	// Create a channel to signal when stdio server is done.
-	errCh := make(chan error, 1)
-
-	// Run ServeStdio in a goroutine.
-	go func() {
-		errCh <- server.ServeStdio(s.mcp)
-	}()
-
-	// Log server startup completion.
-	s.logger.Info("CloudMCP server started successfully",
-		"mode", "minimal_shell",
-		"tools_registered", s.mcpAdapter.GetToolCount(),
-		"metrics_enabled", s.metricsServer != nil,
-	)
-
-	// Wait for either context cancellation or server error.
-	select {
-	case <-ctx.Done():
-		s.logger.Info("Context cancelled, shutting down")
-
-		return fmt.Errorf("context cancelled: %w", ctx.Err())
-	case err := <-errCh:
-		if err != nil {
-			return fmt.Errorf("MCP server error: %w", err)
-		}
-
-		return nil
-	}
 }
 
 // setupMinimalShell initializes the minimal shell configuration.
