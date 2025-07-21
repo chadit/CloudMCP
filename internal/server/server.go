@@ -152,6 +152,25 @@ func (s *Server) Start(ctx context.Context) error {
 		return err
 	}
 
+	// Check if running in daemon mode (for containers)
+	daemonMode := os.Getenv("DAEMON_MODE") == "true"
+
+	if daemonMode {
+		s.logger.Info("Running in daemon mode - HTTP server only")
+		
+		// Log server startup completion.
+		s.logger.Info("CloudMCP server started successfully",
+			"mode", "daemon",
+			"tools_registered", s.mcpAdapter.GetToolCount(),
+			"metrics_enabled", s.metricsServer != nil,
+		)
+
+		// In daemon mode, just wait for context cancellation
+		<-ctx.Done()
+		s.logger.Info("Context cancelled, shutting down")
+		return fmt.Errorf("context cancelled: %w", ctx.Err())
+	}
+
 	s.logger.Info("Starting MCP protocol server")
 
 	// Create a channel to signal when stdio server is done.
