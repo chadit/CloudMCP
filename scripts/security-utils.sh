@@ -44,7 +44,7 @@ get_tool_config() {
     
     case "$tool_key" in
         "golangci-lint-linux-amd64")
-            echo "v1.64.2:linux:amd64:https://github.com/golangci/golangci-lint/releases/download/v1.64.2/golangci-lint-1.64.2-linux-amd64.tar.gz:ae1b9f8ddb8e5e6b0b50669baec8a5e8b1b7d8b3b2a7e9b4b5c7f9e6e8b1b3c8"
+            echo "v1.64.2:linux:amd64:https://github.com/golangci/golangci-lint/releases/download/v1.64.2/golangci-lint-1.64.2-linux-amd64.tar.gz:a893e7c9211f70a0cb8c5121ab80d5b089109c23af6bc2923820ba8b42365072"
             ;;
         "golangci-lint-linux-arm64")
             echo "v1.64.2:linux:arm64:https://github.com/golangci/golangci-lint/releases/download/v1.64.2/golangci-lint-1.64.2-linux-arm64.tar.gz:be2f8ddb8e5e6b0b50669baec8a5e8b1b7d8b3b2a7e9b4b5c7f9e6e8b1b3c9f"
