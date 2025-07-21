@@ -142,9 +142,12 @@ func testToolInputSchemaCompliance(t *testing.T, tool interfaces.Tool) {
 	// Basic JSON schema validation
 	if schemaType, exists := schemaMap["type"]; exists {
 		assert.IsType(t, "", schemaType, "Schema type should be a string")
-		typeStr := schemaType.(string)
-		validTypes := []string{"object", "array", "string", "number", "integer", "boolean", "null"}
-		assert.Contains(t, validTypes, typeStr, "Schema type should be a valid JSON schema type")
+		if typeStr, ok := schemaType.(string); ok {
+			validTypes := []string{"object", "array", "string", "number", "integer", "boolean", "null"}
+			assert.Contains(t, validTypes, typeStr, "Schema type should be a valid JSON schema type")
+		} else {
+			t.Errorf("Schema type field is not a string, got %T", schemaType)
+		}
 	}
 }
 
