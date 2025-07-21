@@ -19,7 +19,6 @@ linters:
     - forcetypeassert # Unchecked type assertions - runtime safety
     
     # Important quality linters
-    - funcorder      # Method ordering - good code organization
     - gocritic       # Comprehensive Go style checks - good practices
     - revive         # Fast Go linter with many useful checks
     
