@@ -22,7 +22,7 @@ permissions:
   security-events: write  # For SARIF uploads
 
 env:
-  GO_VERSION: '1.24'
+  GO_VERSION: '1.23'
 
 # Prevent concurrent runs
 concurrency:
@@ -270,10 +270,10 @@ jobs:
           
           # Add platform-specific security flags
           if [[ "$GOOS" == "linux" && "${{ matrix.platform.cgo }}" == "1" ]]; then
-            # Full static linking for Linux with CGO
-            BUILD_FLAGS="$BUILD_FLAGS -buildmode=pie -linkmode=external -extldflags=-static"
+            # Static linking for Linux with CGO (no PIE due to conflict)
+            BUILD_FLAGS="$BUILD_FLAGS -linkmode=external -extldflags=-static"
           elif [[ "$GOOS" != "windows" ]]; then
-            # PIE for non-Windows platforms
+            # PIE for non-Windows platforms (when not doing static linking)
             BUILD_FLAGS="$BUILD_FLAGS -buildmode=pie"
           fi
           
