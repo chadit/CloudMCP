@@ -72,7 +72,8 @@ EXPOSE 8080
 # Set default environment variables
 ENV LOG_LEVEL=info \
     ENABLE_METRICS=true \
-    METRICS_PORT=8080
+    METRICS_PORT=8080 \
+    DAEMON_MODE=true
 
 # Default command
 ENTRYPOINT ["/usr/local/bin/cloud-mcp"]
