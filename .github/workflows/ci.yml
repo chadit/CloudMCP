@@ -19,7 +19,7 @@ on:
 
 env:
   GO_VERSION: '1.24'
-  GOLANGCI_LINT_VERSION: 'v1.64.8'
+  GOLANGCI_LINT_VERSION: 'v2.2.2'
   # Enhanced CI configuration for module resolution
   GOPROXY: 'https://proxy.golang.org,direct'
   GOSUMDB: 'sum.golang.org'
@@ -189,12 +189,16 @@ jobs:
 
       - name: 🧪 Run Unit Tests with Go ${{ matrix.go-version }}
         timeout-minutes: 15
+        env:
+          # Enable CGO for race detector (override global CGO_ENABLED=0)
+          CGO_ENABLED: '1'
         run: |
           echo "🧪 Running unit tests with Go ${{ matrix.go-version }}..."
           echo "Test configuration:"
           echo "  - Race detector: enabled"
           echo "  - Coverage: enabled"
           echo "  - Timeout: 15 minutes"
+          echo "  - CGO_ENABLED: $CGO_ENABLED (required for race detector)"
           
           # Run tests with enhanced error reporting
           if ! go test -v -race -coverprofile=coverage.out -timeout=10m ./...; then
