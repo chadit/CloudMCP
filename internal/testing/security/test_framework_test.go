@@ -120,7 +120,9 @@ func TestSecureTestFramework_SkipIfTokenMissing(t *testing.T) {
 	defer restoreEnvironment(originalEnv)
 	
 	// Remove a token to test skipping
-	os.Unsetenv("TEST_TOKEN")
+	if err := os.Unsetenv("TEST_TOKEN"); err != nil {
+		t.Logf("Warning: failed to unset TEST_TOKEN: %v", err)
+	}
 
 	// Load environment
 	framework.loadEnvironmentVariables()
@@ -293,7 +295,9 @@ func setupMockEnvironment(t *testing.T) map[string]string {
 	// Set mock values
 	mockEnv := MockTokenEnvironment()
 	for name, value := range mockEnv {
-		os.Setenv(name, value)
+		if err := os.Setenv(name, value); err != nil {
+			t.Logf("Warning: failed to set %s: %v", name, err)
+		}
 	}
 
 	return originalEnv
@@ -303,9 +307,15 @@ func setupMockEnvironment(t *testing.T) map[string]string {
 func restoreEnvironment(originalEnv map[string]string) {
 	for name, value := range originalEnv {
 		if value == "" {
-			os.Unsetenv(name)
+			if err := os.Unsetenv(name); err != nil {
+				// Log but don't fail in cleanup
+				return
+			}
 		} else {
-			os.Setenv(name, value)
+			if err := os.Setenv(name, value); err != nil {
+				// Log but don't fail in cleanup
+				return
+			}
 		}
 	}
 }

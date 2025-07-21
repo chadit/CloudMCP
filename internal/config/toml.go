@@ -135,7 +135,12 @@ func SaveTOMLConfig(config *TOMLConfig, configPath string) error {
 		return fmt.Errorf("failed to create config file: %w", err)
 	}
 
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			// Log the error but don't override the main function's return error
+			fmt.Printf("Warning: failed to close config file: %v\n", err)
+		}
+	}()
 
 	// Encode to TOML.
 	encoder := toml.NewEncoder(file)

@@ -52,7 +52,11 @@ func main() {
 		log.Fatalf("Failed to start client: %v", err)
 	}
 
-	defer mcpClient.Close()
+	defer func() {
+		if err := mcpClient.Close(); err != nil {
+			log.Printf("Warning: failed to close MCP client: %v", err)
+		}
+	}()
 
 	// Initialize connection.
 	fmt.Println("Initializing connection...")
