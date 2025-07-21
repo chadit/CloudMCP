@@ -1,6 +1,6 @@
 module github.com/chadit/CloudMCP
 
-go 1.24
+go 1.23
 
 require (
 	github.com/mark3labs/mcp-go v0.32.0
