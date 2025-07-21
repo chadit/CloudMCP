@@ -376,7 +376,11 @@ func (tf *TestFramework) performHealthCheck(ctx context.Context) (*HealthCheckRe
 	if err != nil {
 		return nil, fmt.Errorf("health check request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			tf.log.Error("Failed to close response body", "error", err)
+		}
+	}()
 
 	responseTime := time.Since(start)
 	
