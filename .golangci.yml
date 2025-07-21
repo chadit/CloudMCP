@@ -6,62 +6,57 @@ run:
   go: "1.24"
 
 linters:
-  # Use default enabled linters: errcheck, govet, ineffassign, staticcheck, unused
   enable:
-    - err113         # Keep our error handling compliance
+    # Core security and quality linters - MUST NOT DISABLE
+    - gosec          # Security analysis - critical for production
+    - err113         # Static error definitions - improves error handling
+    - errcheck       # Unchecked errors - critical for reliability
+    - staticcheck    # Comprehensive static analysis - finds bugs
+    - govet          # Official Go static analysis - finds bugs
+    - unused         # Dead code detection - cleaner codebase
+    - ineffassign    # Ineffective assignments - potential bugs
     - misspell       # Spelling errors - low noise, high value
+    - forcetypeassert # Unchecked type assertions - runtime safety
+    
+    # Important quality linters
+    - funcorder      # Method ordering - good code organization
+    - gocritic       # Comprehensive Go style checks - good practices
+    - revive         # Fast Go linter with many useful checks
     
   disable:
-    # Disable problematic linters temporarily for CI success
-    - funcorder      # Method ordering - cosmetic issue causing 21 violations
-    - gosec          # Temporarily disabled - false positives in test files
-    - mnd           # Magic number detector - too many false positives
-    - nlreturn      # Newline return style - cosmetic
-    - wsl           # Whitespace linter - cosmetic
-    - gocognit      # Cognitive complexity - can be overly strict
-    - nestif        # Nested if statements - can be overly strict
-    - gocyclo       # Cyclomatic complexity - can be overly strict
-    - revive        # Style rules that conflict with gofmt
-    - exhaustive    # Exhaustive switch statements - not always needed
-    - wrapcheck     # Error wrapping - can be overly strict
-    - varnamelen    # Variable name length - can be overly strict
-    - containedctx  # Context in struct - sometimes necessary
-    - contextcheck  # Context usage - sometimes overly strict
-    - dupword       # Duplicate words - can have false positives
-    - forcetypeassert # We already fixed the critical ones
-    - gomoddirectives # Go module directives - not critical
-    - nonamedreturns # Named returns - design choice
-    - testpackage   # Test package names - design choice
-    - paralleltest  # Parallel tests - not always appropriate
-    - tparallel     # Test parallel - not always appropriate
-    - prealloc      # Slice preallocation - micro-optimization
-    - bodyclose     # HTTP response body close - handled by better linters
-    - nilerr        # Nil error return - can have false positives
-    - noctx         # HTTP request without context - not always needed
-    - errorlint     # Error wrapping rules - can be overly strict
-    - wastedassign  # Wasted assignments - can have false positives
-    - unparam       # Unused parameters - sometimes needed for interfaces
-    - tagliatelle   # Struct tag format - not critical for functionality
-    - gocritic      # Very strict style rules - causing noise
-    - decorder      # Declaration order - cosmetic
-    - exhaustruct   # Exhaustive struct initialization - design choice
-    - goheader      # File header requirements - not needed
-    - gomodguard    # Module guard - not needed
-    - ireturn       # Interface return types - design choice
-    - maintidx      # Maintainability index - can be overly strict
-    - nakedret      # Naked returns - design choice
-    - predeclared   # Predeclared identifier usage - design choice
-    - reassign      # Variable reassignment - can have false positives
-    - unconvert     # Unnecessary conversions - can have false positives
-    - usestdlibvars # Standard library variable usage - design choice
-    - whitespace    # Whitespace rules - cosmetic
+    # Disable only genuinely problematic or cosmetic linters
+    - mnd            # Magic number detector - too many false positives for constants
+    - nlreturn       # Newline return style - purely cosmetic
+    - wsl            # Whitespace linter - purely cosmetic  
+    - gocognit       # Cognitive complexity - overly strict for domain logic
+    - nestif         # Nested if statements - sometimes necessary for clarity
+    - gocyclo        # Cyclomatic complexity - overly strict for domain logic
+    - exhaustive     # Exhaustive switch statements - not always needed
+    - varnamelen     # Variable name length - can conflict with Go conventions
+    - containedctx   # Context in struct - sometimes necessary for clean APIs
+    - nonamedreturns # Named returns - legitimate Go pattern
+    - testpackage    # Test package names - design choice
+    - prealloc       # Slice preallocation - micro-optimization
+    - nilerr         # Nil error return - can have false positives
+    - unparam        # Unused parameters - needed for interface compliance
+    - tagliatelle    # Struct tag format - not critical for functionality
+    - decorder       # Declaration order - purely cosmetic
+    - exhaustruct    # Exhaustive struct initialization - design choice
+    - goheader       # File header requirements - not needed
+    - gomodguard     # Module guard - not needed for this project
+    - ireturn        # Interface return types - design choice
+    - maintidx       # Maintainability index - overly strict
+    - nakedret       # Naked returns - design choice
+    - predeclared    # Predeclared identifier usage - design choice
+    - usestdlibvars  # Standard library variable usage - design choice
+    - whitespace     # Whitespace rules - purely cosmetic
     
-    # Keep original disables for complexity
-    - forbidigo
-    - depguard
-    - lll
-    - cyclop
-    - funlen
+    # Original complexity disables - keep these as they're overly strict
+    - forbidigo      # Forbid identifiers - too restrictive
+    - depguard       # Import restrictions - not needed
+    - lll            # Line length - handled by gofmt
+    - cyclop         # Cyclomatic complexity - duplicate of gocyclo  
+    - funlen         # Function length - overly strict
 
 linters-settings:
   wrapcheck:
