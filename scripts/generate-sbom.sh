@@ -197,19 +197,11 @@ generate_spdx() {
     # Generate SPDX JSON format
     syft "${PROJECT_ROOT}" \
         --output spdx-json="${spdx_file}" \
-        --name "${COMPONENT_NAME}" \
-        --version "${COMPONENT_VERSION}" \
-        --source-name "${COMPONENT_NAME}" \
-        --source-version "${COMPONENT_VERSION}" \
         --select-catalogers "+go-module-binary,+go-module"
     
-    # Generate SPDX tag-value format
+    # Generate SPDX tag-value format  
     syft "${PROJECT_ROOT}" \
         --output spdx-tag-value="${spdx_tv_file}" \
-        --name "${COMPONENT_NAME}" \
-        --version "${COMPONENT_VERSION}" \
-        --source-name "${COMPONENT_NAME}" \
-        --source-version "${COMPONENT_VERSION}" \
         --select-catalogers "+go-module-binary,+go-module"
     
     # Enhance SPDX with additional metadata
@@ -242,22 +234,14 @@ generate_cyclonedx() {
     local cyclonedx_file="${SBOM_DIR}/sbom.cdx.json"
     local cyclonedx_xml_file="${SBOM_DIR}/sbom.cdx.xml"
     
-    # Generate CycloneDX JSON format
+    # Generate CycloneDX JSON format  
     syft "${PROJECT_ROOT}" \
         --output cyclonedx-json="${cyclonedx_file}" \
-        --name "${COMPONENT_NAME}" \
-        --version "${COMPONENT_VERSION}" \
-        --source-name "${COMPONENT_NAME}" \
-        --source-version "${COMPONENT_VERSION}" \
         --select-catalogers "+go-module-binary,+go-module"
     
     # Generate CycloneDX XML format
     syft "${PROJECT_ROOT}" \
         --output cyclonedx-xml="${cyclonedx_xml_file}" \
-        --name "${COMPONENT_NAME}" \
-        --version "${COMPONENT_VERSION}" \
-        --source-name "${COMPONENT_NAME}" \
-        --source-version "${COMPONENT_VERSION}" \
         --select-catalogers "+go-module-binary,+go-module"
     
     # Enhance CycloneDX with additional metadata
