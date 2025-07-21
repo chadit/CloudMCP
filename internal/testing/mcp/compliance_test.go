@@ -67,7 +67,6 @@ func TestMCPProtocolCompliance(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt // Capture range variable
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -199,7 +198,6 @@ func TestMCPProtocolVersionCompatibility(t *testing.T) {
 	}
 
 	for _, version := range supportedVersions {
-		version := version // Capture range variable
 		t.Run("Version_"+version, func(t *testing.T) {
 			t.Parallel()
 
