@@ -7,11 +7,24 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
+)
+
+// Static error definitions for err113 compliance.
+var (
+	ErrInvalidJSONRPCVersion = errors.New("invalid JSON-RPC version")
+	ErrResponseIDMismatch    = errors.New("response ID mismatch")
+	ErrBothResultAndError    = errors.New("response cannot have both result and error")
+	ErrMissingResultOrError  = errors.New("response must have either result or error")
+	ErrZeroErrorCode         = errors.New("error code cannot be zero")
+	ErrEmptyErrorMessage     = errors.New("error message cannot be empty")
+	ErrMethodMustBeString    = errors.New("method must be a string")
+	ErrResponseMustHaveID    = errors.New("response must have id field")
 )
 
 // MockMCPClient simulates an MCP client for protocol testing.
@@ -248,12 +261,12 @@ func (c *MockMCPClient) sendRequest(ctx context.Context, method string, params i
 func (c *MockMCPClient) validateJSONRPCResponse(response *JSONRPCResponse, expectedID interface{}) error {
 	// Validate JSON-RPC version
 	if response.JSONRPC != "2.0" {
-		return fmt.Errorf("invalid JSON-RPC version: expected '2.0', got '%s'", response.JSONRPC)
+		return fmt.Errorf("%w: expected '2.0', got '%s'", ErrInvalidJSONRPCVersion, response.JSONRPC)
 	}
 
 	// Validate ID matches request (handle type conversions from JSON)
 	if !compareJSONRPCIDs(response.ID, expectedID) {
-		return fmt.Errorf("response ID mismatch: expected %v, got %v", expectedID, response.ID)
+		return fmt.Errorf("%w: expected %v, got %v", ErrResponseIDMismatch, expectedID, response.ID)
 	}
 
 	// Validate either result or error is present (but not both)
@@ -261,20 +274,20 @@ func (c *MockMCPClient) validateJSONRPCResponse(response *JSONRPCResponse, expec
 	hasError := response.Error != nil
 
 	if hasResult && hasError {
-		return fmt.Errorf("response cannot have both result and error")
+		return ErrBothResultAndError
 	}
 
 	if !hasResult && !hasError {
-		return fmt.Errorf("response must have either result or error")
+		return ErrMissingResultOrError
 	}
 
 	// Validate error structure if present
 	if hasError {
 		if response.Error.Code == 0 {
-			return fmt.Errorf("error code cannot be zero")
+			return ErrZeroErrorCode
 		}
 		if response.Error.Message == "" {
-			return fmt.Errorf("error message cannot be empty")
+			return ErrEmptyErrorMessage
 		}
 	}
 
@@ -322,30 +335,30 @@ func ValidateJSONRPCMessage(data []byte) error {
 	// Check JSON-RPC version
 	jsonrpc, ok := message["jsonrpc"].(string)
 	if !ok || jsonrpc != "2.0" {
-		return fmt.Errorf("invalid JSON-RPC version: expected '2.0', got '%v'", message["jsonrpc"])
+		return fmt.Errorf("%w: expected '2.0', got '%v'", ErrInvalidJSONRPCVersion, message["jsonrpc"])
 	}
 
 	// Check if it's a request or response
 	if method, hasMethod := message["method"]; hasMethod {
 		// It's a request
 		if _, ok := method.(string); !ok {
-			return fmt.Errorf("method must be a string")
+			return ErrMethodMustBeString
 		}
 		// ID is optional for notifications
 	} else {
 		// It's a response
 		if _, hasID := message["id"]; !hasID {
-			return fmt.Errorf("response must have id field")
+			return ErrResponseMustHaveID
 		}
 
 		hasResult := message["result"] != nil
 		hasError := message["error"] != nil
 
 		if hasResult && hasError {
-			return fmt.Errorf("response cannot have both result and error")
+			return ErrBothResultAndError
 		}
 		if !hasResult && !hasError {
-			return fmt.Errorf("response must have either result or error")
+			return ErrMissingResultOrError
 		}
 
 		// Validate error structure if present
@@ -354,13 +367,13 @@ func ValidateJSONRPCMessage(data []byte) error {
 				// Check error code
 				if code, hasCode := errorObj["code"]; hasCode {
 					if codeFloat, ok := code.(float64); ok && codeFloat == 0 {
-						return fmt.Errorf("error code cannot be zero")
+						return ErrZeroErrorCode
 					}
 				}
 				// Check error message
 				if msg, hasMsg := errorObj["message"]; hasMsg {
 					if msgStr, ok := msg.(string); ok && msgStr == "" {
-						return fmt.Errorf("error message cannot be empty")
+						return ErrEmptyErrorMessage
 					}
 				}
 			}
@@ -379,12 +392,12 @@ func ValidateJSONRPCResponse(data []byte, expectedID interface{}) error {
 
 	// Validate JSON-RPC version
 	if response.JSONRPC != "2.0" {
-		return fmt.Errorf("invalid JSON-RPC version: expected '2.0', got '%s'", response.JSONRPC)
+		return fmt.Errorf("%w: expected '2.0', got '%s'", ErrInvalidJSONRPCVersion, response.JSONRPC)
 	}
 
 	// Validate ID matches expected (handle type conversions from JSON)
 	if !compareJSONRPCIDs(response.ID, expectedID) {
-		return fmt.Errorf("response ID mismatch: expected %v, got %v", expectedID, response.ID)
+		return fmt.Errorf("%w: expected %v, got %v", ErrResponseIDMismatch, expectedID, response.ID)
 	}
 
 	// Validate either result or error is present (but not both)
@@ -392,20 +405,20 @@ func ValidateJSONRPCResponse(data []byte, expectedID interface{}) error {
 	hasError := response.Error != nil
 
 	if hasResult && hasError {
-		return fmt.Errorf("response cannot have both result and error")
+		return ErrBothResultAndError
 	}
 
 	if !hasResult && !hasError {
-		return fmt.Errorf("response must have either result or error")
+		return ErrMissingResultOrError
 	}
 
 	// Validate error structure if present
 	if hasError {
 		if response.Error.Code == 0 {
-			return fmt.Errorf("error code cannot be zero")
+			return ErrZeroErrorCode
 		}
 		if response.Error.Message == "" {
-			return fmt.Errorf("error message cannot be empty")
+			return ErrEmptyErrorMessage
 		}
 	}
 

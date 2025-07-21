@@ -10,6 +10,14 @@ import (
 	"time"
 )
 
+// Static error definitions for err113 compliance.
+var (
+	ErrNoValidationConfig     = errors.New("no validation config found for token")
+	ErrTokenRequired          = errors.New("token is required but not provided")
+	ErrTokenLengthInvalid     = errors.New("token length invalid")
+	ErrTokenFormatInvalid     = errors.New("token format invalid")
+)
+
 // TokenFormat represents supported token formats for validation.
 type TokenFormat string
 
@@ -123,7 +131,7 @@ func (v *TokenValidator) ValidateToken(tokenName, tokenValue string) TokenValida
 	if !exists {
 		return TokenValidationResult{
 			Valid:    false,
-			Error:    fmt.Errorf("no validation config found for token: %s", tokenName),
+			Error:    fmt.Errorf("%w: %s", ErrNoValidationConfig, tokenName),
 			Redacted: RedactToken(tokenValue),
 		}
 	}
@@ -141,7 +149,7 @@ func (v *TokenValidator) ValidateToken(tokenName, tokenValue string) TokenValida
 		if config.Required {
 			return TokenValidationResult{
 				Valid:    false,
-				Error:    errors.New("token is required but not provided"),
+				Error:    ErrTokenRequired,
 				Redacted: "[EMPTY]",
 			}
 		}
@@ -162,14 +170,14 @@ func (v *TokenValidator) ValidateToken(tokenName, tokenValue string) TokenValida
 
 	// Validate length using constant-time comparison to prevent timing attacks
 	if !constantTimeValidateLength(tokenValue, config.MinLength, config.MaxLength) {
-		result.Error = fmt.Errorf("token length invalid (expected %d-%d chars)", 
-			config.MinLength, config.MaxLength)
+		result.Error = fmt.Errorf("%w (expected %d-%d chars)", 
+			ErrTokenLengthInvalid, config.MinLength, config.MaxLength)
 		return result
 	}
 
 	// Validate format
 	if !v.validateTokenFormat(tokenValue, config.Format) {
-		result.Error = fmt.Errorf("token format invalid (expected %s)", config.Format)
+		result.Error = fmt.Errorf("%w (expected %s)", ErrTokenFormatInvalid, config.Format)
 		return result
 	}
 
