@@ -640,7 +640,17 @@ func processMethod(request JSONRPCRequest, mcpServer interface{}) JSONRPCRespons
 				},
 			}
 			
-			resultJSON, _ := json.Marshal(result)
+			resultJSON, err := json.Marshal(result)
+			if err != nil {
+				return JSONRPCResponse{
+					JSONRPC: "2.0",
+					ID:      request.ID,
+					Error: &JSONRPCError{
+						Code:    -32603,
+						Message: "Internal error: failed to marshal tool result",
+					},
+				}
+			}
 			return JSONRPCResponse{
 				JSONRPC: "2.0",
 				ID:      request.ID,
