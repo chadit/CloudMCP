@@ -266,7 +266,7 @@ jobs:
           CGO_ENABLED: ${{ matrix.platform.cgo }}
         run: |
           # Security-hardened build flags
-          BUILD_FLAGS="-ldflags=-s -w -buildid= -trimpath -tags=netgo,osusergo"
+          BUILD_FLAGS="-ldflags='-s -w -buildid=' -trimpath -tags=netgo,osusergo"
           
           # Add platform-specific security flags
           if [[ "$GOOS" == "linux" && "${{ matrix.platform.cgo }}" == "1" ]]; then
