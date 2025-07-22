@@ -10,14 +10,22 @@ import (
 )
 
 func TestLoad_DefaultValues(t *testing.T) {
-	t.Parallel()
+	// Remove t.Parallel() to prevent race conditions with environment variables
 
 	// Clear environment variables to test defaults
 	originalServerName := os.Getenv("CLOUD_MCP_SERVER_NAME")
 	originalLogLevel := os.Getenv("LOG_LEVEL")
 	defer func() {
-		_ = os.Setenv("CLOUD_MCP_SERVER_NAME", originalServerName)
-		_ = os.Setenv("LOG_LEVEL", originalLogLevel)
+		if originalServerName != "" {
+			_ = os.Setenv("CLOUD_MCP_SERVER_NAME", originalServerName)
+		} else {
+			_ = os.Unsetenv("CLOUD_MCP_SERVER_NAME")
+		}
+		if originalLogLevel != "" {
+			_ = os.Setenv("LOG_LEVEL", originalLogLevel)
+		} else {
+			_ = os.Unsetenv("LOG_LEVEL")
+		}
 	}()
 
 	_ = os.Unsetenv("CLOUD_MCP_SERVER_NAME")
@@ -34,14 +42,22 @@ func TestLoad_DefaultValues(t *testing.T) {
 }
 
 func TestLoad_EnvironmentVariables(t *testing.T) {
-	t.Parallel()
+	// Remove t.Parallel() to prevent race conditions with environment variables
 
 	// Save original environment variables
 	originalServerName := os.Getenv("CLOUD_MCP_SERVER_NAME")
 	originalLogLevel := os.Getenv("LOG_LEVEL")
 	defer func() {
-		_ = os.Setenv("CLOUD_MCP_SERVER_NAME", originalServerName)
-		_ = os.Setenv("LOG_LEVEL", originalLogLevel)
+		if originalServerName != "" {
+			_ = os.Setenv("CLOUD_MCP_SERVER_NAME", originalServerName)
+		} else {
+			_ = os.Unsetenv("CLOUD_MCP_SERVER_NAME")
+		}
+		if originalLogLevel != "" {
+			_ = os.Setenv("LOG_LEVEL", originalLogLevel)
+		} else {
+			_ = os.Unsetenv("LOG_LEVEL")
+		}
 	}()
 
 	// Set test environment variables
@@ -59,14 +75,22 @@ func TestLoad_EnvironmentVariables(t *testing.T) {
 }
 
 func TestLoad_PartialEnvironmentOverride(t *testing.T) {
-	t.Parallel()
+	// Remove t.Parallel() to prevent race conditions with environment variables
 
 	// Save original environment variables
 	originalServerName := os.Getenv("CLOUD_MCP_SERVER_NAME")
 	originalLogLevel := os.Getenv("LOG_LEVEL")
 	defer func() {
-		_ = os.Setenv("CLOUD_MCP_SERVER_NAME", originalServerName)
-		_ = os.Setenv("LOG_LEVEL", originalLogLevel)
+		if originalServerName != "" {
+			_ = os.Setenv("CLOUD_MCP_SERVER_NAME", originalServerName)
+		} else {
+			_ = os.Unsetenv("CLOUD_MCP_SERVER_NAME")
+		}
+		if originalLogLevel != "" {
+			_ = os.Setenv("LOG_LEVEL", originalLogLevel)
+		} else {
+			_ = os.Unsetenv("LOG_LEVEL")
+		}
 	}()
 
 	// Set only server name, leave log level as default
@@ -98,14 +122,22 @@ func TestConfig_BasicValidation(t *testing.T) {
 }
 
 func TestLoad_EmptyEnvironmentValues(t *testing.T) {
-	t.Parallel()
+	// Remove t.Parallel() to prevent race conditions with environment variables
 
 	// Save original environment variables
 	originalServerName := os.Getenv("CLOUD_MCP_SERVER_NAME")
 	originalLogLevel := os.Getenv("LOG_LEVEL")
 	defer func() {
-		_ = os.Setenv("CLOUD_MCP_SERVER_NAME", originalServerName)
-		_ = os.Setenv("LOG_LEVEL", originalLogLevel)
+		if originalServerName != "" {
+			_ = os.Setenv("CLOUD_MCP_SERVER_NAME", originalServerName)
+		} else {
+			_ = os.Unsetenv("CLOUD_MCP_SERVER_NAME")
+		}
+		if originalLogLevel != "" {
+			_ = os.Setenv("LOG_LEVEL", originalLogLevel)
+		} else {
+			_ = os.Unsetenv("LOG_LEVEL")
+		}
 	}()
 
 	// Set empty environment variables (should use defaults)
