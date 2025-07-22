@@ -36,6 +36,19 @@ jobs:
         with:
           # Need full git history for CodeQL PR diff analysis
           fetch-depth: 0
+          token: ${{ github.token }}
+          ref: ${{ github.head_ref || github.ref }}
+          clean: true
+          
+      - name: Fix git state for CodeQL diff calculation
+        run: |
+          # Configure git for proper diff operations between PR and base branch
+          git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
+          git fetch --all --force --update-head-ok
+          git remote set-head origin -a
+          # Verify git state for debugging
+          echo "Current branch: $(git branch --show-current)"
+          echo "Available remotes: $(git branch -r | head -5)"
 
       - name: Setup Go
         uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed # v5.1.0
