@@ -12,12 +12,12 @@ const (
 
 	// APIVersion is the version of the MCP protocol.
 	APIVersion = "0.1.0"
-
-	// BuildDate can be set at build time using ldflags.
-	BuildDate = ""
 )
 
 var (
+	// BuildDate can be set at build time using ldflags.
+	BuildDate = "" //nolint:gochecknoglobals // Build-time variable set via ldflags
+
 	// GitCommit can be set at build time using ldflags.
 	GitCommit = "dev" //nolint:gochecknoglobals // Build-time variable set via ldflags
 
