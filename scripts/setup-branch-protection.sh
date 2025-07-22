@@ -144,8 +144,13 @@ apply_branch_protection() {
             "Comprehensive Tests (1.23, integration)",
             "Comprehensive Tests (1.23, race)",
             "Security Analysis & SBOM",
-            "Build Testing",
-            "Container Integration"
+            "Build Testing (linux, amd64, 1)",
+            "Build Testing (linux, arm64, 0)",
+            "Build Testing (darwin, amd64, 0)",
+            "Build Testing (darwin, arm64, 0)",
+            "Build Testing (windows, amd64, 0)",
+            "Container Integration",
+            "CodeQL Analysis"
         ]
     },
     "enforce_admins": true,
@@ -230,10 +235,25 @@ setup_rulesets() {
                         "context": "Security Analysis & SBOM"
                     },
                     {
-                        "context": "Build Testing"
+                        "context": "Build Testing (linux, amd64, 1)"
+                    },
+                    {
+                        "context": "Build Testing (linux, arm64, 0)"
+                    },
+                    {
+                        "context": "Build Testing (darwin, amd64, 0)"
+                    },
+                    {
+                        "context": "Build Testing (darwin, arm64, 0)"
+                    },
+                    {
+                        "context": "Build Testing (windows, amd64, 0)"
                     },
                     {
                         "context": "Container Integration"
+                    },
+                    {
+                        "context": "CodeQL Analysis"
                     }
                 ],
                 "strict_required_status_checks_policy": true
