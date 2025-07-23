@@ -1,8 +1,10 @@
 name: 'Phase 1: Fast Feedback'
+# Test workflow trigger
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ "**" ]
+    # Note: branches-ignore cannot be used with branches
   pull_request:
     branches: [ main, develop ]
 

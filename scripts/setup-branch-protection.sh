@@ -150,7 +150,7 @@ apply_branch_protection() {
             "Build Testing (darwin, arm64, 0)",
             "Build Testing (windows, amd64, 0)",
             "Container Integration",
-            "CodeQL Analysis"
+            "CodeQL Analysis (go)"
         ]
     },
     "enforce_admins": true,
@@ -253,7 +253,7 @@ setup_rulesets() {
                         "context": "Container Integration"
                     },
                     {
-                        "context": "CodeQL Analysis"
+                        "context": "CodeQL Analysis (go)"
                     }
                 ],
                 "strict_required_status_checks_policy": true
