@@ -4,8 +4,7 @@ name: 'Phase 1: Fast Feedback'
 on:
   push:
     branches: [ "**" ]
-    # Exclude temporary and experimental branches to avoid noise
-    branches-ignore: [ 'temp/**', 'experimental/**', 'wip/**' ]
+    # Note: branches-ignore cannot be used with branches
   pull_request:
     branches: [ main, develop ]
 
