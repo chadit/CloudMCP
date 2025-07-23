@@ -177,6 +177,49 @@ CloudMCP uses a **two-phase CI/CD system** for optimal development velocity:
 
 **Build Artifacts**: All platforms automatically built and available for download
 
+## 🔒 Branch Protection and Clearance Requirements
+
+CloudMCP enforces **strict branch protection** to ensure code quality and security:
+
+### Pull Request Requirements
+
+All changes to the `main` branch **must** go through pull requests with:
+
+- ✅ **1 Required Approver** - PRs cannot be self-approved
+- ✅ **All 15 Status Checks Must Pass** - Complete CI/CD testing required
+- ✅ **Up-to-date Branch** - Must be current with main before merge
+- ✅ **Admin Enforcement** - Even repository owners must follow these rules
+
+### Required Status Checks (15 Total)
+
+**Phase 1 - Fast Feedback:**
+- Fast Quality Checks (static analysis, linting, formatting)
+
+**Phase 2 - Comprehensive Testing:**
+- Comprehensive Tests (Go 1.22 & 1.23: unit, integration, race)
+- Security Analysis & SBOM
+- Build Testing (5 platforms: Linux, Darwin, Windows)
+- Container Integration
+- CodeQL Analysis (security scanning)
+
+### No Direct Pushes
+
+- 🚫 **Direct pushes to main are blocked** - All changes via PRs
+- 🚫 **Force pushes are prevented** - Maintains git history integrity
+- 🚫 **Branch deletion is blocked** - Protects main branch
+
+### Clearance Process
+
+1. **Create feature branch** from main
+2. **Make your changes** with tests and documentation
+3. **Push to feature branch** - Triggers Phase 1 checks automatically
+4. **Create pull request** - Triggers Phase 2 comprehensive testing
+5. **Wait for all checks** - All 15 status checks must pass ✅
+6. **Request review** - Get approval from another contributor
+7. **Merge approved PR** - Only after approval + all checks pass
+
+**⚠️ Important**: No shortcuts or bypasses - this ensures every change is properly tested and reviewed.
+
 ## 🛠️ Troubleshooting
 
 ### CloudMCP not appearing in your AI tool?
@@ -291,12 +334,26 @@ This design makes CloudMCP:
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes with tests
-4. Ensure code is formatted (`gofumpt -w .`)
-5. Run linters (`golangci-lint run`)
-6. Submit a pull request
+**⚠️ Important**: Please read the [Branch Protection and Clearance Requirements](#-branch-protection-and-clearance-requirements) section above before contributing.
+
+**Quick Contributing Guide:**
+
+1. **Fork the repository**
+2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
+3. **Make your changes** with tests and documentation
+4. **Ensure code quality**:
+   ```bash
+   gofumpt -w .          # Format code
+   golangci-lint run     # Run linters
+   go test ./...         # Run tests
+   ```
+5. **Push to your fork** - This triggers Phase 1 checks
+6. **Submit a pull request** - This triggers Phase 2 comprehensive testing
+7. **Wait for all 15 status checks to pass** ✅
+8. **Request review** from another contributor
+9. **Merge only after approval + all checks pass**
+
+**All contributions must follow the branch protection requirements** - no exceptions, even for repository owners.
 
 ## 📄 License
 
