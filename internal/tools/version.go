@@ -22,6 +22,8 @@ func NewVersionTool() (mcp.Tool, func(ctx context.Context, request mcp.CallToolR
 		jsonResponse, err := json.MarshalIndent(versionInfo, "", "  ")
 		if err != nil {
 			// Fallback to simple string format
+			//
+			//nolint:nilerr // this will be refactored as services are added.
 			return mcp.NewToolResultText(versionInfo.String()), nil
 		}
 

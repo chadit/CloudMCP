@@ -41,56 +41,56 @@ log_error() {
 # Function to get tool configuration
 get_tool_config() {
     local tool_key="$1"
-    
+
     case "$tool_key" in
-        "golangci-lint-linux-amd64")
-            echo "v1.64.2:linux:amd64:https://github.com/golangci/golangci-lint/releases/download/v1.64.2/golangci-lint-1.64.2-linux-amd64.tar.gz:a893e7c9211f70a0cb8c5121ab80d5b089109c23af6bc2923820ba8b42365072"
-            ;;
-        "golangci-lint-linux-arm64")
-            echo "v1.64.2:linux:arm64:https://github.com/golangci/golangci-lint/releases/download/v1.64.2/golangci-lint-1.64.2-linux-arm64.tar.gz:be2f8ddb8e5e6b0b50669baec8a5e8b1b7d8b3b2a7e9b4b5c7f9e6e8b1b3c9f"
-            ;;
-        "golangci-lint-darwin-amd64")
-            echo "v1.64.2:darwin:amd64:https://github.com/golangci/golangci-lint/releases/download/v1.64.2/golangci-lint-1.64.2-darwin-amd64.tar.gz:cf3f8ddb8e5e6b0b50669baec8a5e8b1b7d8b3b2a7e9b4b5c7f9e6e8b1b3ca0"
-            ;;
-        "golangci-lint-darwin-arm64")
-            echo "v1.64.2:darwin:arm64:https://github.com/golangci/golangci-lint/releases/download/v1.64.2/golangci-lint-1.64.2-darwin-arm64.tar.gz:df4f8ddb8e5e6b0b50669baec8a5e8b1b7d8b3b2a7e9b4b5c7f9e6e8b1b3ca1"
-            ;;
-        "hadolint-linux-amd64")
-            echo "v2.12.0:linux:amd64:https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-x86_64:56de6d5e5ec427e17b74fa48d51271c7fc0d61244bf5c90e828aab8362d55010"
-            ;;
-        "hadolint-linux-arm64")
-            echo "v2.12.0:linux:arm64:https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-arm64:5798551bf19f33951881f15eb238f90aef023f11e7ec7e9f4c37961cb87c5df6"
-            ;;
-        "hadolint-darwin-amd64")
-            echo "v2.12.0:darwin:amd64:https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Darwin-x86_64:2a5b7afcab91645c39a7cebefcd835b865f7488e69be24567f433dfc3d41cd27"
-            ;;
-        "hadolint-darwin-arm64")
-            echo "v2.12.0:darwin:arm64:https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Darwin-x86_64:2a5b7afcab91645c39a7cebefcd835b865f7488e69be24567f433dfc3d41cd27"
-            ;;
-        "trivy-linux-amd64")
-            echo "v0.48.3:linux:amd64:https://github.com/aquasecurity/trivy/releases/download/v0.48.3/trivy_0.48.3_Linux-64bit.tar.gz:61f6d5c0fb6ed451c8bab8b13acb5d701f1b532bd6b629f3163f8f57bb10e564"
-            ;;
-        "trivy-linux-arm64")
-            echo "v0.48.3:linux:arm64:https://github.com/aquasecurity/trivy/releases/download/v0.48.3/trivy_0.48.3_Linux-ARM64.tar.gz:01e814fbb0b2aaaa4510b6c29e9a37103fe9818f70be816c3ecbb39e836a61b5"
-            ;;
-        "trivy-darwin-amd64")
-            echo "v0.48.3:darwin:amd64:https://github.com/aquasecurity/trivy/releases/download/v0.48.3/trivy_0.48.3_macOS-64bit.tar.gz:4fc0d1f2ec55869ab4772bd321451023ada4589cc8f9114dae71c7656b2be725"
-            ;;
-        "trivy-darwin-arm64")
-            echo "v0.48.3:darwin:arm64:https://github.com/aquasecurity/trivy/releases/download/v0.48.3/trivy_0.48.3_macOS-ARM64.tar.gz:6553a995a97bd7f57c486b7bd38cc297aeeb1125c2eb647cff0866ad6eeef48d"
-            ;;
-        "cosign-linux-amd64")
-            echo "v2.4.1:linux:amd64:https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign-linux-amd64:8b24b946dd5809c6bd93de08033bcf6bc0ed7d336b7785787c080f574b89249b"
-            ;;
-        "cosign-linux-arm64")
-            echo "v2.4.1:linux:arm64:https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign-linux-arm64:3b2e2e3854d0356c45fe6607047526ccd04742d20bd44afb5be91fa2a6e7cb4a"
-            ;;
-        "cosign-darwin-amd64")
-            echo "v2.4.1:darwin:amd64:https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign-darwin-amd64:666032ca283da92b6f7953965688fd51200fdc891a86c19e05c98b898ea0af4e"
-            ;;
-        *)
-            echo ""
-            ;;
+    "golangci-lint-linux-amd64")
+        echo "v1.64.2:linux:amd64:https://github.com/golangci/golangci-lint/releases/download/v1.64.2/golangci-lint-1.64.2-linux-amd64.tar.gz:a893e7c9211f70a0cb8c5121ab80d5b089109c23af6bc2923820ba8b42365072"
+        ;;
+    "golangci-lint-linux-arm64")
+        echo "v1.64.2:linux:arm64:https://github.com/golangci/golangci-lint/releases/download/v1.64.2/golangci-lint-1.64.2-linux-arm64.tar.gz:be2f8ddb8e5e6b0b50669baec8a5e8b1b7d8b3b2a7e9b4b5c7f9e6e8b1b3c9f"
+        ;;
+    "golangci-lint-darwin-amd64")
+        echo "v1.64.2:darwin:amd64:https://github.com/golangci/golangci-lint/releases/download/v1.64.2/golangci-lint-1.64.2-darwin-amd64.tar.gz:cf3f8ddb8e5e6b0b50669baec8a5e8b1b7d8b3b2a7e9b4b5c7f9e6e8b1b3ca0"
+        ;;
+    "golangci-lint-darwin-arm64")
+        echo "v1.64.2:darwin:arm64:https://github.com/golangci/golangci-lint/releases/download/v1.64.2/golangci-lint-1.64.2-darwin-arm64.tar.gz:df4f8ddb8e5e6b0b50669baec8a5e8b1b7d8b3b2a7e9b4b5c7f9e6e8b1b3ca1"
+        ;;
+    "hadolint-linux-amd64")
+        echo "v2.12.0:linux:amd64:https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-x86_64:56de6d5e5ec427e17b74fa48d51271c7fc0d61244bf5c90e828aab8362d55010"
+        ;;
+    "hadolint-linux-arm64")
+        echo "v2.12.0:linux:arm64:https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-arm64:5798551bf19f33951881f15eb238f90aef023f11e7ec7e9f4c37961cb87c5df6"
+        ;;
+    "hadolint-darwin-amd64")
+        echo "v2.12.0:darwin:amd64:https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Darwin-x86_64:2a5b7afcab91645c39a7cebefcd835b865f7488e69be24567f433dfc3d41cd27"
+        ;;
+    "hadolint-darwin-arm64")
+        echo "v2.12.0:darwin:arm64:https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Darwin-x86_64:2a5b7afcab91645c39a7cebefcd835b865f7488e69be24567f433dfc3d41cd27"
+        ;;
+    "trivy-linux-amd64")
+        echo "v0.48.3:linux:amd64:https://github.com/aquasecurity/trivy/releases/download/v0.48.3/trivy_0.48.3_Linux-64bit.tar.gz:61f6d5c0fb6ed451c8bab8b13acb5d701f1b532bd6b629f3163f8f57bb10e564"
+        ;;
+    "trivy-linux-arm64")
+        echo "v0.48.3:linux:arm64:https://github.com/aquasecurity/trivy/releases/download/v0.48.3/trivy_0.48.3_Linux-ARM64.tar.gz:01e814fbb0b2aaaa4510b6c29e9a37103fe9818f70be816c3ecbb39e836a61b5"
+        ;;
+    "trivy-darwin-amd64")
+        echo "v0.48.3:darwin:amd64:https://github.com/aquasecurity/trivy/releases/download/v0.48.3/trivy_0.48.3_macOS-64bit.tar.gz:4fc0d1f2ec55869ab4772bd321451023ada4589cc8f9114dae71c7656b2be725"
+        ;;
+    "trivy-darwin-arm64")
+        echo "v0.48.3:darwin:arm64:https://github.com/aquasecurity/trivy/releases/download/v0.48.3/trivy_0.48.3_macOS-ARM64.tar.gz:6553a995a97bd7f57c486b7bd38cc297aeeb1125c2eb647cff0866ad6eeef48d"
+        ;;
+    "cosign-linux-amd64")
+        echo "v2.4.1:linux:amd64:https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign-linux-amd64:8b24b946dd5809c6bd93de08033bcf6bc0ed7d336b7785787c080f574b89249b"
+        ;;
+    "cosign-linux-arm64")
+        echo "v2.4.1:linux:arm64:https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign-linux-arm64:3b2e2e3854d0356c45fe6607047526ccd04742d20bd44afb5be91fa2a6e7cb4a"
+        ;;
+    "cosign-darwin-amd64")
+        echo "v2.4.1:darwin:amd64:https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign-darwin-amd64:666032ca283da92b6f7953965688fd51200fdc891a86c19e05c98b898ea0af4e"
+        ;;
+    *)
+        echo ""
+        ;;
     esac
 }
 
@@ -116,27 +116,27 @@ list_available_tools() {
 # Function to detect platform
 detect_platform() {
     local os arch
-    
+
     case "$(uname -s)" in
-        Linux*)  os="linux" ;;
-        Darwin*) os="darwin" ;;
-        CYGWIN*|MINGW*) os="windows" ;;
-        *) 
-            log_error "Unsupported operating system: $(uname -s)"
-            exit 1
-            ;;
+    Linux*) os="linux" ;;
+    Darwin*) os="darwin" ;;
+    CYGWIN* | MINGW*) os="windows" ;;
+    *)
+        log_error "Unsupported operating system: $(uname -s)"
+        exit 1
+        ;;
     esac
-    
+
     case "$(uname -m)" in
-        x86_64|amd64) arch="amd64" ;;
-        arm64|aarch64) arch="arm64" ;;
-        armv7*) arch="arm" ;;
-        *) 
-            log_error "Unsupported architecture: $(uname -m)"
-            exit 1
-            ;;
+    x86_64 | amd64) arch="amd64" ;;
+    arm64 | aarch64) arch="arm64" ;;
+    armv7*) arch="arm" ;;
+    *)
+        log_error "Unsupported architecture: $(uname -m)"
+        exit 1
+        ;;
     esac
-    
+
     echo "${os}-${arch}"
 }
 
@@ -144,12 +144,12 @@ detect_platform() {
 verify_checksum() {
     local file="$1"
     local expected_checksum="$2"
-    
+
     if [[ ! -f "$file" ]]; then
         log_error "File not found for checksum verification: $file"
         return 1
     fi
-    
+
     local actual_checksum
     if command -v sha256sum >/dev/null 2>&1; then
         actual_checksum=$(sha256sum "$file" | cut -d' ' -f1)
@@ -159,7 +159,7 @@ verify_checksum() {
         log_error "No SHA256 tool found (sha256sum or shasum required)"
         return 1
     fi
-    
+
     if [[ "$actual_checksum" == "$expected_checksum" ]]; then
         log_success "Checksum verification passed: $file"
         return 0
@@ -178,15 +178,15 @@ secure_download() {
     local expected_checksum="$3"
     local max_retries=3
     local retry_delay=5
-    
+
     log_info "Downloading securely: $(basename "$output_file")"
-    
+
     # Create output directory if needed
     mkdir -p "$(dirname "$output_file")"
-    
-    for ((i=1; i<=max_retries; i++)); do
+
+    for ((i = 1; i <= max_retries; i++)); do
         log_info "Download attempt $i/$max_retries..."
-        
+
         # Download with curl (with security options)
         if curl -fsSL \
             --connect-timeout 30 \
@@ -196,7 +196,7 @@ secure_download() {
             --user-agent "CloudMCP-Security-Utils/1.0" \
             -o "$output_file" \
             "$url"; then
-            
+
             # Verify checksum
             if verify_checksum "$output_file" "$expected_checksum"; then
                 log_success "Secure download completed: $(basename "$output_file")"
@@ -208,13 +208,13 @@ secure_download() {
         else
             log_warning "Download failed, retrying in ${retry_delay}s..."
         fi
-        
+
         if [[ $i -lt $max_retries ]]; then
             sleep $retry_delay
-            retry_delay=$((retry_delay * 2))  # Exponential backoff
+            retry_delay=$((retry_delay * 2)) # Exponential backoff
         fi
     done
-    
+
     log_error "Failed to download after $max_retries attempts: $url"
     return 1
 }
@@ -224,19 +224,19 @@ install_tool() {
     local tool_name="$1"
     local platform="${2:-$(detect_platform)}"
     local force_install="${3:-false}"
-    
+
     local tool_key="${tool_name}-${platform}"
-    
+
     local config
     config=$(get_tool_config "$tool_key")
-    
+
     if [[ -z "$config" ]]; then
         log_error "Tool configuration not found: $tool_key"
         log_info "Available tools:"
         list_available_tools | grep "^$tool_name-" || echo "  No tools found for $tool_name"
         return 1
     fi
-    
+
     # Parse configuration (handle URLs with colons correctly)
     # Format: version:os:arch:url:checksum
     # Extract each field carefully to handle URLs with colons
@@ -244,14 +244,14 @@ install_tool() {
     os=$(echo "$config" | cut -d':' -f2)
     arch=$(echo "$config" | cut -d':' -f3)
     # Extract URL by removing version:os:arch: prefix and :checksum suffix
-    temp_config="${config#*:*:*:}"  # Remove first 3 fields
-    checksum="${temp_config##*:}"   # Get last field (checksum)
-    url="${temp_config%:*}"         # Remove checksum, leaving URL
-    
+    temp_config="${config#*:*:*:}" # Remove first 3 fields
+    checksum="${temp_config##*:}"  # Get last field (checksum)
+    url="${temp_config%:*}"        # Remove checksum, leaving URL
+
     local tool_dir="${TOOLS_DIR}/${tool_name}"
     local tool_binary="${tool_dir}/${tool_name}"
     local cache_file="${CACHE_DIR}/${tool_name}-${version}-${platform}"
-    
+
     # Check if already installed and up to date
     if [[ -f "$tool_binary" ]] && [[ "$force_install" != "true" ]]; then
         if [[ -f "${tool_dir}/.version" ]] && [[ "$(cat "${tool_dir}/.version")" == "$version" ]]; then
@@ -259,12 +259,12 @@ install_tool() {
             return 0
         fi
     fi
-    
+
     log_info "Installing verified tool: $tool_name $version for $platform"
-    
+
     # Create directories
     mkdir -p "$tool_dir" "$CACHE_DIR"
-    
+
     # Download to cache if not present
     if [[ ! -f "$cache_file" ]]; then
         secure_download "$url" "$cache_file" "$checksum"
@@ -272,33 +272,33 @@ install_tool() {
         log_info "Using cached download"
         verify_checksum "$cache_file" "$checksum"
     fi
-    
+
     # Extract and install
     if [[ "$url" == *.tar.gz ]]; then
         # Extract tar.gz
         log_info "Extracting archive..."
-        
+
         # Special handling for different tool archive structures
         case "$tool_name" in
-            "trivy")
-                # Trivy archives have the binary directly in the root
-                tar -xzf "$cache_file" -C "$tool_dir"
-                ;;
-            *)
-                # Standard extraction with strip-components for other tools
-                tar -xzf "$cache_file" -C "$tool_dir" --strip-components=1
-                ;;
+        "trivy")
+            # Trivy archives have the binary directly in the root
+            tar -xzf "$cache_file" -C "$tool_dir"
+            ;;
+        *)
+            # Standard extraction with strip-components for other tools
+            tar -xzf "$cache_file" -C "$tool_dir" --strip-components=1
+            ;;
         esac
-        
+
         # Find the actual binary (may be in subdirectories or different names)
         local binary_path
         binary_path=$(find "$tool_dir" -name "$tool_name" -type f | head -1)
-        
+
         # If binary not found by exact name, try common variations
         if [[ -z "$binary_path" ]]; then
             binary_path=$(find "$tool_dir" -type f -executable | grep -E "${tool_name}(\\.exe)?$" | head -1)
         fi
-        
+
         # If found and different from expected location, move it
         if [[ -n "$binary_path" ]] && [[ "$binary_path" != "$tool_binary" ]]; then
             log_info "Moving binary from $binary_path to $tool_binary"
@@ -313,17 +313,17 @@ install_tool() {
         # Single binary file
         cp "$cache_file" "$tool_binary"
     fi
-    
+
     # Make executable
     chmod +x "$tool_binary"
-    
+
     # Store version
-    echo "$version" > "${tool_dir}/.version"
-    
+    echo "$version" >"${tool_dir}/.version"
+
     # Verify installation
     if [[ -x "$tool_binary" ]]; then
         log_success "Successfully installed: $tool_name $version"
-        
+
         # Test the binary
         if "$tool_binary" --version >/dev/null 2>&1 || "$tool_binary" version >/dev/null 2>&1; then
             log_success "Tool verification passed: $tool_name"
@@ -341,10 +341,10 @@ update_checksums() {
     log_info "Updating tool checksums (maintenance function)"
     log_warning "This function downloads tools to verify checksums"
     log_warning "Only run this when updating tool versions"
-    
+
     local platform
     platform=$(detect_platform)
-    
+
     list_available_tools | while read -r tool_key; do
         if [[ "$tool_key" == *"-${platform}" ]]; then
             local tool_name="${tool_key%-*}"
@@ -355,17 +355,17 @@ update_checksums() {
             os=$(echo "$config" | cut -d':' -f2)
             arch=$(echo "$config" | cut -d':' -f3)
             # Extract URL by removing version:os:arch: prefix and :checksum suffix
-            temp_config="${config#*:*:*:}"  # Remove first 3 fields
-            checksum="${temp_config##*:}"   # Get last field (checksum)
-            url="${temp_config%:*}"         # Remove checksum, leaving URL
-            
+            temp_config="${config#*:*:*:}" # Remove first 3 fields
+            checksum="${temp_config##*:}"  # Get last field (checksum)
+            url="${temp_config%:*}"        # Remove checksum, leaving URL
+
             log_info "Verifying checksum for: $tool_name"
-            
+
             local temp_file="/tmp/${tool_name}-checksum-verify"
             if curl -fsSL -o "$temp_file" "$url"; then
                 local actual_checksum
                 actual_checksum=$(sha256sum "$temp_file" | cut -d' ' -f1)
-                
+
                 if [[ "$actual_checksum" == "$checksum" ]]; then
                     log_success "Checksum verified: $tool_name"
                 else
@@ -373,7 +373,7 @@ update_checksums() {
                     log_error "Expected: $checksum"
                     log_error "Actual:   $actual_checksum"
                 fi
-                
+
                 rm -f "$temp_file"
             else
                 log_error "Failed to download for verification: $tool_name"
@@ -385,7 +385,7 @@ update_checksums() {
 # Function to clean cache
 clean_cache() {
     log_info "Cleaning security cache..."
-    
+
     if [[ -d "$CACHE_DIR" ]]; then
         rm -rf "$CACHE_DIR"
         log_success "Cache cleaned"
@@ -397,27 +397,27 @@ clean_cache() {
 # Function to list installed tools
 list_tools() {
     log_info "Installed security tools:"
-    
+
     if [[ ! -d "$TOOLS_DIR" ]]; then
         log_info "No tools installed"
         return 0
     fi
-    
+
     for tool_dir in "$TOOLS_DIR"/*; do
         if [[ -d "$tool_dir" ]]; then
             local tool_name
             tool_name=$(basename "$tool_dir")
             local version="unknown"
-            
+
             if [[ -f "${tool_dir}/.version" ]]; then
                 version=$(cat "${tool_dir}/.version")
             fi
-            
+
             local status="❌"
             if [[ -x "${tool_dir}/${tool_name}" ]]; then
                 status="✅"
             fi
-            
+
             echo "  $status $tool_name ($version)"
         fi
     done
@@ -427,7 +427,7 @@ list_tools() {
 get_tool_path() {
     local tool_name="$1"
     local tool_binary="${TOOLS_DIR}/${tool_name}/${tool_name}"
-    
+
     if [[ -x "$tool_binary" ]]; then
         echo "$tool_binary"
     else
@@ -440,11 +440,11 @@ get_tool_path() {
 install_all() {
     local platform
     platform=$(detect_platform)
-    
+
     log_info "Installing all security tools for platform: $platform"
-    
+
     local tools=("golangci-lint" "hadolint" "trivy" "cosign")
-    
+
     for tool in "${tools[@]}"; do
         if install_tool "$tool" "$platform"; then
             log_success "✅ $tool"
@@ -452,13 +452,13 @@ install_all() {
             log_error "❌ $tool"
         fi
     done
-    
+
     log_info "Installation complete. Run 'list' to see installed tools."
 }
 
 # Help function
 show_help() {
-    cat << EOF
+    cat <<EOF
 CloudMCP Security Utilities
 
 USAGE:
@@ -512,41 +512,41 @@ EOF
 # Main function
 main() {
     case "${1:-help}" in
-        install)
-            if [[ -z "${2:-}" ]]; then
-                log_error "Tool name required"
-                show_help
-                exit 1
-            fi
-            install_tool "$2" "${3:-}" "${4:-false}"
-            ;;
-        install-all)
-            install_all
-            ;;
-        list)
-            list_tools
-            ;;
-        get-path)
-            if [[ -z "${2:-}" ]]; then
-                log_error "Tool name required"
-                exit 1
-            fi
-            get_tool_path "$2"
-            ;;
-        clean)
-            clean_cache
-            ;;
-        update-checksums)
-            update_checksums
-            ;;
-        help|--help|-h)
-            show_help
-            ;;
-        *)
-            log_error "Unknown command: ${1:-}"
+    install)
+        if [[ -z "${2:-}" ]]; then
+            log_error "Tool name required"
             show_help
             exit 1
-            ;;
+        fi
+        install_tool "$2" "${3:-}" "${4:-false}"
+        ;;
+    install-all)
+        install_all
+        ;;
+    list)
+        list_tools
+        ;;
+    get-path)
+        if [[ -z "${2:-}" ]]; then
+            log_error "Tool name required"
+            exit 1
+        fi
+        get_tool_path "$2"
+        ;;
+    clean)
+        clean_cache
+        ;;
+    update-checksums)
+        update_checksums
+        ;;
+    help | --help | -h)
+        show_help
+        ;;
+    *)
+        log_error "Unknown command: ${1:-}"
+        show_help
+        exit 1
+        ;;
     esac
 }
 

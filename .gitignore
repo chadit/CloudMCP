@@ -82,3 +82,4 @@ lint_output.txt
 .security-cache/
 .tools/
 client
+*.backup

@@ -14,7 +14,7 @@ type Config struct {
 // Load loads configuration from environment variables with sensible defaults.
 func Load() (*Config, error) {
 	return &Config{
-		ServerName: getEnvOrDefault("CLOUD_MCP_SERVER_NAME", "CloudMCP Minimal"),
+		ServerName: getEnvOrDefault("CLOUD_MCP_SERVER_NAME", "CloudMCP"),
 		LogLevel:   getEnvOrDefault("LOG_LEVEL", "info"),
 	}, nil
 }
@@ -24,5 +24,6 @@ func getEnvOrDefault(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
 	}
+
 	return defaultValue
 }

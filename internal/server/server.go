@@ -42,18 +42,16 @@ func New(cfg *config.Config) (*Server, error) {
 	)
 
 	// Create server instance
-	s := &Server{
+	srv := &Server{
 		config: cfg,
 		mcp:    mcpServer,
 		tools:  make([]contracts.Tool, 0),
 	}
 
 	// Register simple tools
-	if err := s.registerTools(); err != nil {
-		return nil, fmt.Errorf("failed to register tools: %w", err)
-	}
+	srv.registerTools()
 
-	return s, nil
+	return srv, nil
 }
 
 // toolWrapper wraps mcp.Tool to implement our contracts.Tool for compatibility.
@@ -89,7 +87,12 @@ func (s *Server) Start(_ context.Context) error {
 
 	// Start MCP server (blocks until context is cancelled or error occurs)
 	log.Printf("CloudMCP server started successfully")
-	return server.ServeStdio(s.mcp)
+
+	if err := server.ServeStdio(s.mcp); err != nil {
+		return fmt.Errorf("failed to start server: %w", err)
+	}
+
+	return nil
 }
 
 // GetToolCount returns the number of registered tools.
@@ -98,7 +101,7 @@ func (s *Server) GetToolCount() int {
 }
 
 // registerTools registers the simple hello and version tools.
-func (s *Server) registerTools() error {
+func (s *Server) registerTools() {
 	// Create and register hello tool
 	helloTool, helloHandler := tools.NewHelloTool()
 	s.mcp.AddTool(helloTool, helloHandler)
@@ -110,6 +113,4 @@ func (s *Server) registerTools() error {
 	s.mcp.AddTool(versionTool, versionHandler)
 	// Create a wrapper tool to maintain interface compatibility
 	s.tools = append(s.tools, &toolWrapper{tool: versionTool})
-
-	return nil
 }
